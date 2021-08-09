@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body {font-family: Arial;}
+
+/* Style the tab */
+.tab {
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
+}
+
+/* Style the buttons inside the tab */
+.tab button {
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+  font-size: 17px;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+  background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+  background-color: #ccc;
+}
+
+/* Style the tab content */
+.tabcontent {
+  display: none;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-top: none;
+}
+* {box-sizing: border-box}
+
+/* Add padding to containers */
+.container {
+  padding: 16px;
+}
+
+/* Full-width input fields */
+input[type=text], input[type=password], input[type=number] {
+  width: 100%;
+  padding: 15px;
+  margin: 5px 0 22px 0;
+  display: inline-block;
+  border: none;
+  background: #f1f1f1;
+}
+
+input[type=text]:focus, input[type=password]:focus, input[type=number]:focus {
+  background-color: #ddd;
+  outline: none;
+}
+
+
+/* Overwrite default styles of hr */
+hr {
+  border: 1px solid #f1f1f1;
+  margin-bottom: 25px;
+}
+
+/* Set a style for the submit/register button */
+.registerbtn {
+  background-color: #04AA6D;
+  color: white;
+  padding: 16px 20px;
+  margin: 8px 0;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  opacity: 0.9;
+}
+
+.registerbtn:hover {
+  opacity:1;
+}
+
+/* Add a blue text color to links */
+a {
+  color: dodgerblue;
+}
+
+/* Set a grey background color and center the text of the "sign in" section */
+.signin {
+  background-color: #f1f1f1;
+  text-align: center;
+}
+
+/* Style the buttons that are used to open and close the accordion panel */
+.accordion {
+  background-color: #eee;
+  color: #444;
+  cursor: pointer;
+  padding: 18px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  outline: none;
+  transition: 0.4s;
+}
+
+/* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
+.active, .accordion:hover {
+  background-color: #ccc;
+}
+
+/* Style the accordion panel. Note: hidden by default */
+.panel {
+  padding: 0 18px;
+  background-color: white;
+  display: block;
+  overflow: hidden;
+}
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid ##f1f1f1;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #f1f1f1;
+}
+
+.btn {
+  border: none; /* Remove borders */
+  color: white; /* Add a text color */
+  padding: 14px 28px; /* Add some padding */
+  cursor: pointer; /* Add a pointer cursor on mouse-over */
+}
+
+.default {background-color: #e7e7e7; color: black;} /* Gray */
+.default:hover {background: #ddd;}
+
+.danger {background-color: #f44336;} /* Red */
+.danger:hover {background: #da190b;}
+</style>
+</head>
+<body onload="openDashboard(this)">
+
+<h2>Piso Wifi Admin Console</h2>
+
+<div class="tab">
+  <button class="tablinks" onclick="openDashboard(event)">Dashboard</button>
+  <button class="tablinks" onclick="openSystemConfig(event)">System Configration</button>
+  <button class="tablinks" onclick="openPromoRates(event)">Promo Rates</button>
+  <button class="tablinks" onclick="openTab(event, 'About')">About</button>
+
+</div>
+
+<div id="Dashboard" class="tabcontent">
+	<button class="accordion">Uptime</button>
+	<div class="panel">
+	  <p id="upTime">0 Day 0 hour 0 Min 0 Sec</p>
+	</div>
+	<button class="accordion">Mac Address</button>
+	<div class="panel">
+	  <p id="macAddress">-------</p>
+	</div>
+	<button onClick="resetStats('lifeTimeCount')" class="accordion">Lifetime Coin/Sales Count(Click here to reset)</button>
+	<div class="panel">
+	  <p id="lifeCoinCount">0</p>
+	</div>
+	<button onClick="resetStats('coinCount')" class="accordion">Coin/Sales Count(Click here to reset)</button>
+	<div class="panel">
+	  <p id="coinCount">0<button onClick="addRate()" class="btn default" id="addRateButton">Add</button></p>
+	</div>
+	<button onClick="resetStats('customerCount')"  class="accordion">Customer Count(Click here to reset)</button>
+	<div class="panel">
+	  <p id="customerCount">0</p>
+	</div>
+	<button class="accordion">Internet Staus</button>
+	<div class="panel">
+		<p id="internetStatus">Online</p>
+	</div>
+	<button class="accordion">Mikrotik Staus</button>
+	<div class="panel">
+		<p id="mikrotikStatus">Online</p>
+	</div>
+</div>
+
+<div id="SystemConfigration" class="tabcontent">
+  <div class="container">
+  
+	<label for="email"><b>Vendo Name</b></label>
+    <input type="text" placeholder="Vendo Name" id="vendoName" required>
+
+    <label for="email"><b>WIFI SSID</b></label>
+    <input type="text" placeholder="WIFI SSID"  id="wifiSSID" required>
+
+    <label for="psw"><b>WIFI Password</b></label>
+    <input type="password" placeholder="WIFI Password" id="wifiPW">
+	
+	<label for="email"><b>Mikrotik Router IP</b></label>
+    <input type="text" placeholder="Mikrotik Router IP" id="mikrotikIp" required>
+	
+	<label for="email"><b>Mikrotik Username</b></label>
+    <input type="text" placeholder="Mikrotik Router Username" id="mikrotikUser" required>
+	
+	<label for="email"><b>Mikrotik Password</b></label>
+    <input type="password" placeholder="Mikrotik Router Password" id="mikrotikPw" required>
+	
+	<label for="email"><b>Coin slot insert wait time(Seconds)</b></label>
+    <input type="text" placeholder="Coin slot insert wait time" id="coinSlotWaitTime" required>
+	
+	<label for="email"><b>Admin Username</b></label>
+    <input type="text" placeholder="Admin Username" id="adminUser" required>
+	
+	<label for="email"><b>Admin Password</b></label>
+    <input type="password" placeholder="Admin Password" id="adminPw" required>
+
+    <button onClick="saveSystemConfig()" type="button" class="registerbtn">Save</button>
+  </div>
+</div>
+
+<div id="PromoRate" class="tabcontent">
+	<h3>Promo Rates 
+	<button onClick="addRate()" class="btn default" id="addRateButton">Add</button></h3>
+	<table>
+	  <thead>
+		<th>Rate Name</th>
+		<th>Price</th>
+		<th>Minutes</th>
+		<th>Validity(Minutes)</th>
+		<th>Action</th>
+	  </thead>
+	  <tbody id="promoRateBody">
+			
+	  </tbody>
+	</table>
+    <button onClick="savePromoRates()" type="submit" class="registerbtn">Save</button>
+</form>
+</div>
+
+<div id="About" class="tabcontent">
+	<p>System Version: 1.0</p>
+	<p>Developer: Ivan Julius Alayan</p>
+	<p>Contact me ivanalayan@gmail.com</p>
+</div>
+
+<script src="admin/js/jquery.min.js"></script>
+
+<script>
+
+var timer = null;
+var upTimeSeconds = 0;
+var separator = "|";
+var rowSeparator = "#";
+
+function saveSystemConfig(){
+	var postData = createParam([
+					$('#vendoName').val(),
+					$('#wifiSSID').val(),
+					$('#wifiPW').val(),
+					$('#mikrotikIp').val(),
+					$('#mikrotikUser').val(),
+					$('#mikrotikPw').val(),
+					$('#coinSlotWaitTime').val(),
+					$('#adminUser').val(),
+					$('#adminPw').val()
+				 ]);
+				 
+	$.ajax({
+	  type: "POST",
+	  url: "admin/api/saveSystemConfig",
+	  data: "data="+postData,
+	  success: function(data){
+		alert('Configuration save succesfully!, System will restart now to take effect....');
+	  },
+	  error: function(XMLHttpRequest, textStatus, errorThrown) { 
+		alert("Error: " + errorThrown); 
+	  } 
+	});
+}
+
+function savePromoRates(){
+	var params = [];
+	for(var i=0;i<100;i++){
+		var rateNameText = $("#rateNameText"+i).val();
+		var priceText = $("#priceText"+i).val();
+		var minutesText = $("#minutesText"+i).val();
+		var validityText = $("#validityText"+i).val();
+		if(rateNameText != null && priceText != null && minutesText != null && validityText != null){
+			params.push(rateNameText+"#"+priceText+"#"+minutesText+"#"+validityText);
+		}
+	}
+	var postData = createParam(params);
+	$.ajax({
+	  type: "POST",
+	  url: "admin/api/saveRates",
+	  data: "data="+postData,
+	  success: function(data){
+		alert('Configuration save succesfully!');
+	  },
+	  error: function(XMLHttpRequest, textStatus, errorThrown) { 
+		alert("Error: " + errorThrown); 
+	  } 
+	});
+}
+
+function createParam(params){
+	var data = "";
+	for(var i=0;i<params.length;i++){
+		if(i>0){
+			data += separator;
+		}
+		data += params[i];
+	}
+	return encodeURI(data);
+}
+
+function resetStats(type){
+	var r = confirm("Are you sure you want to reset statistic?");
+	if (r == true) {
+		$.ajax({
+		  type: "GET",
+		  //url: "admin/dashboard.data",
+		  url: "admin/api/resetStatistic?type="+type,
+		  success: function(data){
+			openDashboard(null);
+		  }
+		});
+	}
+}
+
+function openDashboard(evt){
+
+	$.ajax({
+	  type: "GET",
+	  url: "admin/api/dashboard?query="+new Date().getTime(),
+	  success: function(data){
+		if(timer != null){
+			clearInterval(timer);
+			timer = null;
+		}
+		var dashboardData = data.split(separator);
+		upTimeSeconds = (parseInt(dashboardData[0])/1000);
+		timer = setInterval(function(){
+			upTimeSeconds++;
+			$('#upTime').html(secondsToDhms(upTimeSeconds));
+		}, 1000);
+		
+		$('#lifeCoinCount').html(dashboardData[1]);
+		$('#coinCount').html(dashboardData[2]);
+		$('#customerCount').html(dashboardData[3]);
+		if(dashboardData[4] == "1"){
+			$('#internetStatus').html("Online");	
+		}else{
+			$('#internetStatus').html("Offline");
+		}
+		if(dashboardData[5] == "1"){
+			$('#mikrotikStatus').html("Online");	
+		}else{
+			$('#mikrotikStatus').html("Offline");
+		}
+		$('#macAddress').html(dashboardData[6]);
+	  }
+	});
+	openTab(evt, 'Dashboard');
+}
+
+function openSystemConfig(evt){
+	$.ajax({
+	  type: "GET",
+	  url: "admin/api/getSystemConfig?query="+new Date().getTime(),
+	  success: function(data){
+		var configData = data.split(separator);
+		$('#vendoName').val(configData[0]);
+		$('#wifiSSID').val(configData[1]);
+		$('#wifiPW').val(configData[2]);
+		$('#mikrotikIp').val(configData[3]);
+		$('#mikrotikUser').val(configData[4]);
+		$('#mikrotikPw').val(configData[5]);
+		$('#coinSlotWaitTime').val(configData[6]);
+		$('#adminUser').val(configData[7]);
+		$('#adminPw').val(configData[8])
+	  }
+	});
+	openTab(evt, 'SystemConfigration');
+}
+
+var rateCount = 0;
+
+var script = " <tr id='rateRow'>";
+			script += "<td><input type='text' value='rateNameValue' placeholder='Rate Name' id='rateNameText'></td>";
+			script += "<td><input type='number' value='priceValue' placeholder='Price' id='priceText'></td>";
+			script += "<td><input type='number' value='minutesValue' placeholder='Minutes' id='minutesText'></td>";
+			script += "<td><input type='number' value='validityValue' placeholder='Validity' id='validityText'></td>";
+			script += "<td><button class='btn danger' onClick='deleteRate(rateIndex)'>Delete</button></td>";
+			script += "</tr>";
+
+function addRate(){
+	var rowData = ["","",""];
+	var rowScript = generateRowScript(rateCount, rowData);
+	$("#promoRateBody").append(rowScript);
+	rateCount++;
+}
+
+function deleteRate(index){
+	$("#rateRow"+index).remove();
+}
+
+function openPromoRates(evt){
+	$.ajax({
+	  type: "GET",
+	  url: "admin/api/getRates?query="+new Date().getTime(),
+	  success: function(data){
+		var rateData = data.split('|');
+		var html = "";
+		for(var i=0;i<rateData.length;i++){
+			var rowData = rateData[i].split('#');
+			var rowScript = generateRowScript(i, rowData);
+			html += rowScript;
+			rateCount++;
+		}
+		$("#promoRateBody").html(html);
+	  }
+	});
+	openTab(evt, 'PromoRate');
+}
+
+function generateRowScript(i , rowData){
+	var rowScript = script.replace("rateNameText", "rateNameText"+i);
+	rowScript = rowScript.replace("rateNameValue", rowData[0]);
+	rowScript = rowScript.replace("priceText", "priceText"+i);
+	rowScript = rowScript.replace("priceValue", rowData[1]);
+	rowScript = rowScript.replace("minutesText", "minutesText"+i);
+	rowScript = rowScript.replace("minutesValue", rowData[2]);
+	rowScript = rowScript.replace("validityText", "validityText"+i);
+	rowScript = rowScript.replace("validityValue", rowData[3]);
+	rowScript = rowScript.replace("rateIndex", i);
+	rowScript = rowScript.replace("rateRow", "rateRow"+i);
+	return rowScript;
+}
+
+
+function openTab(evt, tabName) {
+  var i, tabcontent, tablinks;
+  tabcontent = document.getElementsByClassName("tabcontent");
+  for (i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].style.display = "none";
+  }
+  tablinks = document.getElementsByClassName("tablinks");
+  for (i = 0; i < tablinks.length; i++) {
+    tablinks[i].className = tablinks[i].className.replace(" active", "");
+  }
+  document.getElementById(tabName).style.display = "block";
+  if(evt != null && evt.currentTarget != null){
+	evt.currentTarget.className += " active";
+  }
+  
+}
+
+function secondsToDhms(seconds) {
+	seconds = Number(seconds);
+	var d = Math.floor(seconds / (3600*24));
+	var h = Math.floor(seconds % (3600*24) / 3600);
+	var m = Math.floor(seconds % 3600 / 60);
+	var s = Math.floor(seconds % 60);
+
+	var dDisplay = d > 0 ? d + (d == 1 ? " Day " : " Days ") : "0 Day ";
+	var hDisplay = h > 0 ? h + (h == 1 ? " Hour " : " Hours ") : "0 Hour ";
+	var mDisplay = m > 0 ? m + (m == 1 ? " Min " : " Mins ") : "0 Min ";
+	var sDisplay = s > 0 ? s + (s == 1 ? " Sec" : " Secs") : "0 Sec ";
+	return dDisplay + hDisplay + mDisplay + sDisplay;
+}
+</script>
+   
+</body>
+</html> 

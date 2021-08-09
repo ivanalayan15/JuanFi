@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<link rel="stylesheet" href="assets/css/bootstrap.min.css">
+	<link rel="stylesheet" href="assets/css/toast.min.css">
+	<link rel="stylesheet" href="assets/css/core.css">
+	$(if refresh-timeout)
+	<meta http-equiv="refresh" content="$(refresh-timeout-secs)">
+	$(endif)
+    <title>JuanFi - Status</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<script>
+		var loginError = "";
+	</script>
+
+</head>
+
+<div class="container">
+
+		<form action="$(link-logout)" name="logout" >
+			<input type="hidden" name="erase-cookie" value="true" />
+		</form>
+		
+        <div class="row">
+			
+            <div class="col-sm-6">
+                <div class="row">
+                    <img src="assets/MainPic.PNG" class="img-fluid" />
+                </div>
+            </div>
+
+            <div class="col-sm-4">
+                <div class="login">
+                    <center>
+						<ul class="list-group">
+						  <li class="list-group-item active" style="background-color: #20e88c">Connected</li>
+						  <li class="list-group-item">IP: $(ip)</li>
+						  <li class="list-group-item">Mac: $(mac)</li>
+						  <li class="list-group-item">Voucher: $(username)</li>
+						  <li class="list-group-item">Remaining Time: <span id="remainTime"></span></li>
+						  <li class="list-group-item">Expiration Time: <span id="expirationTime">-</span></li>
+						  <li class="list-group-item"><i class="fa fa-arrow-circle-up"></i>&nbsp;<b>$(bytes-in-nice)</b>&nbsp;<b>|</b>&nbsp;<i class="fa fa-arrow-circle-down"></i>&nbsp;<b>$(bytes-out-nice)</b></li>
+						  
+						</ul>
+                    </center>
+                    <br>
+					<button type="button" id="insertBtn" class="btn btn-success btn-block"  data-toggle="modal" >ADD TIME</button>
+                    <div style="margin-bottom:-5px"></div>
+					<br>
+					<button type="button" id="promoRateBtn" class="btn btn-warning btn-block">PROMO RATES</button>
+					<div style="margin-bottom:-5px"></div>
+					<br>
+					<button type="button" onClick="document.logout.submit();" class="btn btn-danger btn-block">LOGOUT</button>
+					
+					<div class="modal fade" id="insertCoinModal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+					  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+						<div class="modal-content">
+						  <div class="modal-header">
+							<h5 class="modal-title" id="exampleModalLabel">Please insert the coin</h5>
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							  <span aria-hidden="true">&times;</span>
+							</button>
+						  </div>
+						  <div class="modal-body">
+								<img src="assets/insert-coin-animation.gif" class="insertCoinImg"/>
+								<br/>
+								<div class="progress">
+									<div id="progressDiv" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>
+								</div>
+								<table class="table">
+								  <thead>
+									<tr>
+									  <th scope="col">Coin</th>
+									  <th scope="col">Total Time</th>
+									</tr>
+								  </thead>
+								  <tbody>
+									<tr>
+									  <td id="totalCoin">0</td>
+									  <td id="totalTime">0 Day 0 Hour 0 Min 0 Sec</td>
+									</tr>
+								  </tbody>
+								</table>
+								
+						  </div>
+						  <div class="modal-footer">
+							<button type="button" id="saveVoucherButton" data-save-type="extend" class="btn btn-primary" data-dismiss="modal">
+							  Save and Connect
+							</button>
+							<button type="button" id="cncl" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+						  </div>
+						</div>
+					  </div>
+					</div>
+					
+					<div class="modal fade" id="promoRatesModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+						<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+						  <div class="modal-content">
+							<div class="modal-header">
+							  <h5 class="modal-title" id="exampleModalLabel">Promo Rates</h5>
+							  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							  </button>
+							</div>
+							<div class="modal-body">
+								  <table class="table">
+									<thead>
+									  <tr>
+										<th scope="col">Rates</th>
+										<th scope="col">Validity(Expiration)</th>
+									  </tr>
+									</thead>
+									<tbody id="ratesBody">
+									  <tr>
+										<td id="totalTime">Rates loading....</td>
+									  </tr>
+									</tbody>
+								  </table>
+							</div>
+							<div class="modal-footer">
+							  <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+							</div>
+						  </div>
+						</div>
+					  </div>
+
+                </div>
+            </div>	
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/popper.min.js"></script>
+			<script src="assets/js/bootstrap.min.js"></script>
+			<script src="assets/js/toast.min.js"></script>
+			<script src="assets/js/core.js"></script>
+			
+			
+			<script>
+				var sessiontime = "$(session-time-left-secs)";
+				var uptime = "$(uptime-secs)";
+				window.name="hotspot_status";
+				
+				$(document).ready(function(){
+					var validity = localStorage.getItem(voucher+"validity");
+					if(validity != null){
+						$("#expirationTime").html(new Date(parseInt(validity)));
+					}
+					var time = sessiontime;
+					$("#remainTime").html(secondsToDhms(time));
+					var zz = setInterval(function(){
+						time--;
+						$("#remainTime").html(secondsToDhms(time));
+						if(time <= 0){
+							$.toast({
+								title: 'Success',
+								content: 'Time limit exceeded, Thank you for the purchase, will be logout shortly',
+								type: 'success',
+								delay: 5000
+							});
+							clearInterval(zz);
+							cleanUpLocalStorage(voucher);
+							setTimeout(function(){
+								document.logout.submit();
+							}, 6000);
+						}
+					}, 1000);
+					
+				});
+			</script>
+			
+			
+			<div id="loaderDiv" class="spinner hidden">
+				<center>
+					<img src="assets/loading.svg" />
+				</center>
+			</div>
+</body>
+
+</html>
