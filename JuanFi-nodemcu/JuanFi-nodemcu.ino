@@ -40,6 +40,7 @@ volatile int totalCoin = 0;
 boolean isNewVoucher = false;
 int coinsChange = 0;
 String currentActiveVoucher = "";
+String currentMacAttempt = "";
 int timeToAdd = 0;
 bool coinSlotActive = false;
 bool acceptCoin = false;
@@ -48,7 +49,6 @@ bool coinExpired = false;
 bool mikrotekConnectionSuccess = false;
 String currentMacAddress = "";
 
-
 typedef struct {
   String rateName;
   int price;
@@ -56,7 +56,14 @@ typedef struct {
   int validity;
 } PromoRates;
 
+typedef struct {
+  String mac;
+  long unlockTime;
+  int attemptCount;
+} AttemptMacAddress;
 
+int attemptedMaxCount = 20;
+AttemptMacAddress attempted[20];
 PromoRates rates[100];
 int ratesCount = 0;
 int currentValidity = 0;
@@ -81,6 +88,8 @@ const int SYSTEM_READY_LED = D3;
 
 
 int MAX_WAIT_COIN_SEC = 30000;
+int COINSLOT_BAN_COUNT = 0;
+int COINSLOT_BAN_MINUTES = 0;
 
 
 //put here your raspi ip address, and login details
@@ -525,6 +534,52 @@ bool hasInternetConnect(){
    
 }
 
+void addAttemptToCoinslot(){
+  if(COINSLOT_BAN_COUNT > 0){
+    int currentMacIndex = -1;
+    int availableIndex = -1;
+    for(int i=0;i<attemptedMaxCount;i++){
+      if (attempted[i].mac == currentMacAttempt){
+          currentMacIndex = i;
+          break;
+      }else if(attempted[i].mac == ""){
+        availableIndex = i;
+      }
+    }
+     Serial.println(currentMacAttempt);
+     Serial.println(currentMacIndex);
+     Serial.println(availableIndex);
+    if(currentMacIndex > -1){
+      attempted[currentMacIndex].attemptCount++;
+     
+      if(attempted[currentMacIndex].attemptCount >= COINSLOT_BAN_COUNT){
+          long curMil = millis();
+          attempted[currentMacIndex].unlockTime = curMil + (COINSLOT_BAN_MINUTES * 60000);
+          Serial.print("Unlock time: ");
+          Serial.println(attempted[currentMacIndex].unlockTime);
+      }
+    }else{
+      if(availableIndex > -1){
+        attempted[availableIndex].mac = currentMacAttempt;
+        attempted[availableIndex].attemptCount++ ;
+      }
+    }
+  }
+}
+
+void clearAttemptToCoinSlot(){
+  if(COINSLOT_BAN_COUNT > 0){
+    for(int i=0;i<attemptedMaxCount;i++){
+        if (attempted[i].mac == currentMacAttempt){
+            attempted[i].mac = "";
+            attempted[i].unlockTime = 0;
+            attempted[i].attemptCount = 0;
+            break;
+        }
+    }
+  }
+}
+
 void checkCoin(){
 
   if(!checkIfSystemIsAvailable()){
@@ -591,11 +646,14 @@ void useVoucher(){
   }
   disableCoinSlot();
   if(timeToAdd > 0 ){
+    clearAttemptToCoinSlot();
     //if(isNewVoucher){
       registerNewVoucher(voucher);
     //}
     updateStatistic();
     addTimeToVoucher(voucher, timeToAdd);
+  }else{
+    addAttemptToCoinslot();
   }
   char * keys[] = {"status", "totalCoin", "timeAdded", "validity"};
   char totalCoinStr[16];
@@ -648,6 +706,15 @@ void topUp() {
       return;
   }
 
+  String macAdd = server.arg("mac");
+  if(!checkMacAddress(macAdd)){
+    char * keys[] = {"status", "errorCode"};
+    char * values[] = {"false", "coin.slot.banned"};
+    setupCORSPolicy();
+    server.send(200, "application/json", toJson(keys, values, 2));
+    return;
+  }
+  currentMacAttempt = macAdd;
   String voucher = server.arg("voucher");
    if(currentActiveVoucher != "" && !validateVoucher(voucher)){
       return;
@@ -676,6 +743,36 @@ void topUp() {
   }
   setupCORSPolicy();
   server.send(200, "application/json", toJson(keys, values, 2));
+}
+
+boolean checkMacAddress(String mac){
+  bool isValid = true;
+  if(COINSLOT_BAN_COUNT > 0){
+    Serial.print("Checking mac if valid ");
+    Serial.println(mac);
+    for(int i=0;i<attemptedMaxCount;i++){
+      if (attempted[i].mac != ""){
+          long curMil = millis();
+          if( attempted[i].unlockTime > 0 && attempted[i].unlockTime <= curMil){
+            Serial.print(attempted[i].mac);
+            Serial.println(" unlocking mac address...");
+            attempted[i].mac = "";
+            attempted[i].attemptCount = 0;
+            attempted[i].unlockTime = 0;
+          }else if(attempted[i].mac == mac){
+             Serial.print("Mac address has previous attempt");
+             Serial.println(attempted[i].attemptCount);
+             Serial.println(COINSLOT_BAN_COUNT);
+             if( attempted[i].attemptCount >= COINSLOT_BAN_COUNT){
+                isValid = false;
+                Serial.print(mac);
+                Serial.println(" mac address currenly banned");
+             }
+          }
+      }
+    }
+  }
+  return isValid;
 }
 
 void setupCORSPolicy(){
@@ -803,7 +900,7 @@ void populateSystemConfiguration(){
   Serial.print("Data: ");
   Serial.println(data);
 
-  String rows[9];
+  String rows[11];
   split(rows, data, '|');
   String ip[4];
   split(ip, rows[3], '.');
@@ -817,7 +914,9 @@ void populateSystemConfiguration(){
   user = rows[4];
   pwd = rows[5];
   MAX_WAIT_COIN_SEC = rows[6].toInt() * 1000;
-  adminAuth = base64::encode(rows[7]+":"+rows[8]);  
+  adminAuth = base64::encode(rows[7]+":"+rows[8]);
+  COINSLOT_BAN_COUNT = rows[9].toInt();
+  COINSLOT_BAN_MINUTES = rows[10].toInt();
 }
 
 
@@ -905,6 +1004,7 @@ void loop () {
         timeToAdd = calculateAddTime();
         //Auto add time no need to use voucher
         if(timeToAdd > 0 ) {
+          clearAttemptToCoinSlot();
           Serial.print("Coin insert waiting expired, Auto using the voucher ");
           Serial.print(currentActiveVoucher);
           if(isNewVoucher){
@@ -912,6 +1012,8 @@ void loop () {
           }
           updateStatistic();
           addTimeToVoucher(currentActiveVoucher, timeToAdd);
+        }else{
+          addAttemptToCoinslot();
         }
         resetGlobalVariables();
       }

@@ -2,6 +2,7 @@ var errorCodeMap = [];
 errorCodeMap['coins.wait.expired'] = 'Coin slot expired';
 errorCodeMap['coin.not.inserted'] = 'Coin not inserted';
 errorCodeMap['coinslot.busy'] = 'Coin slot is busy';
+errorCodeMap['coin.slot.banned'] = 'You have been banned from using coin slot, due to multiple request for insert coin, please try again later!';
 errorCodeMap['coin.slot.notavailable'] = 'Coin slot is not available as of the moment, Please try again later';
 errorCodeMap['no.internet.detected'] = 'No internet connection as of the moment, Please try again later';
 var totalCoinReceived = 0;
@@ -90,7 +91,7 @@ function callTopupAPI(retryCount){
 	$.ajax({
 	  type: "POST",
 	  url: "http://"+vendorIpAdress+"/topUp",
-	  data: "voucher="+voucher,
+	  data: "voucher="+voucher+"&mac="+mac,
 	  success: function(data){
 		$("#loaderDiv").attr("class","spinner hidden");
 		if(data.status == "true"){

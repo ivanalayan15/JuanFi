@@ -224,6 +224,12 @@ tr:nth-child(even) {
 	
 	<label for="email"><b>Admin Password</b></label>
     <input type="password" placeholder="Admin Password" id="adminPw" required>
+	
+	<label for="email"><b>Coins Slot Abuse Count</b></label>
+    <input type="text" placeholder="Coins Slot Abuse Count" id="coinSlotAbuseCount" required>
+	
+	<label for="email"><b>Coins Slot Ban Minutes</b></label>
+    <input type="text" placeholder="Coins Slot Ban Minutes" id="coinSlotBanMinutes" required>
 
     <button onClick="saveSystemConfig()" type="button" class="registerbtn">Save</button>
   </div>
@@ -273,7 +279,9 @@ function saveSystemConfig(){
 					$('#mikrotikPw').val(),
 					$('#coinSlotWaitTime').val(),
 					$('#adminUser').val(),
-					$('#adminPw').val()
+					$('#adminPw').val(),
+					$('#coinSlotAbuseCount').val(),
+					$('#coinSlotBanMinutes').val()
 				 ]);
 				 
 	$.ajax({
@@ -389,7 +397,9 @@ function openSystemConfig(evt){
 		$('#mikrotikPw').val(configData[5]);
 		$('#coinSlotWaitTime').val(configData[6]);
 		$('#adminUser').val(configData[7]);
-		$('#adminPw').val(configData[8])
+		$('#adminPw').val(configData[8]);
+		$('#coinSlotAbuseCount').val(configData[9]);
+		$('#coinSlotBanMinutes').val(configData[10])
 	  }
 	});
 	openTab(evt, 'SystemConfigration');
