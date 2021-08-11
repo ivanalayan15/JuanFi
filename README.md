@@ -47,6 +47,9 @@ https://www.arduino.cc/en/software
 2.) Install nodemcu board and libraries
 https://randomnerdtutorials.com/how-to-install-esp8266-board-arduino-ide/
 
+install dependency libraries at arduino libraries folder 
+https://github.com/videojedi/ESP8266-Telnet-Client
+
 
 3.) Compile and upload code
 
