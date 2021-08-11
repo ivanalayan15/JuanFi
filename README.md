@@ -85,12 +85,15 @@ d.) Configure Promo rates
 3.) Add IP Bindings exception on hotspot
 ![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Mikrotik-Step2.PNG?raw=true)
 
-4.) Upload html template to mikrotik in Files option of mikrotik
+4.) Modify vendoIpAddress (NodeMcu IPaddress) in the core.js file
+![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Mikrotik-Step5.PNG?raw=true)
 
-5.) Create user for nodemcu access, default user for nodemcu is pisonet / abc123 you can change it by your own
+5.) Upload html template to mikrotik in Files option of mikrotik
+
+6.) Create user for nodemcu access, default user for nodemcu is pisonet / abc123 you can change it by your own
 ![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Mikrotik-Step3.PNG?raw=true)
 
-6.) Execute the following script in mikrotik telnet terminal
+7.) Execute the following script in mikrotik telnet terminal
 replace 10.0.10.253 with your own nodemcu IP address
 
 ```bash
