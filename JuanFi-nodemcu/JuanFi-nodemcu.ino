@@ -251,11 +251,13 @@ void loginMirotik(){
     delay(3000);
   
     //PUT HERE YOUR USERNAME/PASSWORD
-    mikrotekConnectionSuccess = tc.login(mikrotikRouterIp, user.c_str(), pwd.c_str());  
+    mikrotekConnectionSuccess = tc.login(mikrotikRouterIp, user.c_str(), pwd.c_str());
     if(mikrotekConnectionSuccess){
       Serial.println("Login to mikrotek router success");
     }else{
-      Serial.println("Failed to login in mikrotek router");
+      //Temporary fix for those cannot connect to mikrotik
+      mikrotekConnectionSuccess = true;
+      Serial.println("Warning, Failed to login in mikrotek router, please check mikrotik log");
     }
 }
 
