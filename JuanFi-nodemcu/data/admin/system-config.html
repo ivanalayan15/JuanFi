@@ -154,14 +154,14 @@ tr:nth-child(even) {
 </head>
 <body onload="openDashboard(this)">
 
-<h2>Piso Wifi Admin Console</h2>
+<h2>JuanFi Admin Console</h2>
 
 <div class="tab">
   <button class="tablinks" onclick="openDashboard(event)">Dashboard</button>
   <button class="tablinks" onclick="openSystemConfig(event)">System Configration</button>
   <button class="tablinks" onclick="openPromoRates(event)">Promo Rates</button>
   <button class="tablinks" onclick="openTab(event, 'About')">About</button>
-
+  <button class="tablinks" onclick="logout()">Logout</button>
 </div>
 
 <div id="Dashboard" class="tabcontent">
@@ -465,6 +465,19 @@ function openTab(evt, tabName) {
 	evt.currentTarget.className += " active";
   }
   
+}
+
+function logout(){
+	var r = confirm("Are you sure you want to logout?");
+	if (r == true) {
+	  $.ajax({
+		  type: "GET",
+		  url: "admin/api/logout?query="+new Date().getTime(),
+		  success: function(data){
+			window.location.reload();
+	  }
+	});
+	}
 }
 
 function secondsToDhms(seconds) {

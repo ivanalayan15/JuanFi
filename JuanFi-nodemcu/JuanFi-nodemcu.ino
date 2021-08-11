@@ -199,6 +199,7 @@ void setup () {
   server.on("/admin/api/getSystemConfig", handleAdminGetSystemConfig);
   server.on("/admin/api/getRates", handleAdminGetRates);
   server.on("/admin/api/saveRates", handleAdminSaveRates);
+  server.on("/admin/api/logout", handleLogout);
   server.on("/admin", handleAdminPage);
 
   populateRates();
@@ -232,6 +233,11 @@ void handleNotFound()
 void handleHealth(){
   setupCORSPolicy();
   server.send ( 200, "text/plain", "ok");
+}
+
+void handleLogout(){
+  server.sendHeader("WWW-Authenticate", "Basic realm=\"Secure\"");
+  server.send(401, "text/html", "<html>Authentication failed</html>");
 }
 
 void loginMirotik(){
