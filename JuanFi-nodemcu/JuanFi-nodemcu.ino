@@ -33,7 +33,10 @@
 #include <EEPROM.h>
 #include "FS.h"
 #include <base64.h>
+#include <LiquidCrystal_I2C.h>
 
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 volatile int coin = 0;
 volatile int totalCoin = 0;
@@ -83,13 +86,15 @@ void ICACHE_RAM_ATTR coinInserted()
 
 int COIN_SELECTOR_PIN = D6;
 int COIN_SET_PIN = D7;
-int INSERT_COIN_LED = D5;
-int SYSTEM_READY_LED = D3;
+int INSERT_COIN_LED = D2;
+int SYSTEM_READY_LED = D1;
+int INSERT_COIN_BTN_PIN = D5;
 
 
 int MAX_WAIT_COIN_SEC = 30000;
 int COINSLOT_BAN_COUNT = 0;
 int COINSLOT_BAN_MINUTES = 0;
+int LCD_TYPE = 0;
 
 
 //put here your raspi ip address, and login details
@@ -99,6 +104,7 @@ String pwd = "abc123";
 String ssid     = "MikrofffffTik-36DA2B";
 String password = "";
 String adminAuth = "";
+String vendorName = "";
 
 ESP8266WiFiMulti WiFiMulti;
 
@@ -116,6 +122,9 @@ const int WIFI_CONNECT_TIMEOUT = 15000;
 const int WIFI_CONNECT_DELAY = 500;
 
 bool wifiConnected = false;
+bool welcomePrinted = false;
+
+int lastSaleTime = 0;
 
 void setup () { 
                                 
@@ -124,17 +133,21 @@ void setup () {
   if(!SPIFFS.begin()){
     Serial.println("An Error has occurred while mounting SPIFFS");
     return;
-  }
-
-
+  }  
+  
   populateSystemConfiguration(); 
   
   pinMode(COIN_SELECTOR_PIN, INPUT_PULLUP);
   pinMode(INSERT_COIN_LED, OUTPUT);
   pinMode(SYSTEM_READY_LED, OUTPUT);
   pinMode(COIN_SET_PIN, OUTPUT);
- 
   
+  if(LCD_TYPE > 0){
+     lcd.init();   // initializing the LCD
+     lcd.backlight(); // Enable or Turn On the backlight 
+     lcd.print("Initializing.."); 
+  }
+
   // We start by connecting to a WiFi network
   WiFi.mode(WIFI_STA);
   WiFiMulti.addAP(ssid.c_str(), password.c_str());
@@ -186,6 +199,7 @@ void setup () {
     server.on("/getRates", handleUserGetRates);
     server.on("/testInsertCoin", testInsertCoin);
     server.onNotFound(handleNotFound);
+    printWelcome();
     
   }else{
     //Soft AP setup
@@ -201,7 +215,11 @@ void setup () {
       server.sendHeader("Location", String("/admin"), true);
       server.send ( 302, "text/plain", "");
     });
-
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("JuanFi");
+    lcd.setCursor(0, 1);
+    lcd.print("Initial Setup"); 
   }
   
   server.on("/admin/api/dashboard", handleAdminDashboard);
@@ -605,6 +623,7 @@ void checkCoin(){
   if(!acceptCoin){
     totalCoin += coin;
     timeToAdd = calculateAddTime();
+    printTransactionDetail();
     char * keys[] = {"status", "newCoin", "timeAdded", "totalCoin", "validity"};
     char coinStr[16];
     itoa(coin, coinStr, 10);
@@ -668,6 +687,7 @@ void useVoucher(){
   char * values[] = {"true", totalCoinStr, timeToAddStr, validityStr};
   resetGlobalVariables();
   setupCORSPolicy();
+  printThankYou();
   server.send(200, "application/json", toJson(keys, values, 4));
 }
 
@@ -745,6 +765,7 @@ void topUp() {
     currentActiveVoucher = voucher;
   }
   setupCORSPolicy();
+  printInsertCoinNow();
   server.send(200, "application/json", toJson(keys, values, 2));
 }
 
@@ -903,7 +924,7 @@ void populateSystemConfiguration(){
   Serial.print("Data: ");
   Serial.println(data);
 
-  String rows[15];
+  String rows[17];
   split(rows, data, '|');
   String ip[4];
   split(ip, rows[3], '.');
@@ -912,6 +933,7 @@ void populateSystemConfiguration(){
   mikrotikRouterIp[1] = ip[1].toInt();
   mikrotikRouterIp[2] = ip[2].toInt();
   mikrotikRouterIp[3] = ip[3].toInt();
+  vendorName = rows[0];
   ssid = rows[1];
   password = rows[2];
   user = rows[4];
@@ -922,8 +944,10 @@ void populateSystemConfiguration(){
   COINSLOT_BAN_MINUTES = rows[10].toInt();
   COIN_SELECTOR_PIN = rows[11].toInt();
   COIN_SET_PIN = rows[12].toInt();
-  INSERT_COIN_LED = rows[13].toInt();
-  SYSTEM_READY_LED = rows[14].toInt();
+  SYSTEM_READY_LED = rows[13].toInt();
+  INSERT_COIN_LED = rows[14].toInt();
+  LCD_TYPE = rows[15].toInt();
+  INSERT_COIN_BTN_PIN = rows[16].toInt();
 }
 
 
@@ -1019,17 +1043,80 @@ void loop () {
           }
           updateStatistic();
           addTimeToVoucher(currentActiveVoucher, timeToAdd);
+          printThankYou();
         }else{
           addAttemptToCoinslot();
         }
         resetGlobalVariables();
       }
+    }else{
+      //if coinslot is disable
+      //print welcome again after 5 seconds after thank you message
+      if(currentMilis > (lastSaleTime + 5000)){
+        printWelcome();
+      }
     }
-    
   }else{
     dnsServer.processNextRequest();
   }
   
   server.handleClient();
   MDNS.update();
+}
+
+void printInsertCoinNow(){
+  if(LCD_TYPE > 0 ){
+    welcomePrinted = false;
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Please insert");
+    lcd.setCursor(0, 1);
+    lcd.print("coin now, 1/5/10"); 
+  }
+}
+
+void printTransactionDetail(){
+  if(LCD_TYPE > 0 ){
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Coin: "+String(totalCoin) + " PHP");
+    lcd.setCursor(0, 1);
+   
+    int days = timeToAdd / (3600*24);
+    int hr =  timeToAdd % (3600*24) / 3600;
+    int min =  timeToAdd % 3600 / 60;
+
+    String t = "T: ";
+    t += String(days);
+    t += "d ";
+    t += String(hr);
+    t += "h ";
+    t += String(min);
+    t += "m ";
+    lcd.print(t);
+  }
+}
+
+void printThankYou(){
+  if(LCD_TYPE > 0 ){
+    welcomePrinted = false;
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Thank you for");
+    lcd.setCursor(0, 1);
+    lcd.print("the purchase!"); 
+    lastSaleTime = millis();
+  }
+}
+
+void printWelcome(){
+  
+  if(LCD_TYPE > 0 && (!welcomePrinted)){
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Welcome to");
+      lcd.setCursor(0, 1);
+      lcd.print(vendorName);
+      welcomePrinted = true;
+  }  
 }

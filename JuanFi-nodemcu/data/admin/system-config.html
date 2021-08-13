@@ -242,8 +242,8 @@ tr:nth-child(even) {
 	
 	<label for="coinSlotPin"><b>Coinslot Pin</b></label>
     <select name="coinSlotPin" id="coinSlotPin">
-	  <option value="5">D1</option>
-	  <option value="4">D2</option>
+	  <option value="0">D3</option>
+	  <option value="2">D4</option>
 	  <option value="14">D5</option>
 	  <option value="12" selected>D6</option>
 	  <option value="13">D7</option>
@@ -252,8 +252,8 @@ tr:nth-child(even) {
 	
 	<label for="coinSlotSetPin"><b>Coinslot Set Pin</b></label>
     <select name="coinSlotSetPin" id="coinSlotSetPin">
-	  <option value="5">D1</option>
-	  <option value="4">D2</option>
+	  <option value="2">D3</option>
+	  <option value="0">D4</option>
 	  <option value="14">D5</option>
 	  <option value="12">D6</option>
 	  <option value="13" selected>D7</option>
@@ -262,8 +262,8 @@ tr:nth-child(even) {
 	
 	<label for="systemReadyLEDPin"><b>System Ready LED Pin</b></label>
     <select name="systemReadyLEDPin" id="systemReadyLEDPin">
-	  <option value="5" selected>D1</option>
-	  <option value="4">D2</option>
+	  <option value="0" selected>D3</option>
+	  <option value="2">D4</option>
 	  <option value="14">D5</option>
 	  <option value="12">D6</option>
 	  <option value="13">D7</option>
@@ -272,9 +272,25 @@ tr:nth-child(even) {
 	
 	<label for="insertCoinLEDPin"><b>Insert Coin LED Pin</b></label>
     <select name="insertCoinLEDPin" id="insertCoinLEDPin">
-	  <option value="5">D1</option>
-	  <option value="4" selected>D2</option>
+	  <option value="0">D3</option>
+	  <option value="2" selected>D4</option>
 	  <option value="14">D5</option>
+	  <option value="12">D6</option>
+	  <option value="13">D7</option>
+	  <option value="15">D8</option>
+	</select>
+	
+	<label for="lcdScreen"><b>LCD Screen</b></label>
+    <select name="lcdScreen" id="lcdScreen">
+	  <option value="0" selected>None</option>
+	  <option value="1">16x2</option>
+	</select>
+	
+	<label for="insertCoinBtnPin"><b>Insert Coin Button Pin</b></label>
+    <select name="insertCoinBtnPin" id="insertCoinBtnPin">
+	  <option value="0">D3</option>
+	  <option value="2">D4</option>
+	  <option value="14" selected>D5</option>
 	  <option value="12">D6</option>
 	  <option value="13">D7</option>
 	  <option value="15">D8</option>
@@ -324,12 +340,14 @@ function saveSystemConfig(){
 	var coinSlotSetPin = $('#coinSlotSetPin').val();
 	var systemReadyLEDPin = $('#systemReadyLEDPin').val();
 	var insertCoinLEDPin = $('#insertCoinLEDPin').val();
+	var insertCoinBtnPin = $('#insertCoinBtnPin').val();
 	
 	var pinMap = [];
 	pinMap['Coinslot Pin'] = coinSlotPin;
 	pinMap['Coinslot Set Pin'] = coinSlotSetPin;
 	pinMap['System Ready Pin'] = systemReadyLEDPin;
 	pinMap['Insert Coin LED Pin'] = insertCoinLEDPin;
+	pinMap['Insert Coin Button Pin'] = insertCoinBtnPin;
 	
 	if(!validateCoinSlotPin(pinMap)){
 		return;
@@ -351,7 +369,9 @@ function saveSystemConfig(){
 					coinSlotPin,
 					coinSlotSetPin,
 					systemReadyLEDPin,
-					insertCoinLEDPin
+					insertCoinLEDPin,
+					$('#lcdScreen').val(),
+					insertCoinBtnPin
 				 ]);
 				 
 	$.ajax({
@@ -489,6 +509,8 @@ function openSystemConfig(evt){
 		$('#coinSlotSetPin').val(configData[12]);
 		$('#systemReadyLEDPin').val(configData[13]);
 		$('#insertCoinLEDPin').val(configData[14]);
+		$('#lcdScreen').val(configData[15]);
+		$('#insertCoinBtnPin').val(configData[16]);
 	  }
 	});
 	openTab(evt, 'SystemConfigration');
