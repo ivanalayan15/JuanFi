@@ -81,10 +81,10 @@ void ICACHE_RAM_ATTR coinInserted()
 }
 
 
-const int COIN_SELECTOR_PIN = D6;
-const int COIN_SET_PIN = D7;
-const int INSERT_COIN_LED = D5;
-const int SYSTEM_READY_LED = D3;
+int COIN_SELECTOR_PIN = D6;
+int COIN_SET_PIN = D7;
+int INSERT_COIN_LED = D5;
+int SYSTEM_READY_LED = D3;
 
 
 int MAX_WAIT_COIN_SEC = 30000;
@@ -126,11 +126,14 @@ void setup () {
     return;
   }
 
+
+  populateSystemConfiguration(); 
+  
   pinMode(COIN_SELECTOR_PIN, INPUT_PULLUP);
   pinMode(INSERT_COIN_LED, OUTPUT);
   pinMode(SYSTEM_READY_LED, OUTPUT);
   pinMode(COIN_SET_PIN, OUTPUT);
-  populateSystemConfiguration();
+ 
   
   // We start by connecting to a WiFi network
   WiFi.mode(WIFI_STA);
@@ -900,7 +903,7 @@ void populateSystemConfiguration(){
   Serial.print("Data: ");
   Serial.println(data);
 
-  String rows[11];
+  String rows[15];
   split(rows, data, '|');
   String ip[4];
   split(ip, rows[3], '.');
@@ -917,6 +920,10 @@ void populateSystemConfiguration(){
   adminAuth = base64::encode(rows[7]+":"+rows[8]);
   COINSLOT_BAN_COUNT = rows[9].toInt();
   COINSLOT_BAN_MINUTES = rows[10].toInt();
+  COIN_SELECTOR_PIN = rows[11].toInt();
+  COIN_SET_PIN = rows[12].toInt();
+  INSERT_COIN_LED = rows[13].toInt();
+  SYSTEM_READY_LED = rows[14].toInt();
 }
 
 

@@ -58,6 +58,15 @@ input[type=text], input[type=password], input[type=number] {
   background: #f1f1f1;
 }
 
+select {
+  width: 100%;
+  padding: 15px;
+  margin: 5px 0 22px 0;
+  display: inline-block;
+  border: none;
+  background: #f1f1f1;
+}
+
 input[type=text]:focus, input[type=password]:focus, input[type=number]:focus {
   background-color: #ddd;
   outline: none;
@@ -230,6 +239,46 @@ tr:nth-child(even) {
 	
 	<label for="email"><b>Coins Slot Ban Minutes</b></label>
     <input type="text" placeholder="Coins Slot Ban Minutes" id="coinSlotBanMinutes" required>
+	
+	<label for="coinSlotPin"><b>Coinslot Pin</b></label>
+    <select name="coinSlotPin" id="coinSlotPin">
+	  <option value="5">D1</option>
+	  <option value="4">D2</option>
+	  <option value="14">D5</option>
+	  <option value="12" selected>D6</option>
+	  <option value="13">D7</option>
+	  <option value="15">D8</option>
+	</select>
+	
+	<label for="coinSlotSetPin"><b>Coinslot Set Pin</b></label>
+    <select name="coinSlotSetPin" id="coinSlotSetPin">
+	  <option value="5">D1</option>
+	  <option value="4">D2</option>
+	  <option value="14">D5</option>
+	  <option value="12">D6</option>
+	  <option value="13" selected>D7</option>
+	  <option value="15">D8</option>
+	</select>
+	
+	<label for="systemReadyLEDPin"><b>System Ready LED Pin</b></label>
+    <select name="systemReadyLEDPin" id="systemReadyLEDPin">
+	  <option value="5" selected>D1</option>
+	  <option value="4">D2</option>
+	  <option value="14">D5</option>
+	  <option value="12">D6</option>
+	  <option value="13">D7</option>
+	  <option value="15">D8</option>
+	</select>
+	
+	<label for="insertCoinLEDPin"><b>Insert Coin LED Pin</b></label>
+    <select name="insertCoinLEDPin" id="insertCoinLEDPin">
+	  <option value="5">D1</option>
+	  <option value="4" selected>D2</option>
+	  <option value="14">D5</option>
+	  <option value="12">D6</option>
+	  <option value="13">D7</option>
+	  <option value="15">D8</option>
+	</select>
 
     <button onClick="saveSystemConfig()" type="button" class="registerbtn">Save</button>
   </div>
@@ -270,6 +319,23 @@ var separator = "|";
 var rowSeparator = "#";
 
 function saveSystemConfig(){
+
+	var coinSlotPin = $('#coinSlotPin').val();
+	var coinSlotSetPin = $('#coinSlotSetPin').val();
+	var systemReadyLEDPin = $('#systemReadyLEDPin').val();
+	var insertCoinLEDPin = $('#insertCoinLEDPin').val();
+	
+	var pinMap = [];
+	pinMap['Coinslot Pin'] = coinSlotPin;
+	pinMap['Coinslot Set Pin'] = coinSlotSetPin;
+	pinMap['System Ready Pin'] = systemReadyLEDPin;
+	pinMap['Insert Coin LED Pin'] = insertCoinLEDPin;
+	
+	if(!validateCoinSlotPin(pinMap)){
+		return;
+	}
+	
+
 	var postData = createParam([
 					$('#vendoName').val(),
 					$('#wifiSSID').val(),
@@ -281,7 +347,11 @@ function saveSystemConfig(){
 					$('#adminUser').val(),
 					$('#adminPw').val(),
 					$('#coinSlotAbuseCount').val(),
-					$('#coinSlotBanMinutes').val()
+					$('#coinSlotBanMinutes').val(),
+					coinSlotPin,
+					coinSlotSetPin,
+					systemReadyLEDPin,
+					insertCoinLEDPin
 				 ]);
 				 
 	$.ajax({
@@ -296,6 +366,21 @@ function saveSystemConfig(){
 	  } 
 	});
 }
+
+function validateCoinSlotPin(pinMap){
+	for(var i in pinMap){
+		for(var j in pinMap){
+			if(i != j){
+				if(pinMap[i] == pinMap[j]){
+					alert(i + ' is already used by ' + j);
+					return false;
+				}
+			}
+		}
+	}
+	return true;
+}
+
 
 function savePromoRates(){
 	var params = [];
@@ -399,7 +484,11 @@ function openSystemConfig(evt){
 		$('#adminUser').val(configData[7]);
 		$('#adminPw').val(configData[8]);
 		$('#coinSlotAbuseCount').val(configData[9]);
-		$('#coinSlotBanMinutes').val(configData[10])
+		$('#coinSlotBanMinutes').val(configData[10]);
+		$('#coinSlotPin').val(configData[11]);
+		$('#coinSlotSetPin').val(configData[12]);
+		$('#systemReadyLEDPin').val(configData[13]);
+		$('#insertCoinLEDPin').val(configData[14]);
 	  }
 	});
 	openTab(evt, 'SystemConfigration');
