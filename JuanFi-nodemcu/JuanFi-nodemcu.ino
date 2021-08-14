@@ -1016,22 +1016,39 @@ void loop () {
   if(wifiConnected){
     unsigned long currentMilis = millis();
 
-    int insertCoinButton = digitalRead(INSERT_COIN_BTN_PIN);
-    if(insertCoinButton == LOW){
-        if(!manualVoucher){
-          if(welcomePrinted){
-            activateManualVoucherPurchase();
+   //handling for disconnection of AP
+   if (!client.connected()) {
+      handleSystemAbnormal();
+      return;
+   }
+
+    //insert button led will work only when have lcd
+    if( LCD_TYPE > 0 ){
+      int insertCoinButton = digitalRead(INSERT_COIN_BTN_PIN);
+      if(insertCoinButton == LOW){
+          printPleaseWait();
+          if(!manualVoucher){
+            if(welcomePrinted){
+              bool result = activateManualVoucherPurchase();
+              if(!result){
+                //when no internet available, return back to normal to try later
+                lastSaleTime = millis();
+                thankyou_cooldown = 5000;
+                welcomePrinted = false;
+                return;  
+              }
+            }else{
+              //clear thank you message after button press
+              thankyou_cooldown = 0;  
+              delay(1000);
+            }
           }else{
-            //clear thank you message after button press
-            thankyou_cooldown = 0;  
-            delay(1000);
+            //make coinslot expired when button is pressed
+            targetMilis = currentMilis;
           }
-        }else{
-          //make coinslot expired when button is pressed
-          targetMilis = currentMilis;
-        }
+      }
     }
-    
+       
     //insert coin logic
     if(acceptCoin){
       if((targetMilis > currentMilis)){
@@ -1097,6 +1114,17 @@ void loop () {
   
   server.handleClient();
   MDNS.update();
+}
+
+void handleSystemAbnormal(){
+    Serial.println("AP disconnected!!!!!!!!!!!!!!!");
+    mikrotekConnectionSuccess = false;
+    printSystemNotAvailable();
+    digitalWrite(INSERT_COIN_LED, LOW);
+    digitalWrite(SYSTEM_READY_LED, LOW);
+    //Reconnect after 10 seconds
+    delay(10000);
+    ESP.restart();
 }
 
 void printInsertCoinNow(){
@@ -1172,14 +1200,16 @@ void printWelcome(){
   }  
 }
 
-void activateManualVoucherPurchase(){
+bool activateManualVoucherPurchase(){
   bool hasInternetConnection = hasInternetConnect();
   if(!hasInternetConnection){
-    return;
+    printInternetNotAvailable();
+    return false;
   }
 
   if(!checkIfSystemIsAvailable()){
-      return;
+      printSystemNotAvailable();
+      return false;
   }
 
   currentMacAttempt = currentMacAddress;
@@ -1191,4 +1221,38 @@ void activateManualVoucherPurchase(){
   manualVoucher = true;
   //show 30 sec the voucher code
   thankyou_cooldown = 30000;
+  return true;
+}
+
+void printSystemNotAvailable(){
+  
+  if(LCD_TYPE > 0){
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("System not");
+      lcd.setCursor(0, 1);
+      lcd.print("Available");
+  }  
+}
+
+void printInternetNotAvailable(){
+  
+  if(LCD_TYPE > 0){
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Internet not");
+      lcd.setCursor(0, 1);
+      lcd.print("Available");
+  }  
+}
+
+void printPleaseWait(){
+  
+  if(LCD_TYPE > 0){
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Please wait...");
+      lcd.setCursor(0, 1);
+      lcd.print("");
+  }  
 }
