@@ -192,10 +192,13 @@ function checkCoin(){
 					if(totalCoinReceived > 0){
 						$.toast({
 						  title: 'Success',
-						  content: 'Coin slot expired!, but was able to succesfully process the coin '+totalCoinReceived,
+						  content: 'Coin slot expired!, but was able to succesfully process the coin '+totalCoinReceived +", will do auto login shortly",
 						  type: 'info',
 						  delay: 5000
-						});	
+						});
+						setTimeout(function (){
+							doLogin();
+						}, 3000);
 					}else{
 						notifyCoinSlotError('coins.wait.expired');
 					}
