@@ -123,8 +123,11 @@ const int WIFI_CONNECT_DELAY = 500;
 
 bool wifiConnected = false;
 bool welcomePrinted = false;
+bool manualVoucher = false;
 
 int lastSaleTime = 0;
+int thankyou_cooldown = 5000;
+long lastPrinted = 0;
 
 void setup () { 
                                 
@@ -141,6 +144,7 @@ void setup () {
   pinMode(INSERT_COIN_LED, OUTPUT);
   pinMode(SYSTEM_READY_LED, OUTPUT);
   pinMode(COIN_SET_PIN, OUTPUT);
+  pinMode(INSERT_COIN_BTN_PIN, INPUT_PULLUP);
   
   if(LCD_TYPE > 0){
      lcd.init();   // initializing the LCD
@@ -556,7 +560,7 @@ bool hasInternetConnect(){
 }
 
 void addAttemptToCoinslot(){
-  if(COINSLOT_BAN_COUNT > 0){
+  if(COINSLOT_BAN_COUNT > 0 && (!manualVoucher)){
     int currentMacIndex = -1;
     int availableIndex = -1;
     for(int i=0;i<attemptedMaxCount;i++){
@@ -623,7 +627,6 @@ void checkCoin(){
   if(!acceptCoin){
     totalCoin += coin;
     timeToAdd = calculateAddTime();
-    printTransactionDetail();
     char * keys[] = {"status", "newCoin", "timeAdded", "totalCoin", "validity"};
     char coinStr[16];
     itoa(coin, coinStr, 10);
@@ -685,9 +688,10 @@ void useVoucher(){
   char validityStr[16];
   itoa(currentValidity, validityStr, 10);
   char * values[] = {"true", totalCoinStr, timeToAddStr, validityStr};
+  printThankYou();
   resetGlobalVariables();
   setupCORSPolicy();
-  printThankYou();
+  acceptCoin = false;
   server.send(200, "application/json", toJson(keys, values, 4));
 }
 
@@ -716,6 +720,8 @@ bool validateVoucher(String voucher){
 }
 
 void topUp() {
+  manualVoucher = false;
+  thankyou_cooldown = 5000;
   bool hasInternetConnection = hasInternetConnect();
   if(!hasInternetConnection){
     char * keys[] = {"status", "errorCode"};
@@ -765,7 +771,6 @@ void topUp() {
     currentActiveVoucher = voucher;
   }
   setupCORSPolicy();
-  printInsertCoinNow();
   server.send(200, "application/json", toJson(keys, values, 2));
 }
 
@@ -1010,6 +1015,23 @@ void loop () {
   
   if(wifiConnected){
     unsigned long currentMilis = millis();
+
+    int insertCoinButton = digitalRead(INSERT_COIN_BTN_PIN);
+    if(insertCoinButton == LOW){
+        if(!manualVoucher){
+          if(welcomePrinted){
+            activateManualVoucherPurchase();
+          }else{
+            //clear thank you message after button press
+            thankyou_cooldown = 0;  
+            delay(1000);
+          }
+        }else{
+          //make coinslot expired when button is pressed
+          targetMilis = currentMilis;
+        }
+    }
+    
     //insert coin logic
     if(acceptCoin){
       if((targetMilis > currentMilis)){
@@ -1027,11 +1049,24 @@ void loop () {
             Serial.println(coin);
             coinsChange = 0;
             acceptCoin = false;
+
+            //if manual voucher mode
+            if(manualVoucher){
+              totalCoin += coin;
+              timeToAdd = calculateAddTime();
+              activateCoinSlot();
+            }
+          }
+          if(timeToAdd > 0){
+            printTransactionDetail();
+          }else{
+            printInsertCoinNow();
           }
       }else{
         disableCoinSlot();
         acceptCoin = false;
         coinExpired = true;
+        manualVoucher = false;
         timeToAdd = calculateAddTime();
         //Auto add time no need to use voucher
         if(timeToAdd > 0 ) {
@@ -1051,8 +1086,8 @@ void loop () {
       }
     }else{
       //if coinslot is disable
-      //print welcome again after 5 seconds after thank you message
-      if(currentMilis > (lastSaleTime + 5000)){
+      //print welcome again after x seconds after thank you message
+      if(currentMilis > (lastSaleTime + thankyou_cooldown)){
         printWelcome();
       }
     }
@@ -1066,34 +1101,50 @@ void loop () {
 
 void printInsertCoinNow(){
   if(LCD_TYPE > 0 ){
-    welcomePrinted = false;
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("Please insert");
-    lcd.setCursor(0, 1);
-    lcd.print("coin now, 1/5/10"); 
+    long currentMilis = millis();
+    //print only after 1 second to avoid performance issue
+    if(currentMilis > (lastPrinted + 1000)){
+      long remain = targetMilis - currentMilis;
+      welcomePrinted = false;
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Pls insert");
+      lcd.setCursor(14, 0);
+      lcd.print(String(remain/1000));
+      lcd.setCursor(0, 1);
+      lcd.print("coin now, 1/5/10");
+      lastPrinted = currentMilis;
+    }
   }
 }
 
 void printTransactionDetail(){
   if(LCD_TYPE > 0 ){
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("Coin: "+String(totalCoin) + " PHP");
-    lcd.setCursor(0, 1);
-   
-    int days = timeToAdd / (3600*24);
-    int hr =  timeToAdd % (3600*24) / 3600;
-    int min =  timeToAdd % 3600 / 60;
-
-    String t = "T: ";
-    t += String(days);
-    t += "d ";
-    t += String(hr);
-    t += "h ";
-    t += String(min);
-    t += "m ";
-    lcd.print(t);
+    long currentMilis = millis();
+    //print only after 1 second to avoid performance issue
+    if(currentMilis > (lastPrinted + 1000)){
+      long remain = targetMilis - currentMilis;
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("PHP: "+String(totalCoin) + " ");
+      lcd.setCursor(14, 0);
+      lcd.print(String(remain/1000));
+      lcd.setCursor(0, 1);
+     
+      int days = timeToAdd / (3600*24);
+      int hr =  timeToAdd % (3600*24) / 3600;
+      int min =  timeToAdd % 3600 / 60;
+  
+      String t = "T: ";
+      t += String(days);
+      t += "d ";
+      t += String(hr);
+      t += "h ";
+      t += String(min);
+      t += "m ";
+      lcd.print(t);
+      lastPrinted = currentMilis;
+    }
   }
 }
 
@@ -1102,9 +1153,9 @@ void printThankYou(){
     welcomePrinted = false;
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print("Thank you for");
+    lcd.print("Code: "+currentActiveVoucher);
     lcd.setCursor(0, 1);
-    lcd.print("the purchase!"); 
+    lcd.print("Thank you!"); 
     lastSaleTime = millis();
   }
 }
@@ -1119,4 +1170,25 @@ void printWelcome(){
       lcd.print(vendorName);
       welcomePrinted = true;
   }  
+}
+
+void activateManualVoucherPurchase(){
+  bool hasInternetConnection = hasInternetConnect();
+  if(!hasInternetConnection){
+    return;
+  }
+
+  if(!checkIfSystemIsAvailable()){
+      return;
+  }
+
+  currentMacAttempt = currentMacAddress;
+  currentValidity = 0;
+  isNewVoucher = true;
+  resetGlobalVariables();
+  activateCoinSlot();
+  currentActiveVoucher = generateVoucher();
+  manualVoucher = true;
+  //show 30 sec the voucher code
+  thankyou_cooldown = 30000;
 }
