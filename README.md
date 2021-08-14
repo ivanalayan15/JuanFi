@@ -9,12 +9,17 @@ JuanFi is an open source system for coinslot integration for mikrotik hotspot
  * Mikrotik integration
  * Pause expiration
  * Codeless generation
+ * Anti Coinslot abuse system
+ * LCD Display
+ * Code generation in vendo using LCD without device needed
  
  ### Admin System
  * Initial setup of the system
  * Mikrotik connection setup, SSID setup, coinslot settings
  * Promo Rates configuration ( Rates, expiration)
  * Dashboard, Sales report
+ * Custom pin configuration
+ * coinslot abuse system config
 
 ## Requirements
 1.) NodeMCU
@@ -47,9 +52,10 @@ https://www.arduino.cc/en/software
 2.) Install nodemcu board and libraries
 https://randomnerdtutorials.com/how-to-install-esp8266-board-arduino-ide/
 
-install dependency libraries at arduino libraries folder 
-https://github.com/videojedi/ESP8266-Telnet-Client
 
+install dependency libraries at arduino libraries folder 
+* Download this https://github.com/videojedi/ESP8266-Telnet-Client and put it on ardunio library folder
+* From arduino, Go to Tools->Manage Libararies->Seach for LiquidCrystal_I2C and installl
 
 3.) Compile and upload code
 
@@ -58,7 +64,7 @@ https://github.com/videojedi/ESP8266-Telnet-Client
    b.) Compile and upload
       ![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi%20-%20NodeMcu-UploadCode.PNG?raw=true)
 
-   c.) Upload sketchup data
+   c.) Upload sketchup data using SIFSS, follow this instruction https://randomnerdtutorials.com/install-esp8266-filesystem-uploader-arduino-ide/
       ![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi%20-%20NodeMcu-SketchUpload.png?raw=true)
 
 4.) JuanFi initial setup

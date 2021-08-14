@@ -33,13 +33,17 @@
 #include <EEPROM.h>
 #include "FS.h"
 #include <base64.h>
+#include <LiquidCrystal_I2C.h>
 
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 volatile int coin = 0;
 volatile int totalCoin = 0;
 boolean isNewVoucher = false;
 int coinsChange = 0;
 String currentActiveVoucher = "";
+String currentMacAttempt = "";
 int timeToAdd = 0;
 bool coinSlotActive = false;
 bool acceptCoin = false;
@@ -48,7 +52,6 @@ bool coinExpired = false;
 bool mikrotekConnectionSuccess = false;
 String currentMacAddress = "";
 
-
 typedef struct {
   String rateName;
   int price;
@@ -56,7 +59,14 @@ typedef struct {
   int validity;
 } PromoRates;
 
+typedef struct {
+  String mac;
+  long unlockTime;
+  int attemptCount;
+} AttemptMacAddress;
 
+int attemptedMaxCount = 20;
+AttemptMacAddress attempted[20];
 PromoRates rates[100];
 int ratesCount = 0;
 int currentValidity = 0;
@@ -74,13 +84,17 @@ void ICACHE_RAM_ATTR coinInserted()
 }
 
 
-const int COIN_SELECTOR_PIN = D6;
-const int COIN_SET_PIN = D7;
-const int INSERT_COIN_LED = D5;
-const int SYSTEM_READY_LED = D3;
+int COIN_SELECTOR_PIN = D6;
+int COIN_SET_PIN = D7;
+int INSERT_COIN_LED = D2;
+int SYSTEM_READY_LED = D1;
+int INSERT_COIN_BTN_PIN = D5;
 
 
 int MAX_WAIT_COIN_SEC = 30000;
+int COINSLOT_BAN_COUNT = 0;
+int COINSLOT_BAN_MINUTES = 0;
+int LCD_TYPE = 0;
 
 
 //put here your raspi ip address, and login details
@@ -90,6 +104,7 @@ String pwd = "abc123";
 String ssid     = "MikrofffffTik-36DA2B";
 String password = "";
 String adminAuth = "";
+String vendorName = "";
 
 ESP8266WiFiMulti WiFiMulti;
 
@@ -107,6 +122,12 @@ const int WIFI_CONNECT_TIMEOUT = 15000;
 const int WIFI_CONNECT_DELAY = 500;
 
 bool wifiConnected = false;
+bool welcomePrinted = false;
+bool manualVoucher = false;
+
+int lastSaleTime = 0;
+int thankyou_cooldown = 5000;
+long lastPrinted = 0;
 
 void setup () { 
                                 
@@ -115,14 +136,22 @@ void setup () {
   if(!SPIFFS.begin()){
     Serial.println("An Error has occurred while mounting SPIFFS");
     return;
-  }
-
+  }  
+  
+  populateSystemConfiguration(); 
+  
   pinMode(COIN_SELECTOR_PIN, INPUT_PULLUP);
   pinMode(INSERT_COIN_LED, OUTPUT);
   pinMode(SYSTEM_READY_LED, OUTPUT);
   pinMode(COIN_SET_PIN, OUTPUT);
-  populateSystemConfiguration();
+  pinMode(INSERT_COIN_BTN_PIN, INPUT_PULLUP);
   
+  if(LCD_TYPE > 0){
+     lcd.init();   // initializing the LCD
+     lcd.backlight(); // Enable or Turn On the backlight 
+     lcd.print("Initializing.."); 
+  }
+
   // We start by connecting to a WiFi network
   WiFi.mode(WIFI_STA);
   WiFiMulti.addAP(ssid.c_str(), password.c_str());
@@ -174,6 +203,7 @@ void setup () {
     server.on("/getRates", handleUserGetRates);
     server.on("/testInsertCoin", testInsertCoin);
     server.onNotFound(handleNotFound);
+    printWelcome();
     
   }else{
     //Soft AP setup
@@ -189,7 +219,11 @@ void setup () {
       server.sendHeader("Location", String("/admin"), true);
       server.send ( 302, "text/plain", "");
     });
-
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("JuanFi");
+    lcd.setCursor(0, 1);
+    lcd.print("Initial Setup"); 
   }
   
   server.on("/admin/api/dashboard", handleAdminDashboard);
@@ -199,6 +233,7 @@ void setup () {
   server.on("/admin/api/getSystemConfig", handleAdminGetSystemConfig);
   server.on("/admin/api/getRates", handleAdminGetRates);
   server.on("/admin/api/saveRates", handleAdminSaveRates);
+  server.on("/admin/api/logout", handleLogout);
   server.on("/admin", handleAdminPage);
 
   populateRates();
@@ -232,6 +267,11 @@ void handleNotFound()
 void handleHealth(){
   setupCORSPolicy();
   server.send ( 200, "text/plain", "ok");
+}
+
+void handleLogout(){
+  server.sendHeader("WWW-Authenticate", "Basic realm=\"Secure\"");
+  server.send(401, "text/html", "<html>Authentication failed</html>");
 }
 
 void loginMirotik(){
@@ -519,6 +559,52 @@ bool hasInternetConnect(){
    
 }
 
+void addAttemptToCoinslot(){
+  if(COINSLOT_BAN_COUNT > 0 && (!manualVoucher)){
+    int currentMacIndex = -1;
+    int availableIndex = -1;
+    for(int i=0;i<attemptedMaxCount;i++){
+      if (attempted[i].mac == currentMacAttempt){
+          currentMacIndex = i;
+          break;
+      }else if(attempted[i].mac == ""){
+        availableIndex = i;
+      }
+    }
+     Serial.println(currentMacAttempt);
+     Serial.println(currentMacIndex);
+     Serial.println(availableIndex);
+    if(currentMacIndex > -1){
+      attempted[currentMacIndex].attemptCount++;
+     
+      if(attempted[currentMacIndex].attemptCount >= COINSLOT_BAN_COUNT){
+          long curMil = millis();
+          attempted[currentMacIndex].unlockTime = curMil + (COINSLOT_BAN_MINUTES * 60000);
+          Serial.print("Unlock time: ");
+          Serial.println(attempted[currentMacIndex].unlockTime);
+      }
+    }else{
+      if(availableIndex > -1){
+        attempted[availableIndex].mac = currentMacAttempt;
+        attempted[availableIndex].attemptCount++ ;
+      }
+    }
+  }
+}
+
+void clearAttemptToCoinSlot(){
+  if(COINSLOT_BAN_COUNT > 0){
+    for(int i=0;i<attemptedMaxCount;i++){
+        if (attempted[i].mac == currentMacAttempt){
+            attempted[i].mac = "";
+            attempted[i].unlockTime = 0;
+            attempted[i].attemptCount = 0;
+            break;
+        }
+    }
+  }
+}
+
 void checkCoin(){
 
   if(!checkIfSystemIsAvailable()){
@@ -585,11 +671,14 @@ void useVoucher(){
   }
   disableCoinSlot();
   if(timeToAdd > 0 ){
+    clearAttemptToCoinSlot();
     //if(isNewVoucher){
       registerNewVoucher(voucher);
     //}
     updateStatistic();
     addTimeToVoucher(voucher, timeToAdd);
+  }else{
+    addAttemptToCoinslot();
   }
   char * keys[] = {"status", "totalCoin", "timeAdded", "validity"};
   char totalCoinStr[16];
@@ -599,8 +688,10 @@ void useVoucher(){
   char validityStr[16];
   itoa(currentValidity, validityStr, 10);
   char * values[] = {"true", totalCoinStr, timeToAddStr, validityStr};
+  printThankYou();
   resetGlobalVariables();
   setupCORSPolicy();
+  acceptCoin = false;
   server.send(200, "application/json", toJson(keys, values, 4));
 }
 
@@ -629,6 +720,8 @@ bool validateVoucher(String voucher){
 }
 
 void topUp() {
+  manualVoucher = false;
+  thankyou_cooldown = 5000;
   bool hasInternetConnection = hasInternetConnect();
   if(!hasInternetConnection){
     char * keys[] = {"status", "errorCode"};
@@ -642,6 +735,15 @@ void topUp() {
       return;
   }
 
+  String macAdd = server.arg("mac");
+  if(!checkMacAddress(macAdd)){
+    char * keys[] = {"status", "errorCode"};
+    char * values[] = {"false", "coin.slot.banned"};
+    setupCORSPolicy();
+    server.send(200, "application/json", toJson(keys, values, 2));
+    return;
+  }
+  currentMacAttempt = macAdd;
   String voucher = server.arg("voucher");
    if(currentActiveVoucher != "" && !validateVoucher(voucher)){
       return;
@@ -670,6 +772,36 @@ void topUp() {
   }
   setupCORSPolicy();
   server.send(200, "application/json", toJson(keys, values, 2));
+}
+
+boolean checkMacAddress(String mac){
+  bool isValid = true;
+  if(COINSLOT_BAN_COUNT > 0){
+    Serial.print("Checking mac if valid ");
+    Serial.println(mac);
+    for(int i=0;i<attemptedMaxCount;i++){
+      if (attempted[i].mac != ""){
+          long curMil = millis();
+          if( attempted[i].unlockTime > 0 && attempted[i].unlockTime <= curMil){
+            Serial.print(attempted[i].mac);
+            Serial.println(" unlocking mac address...");
+            attempted[i].mac = "";
+            attempted[i].attemptCount = 0;
+            attempted[i].unlockTime = 0;
+          }else if(attempted[i].mac == mac){
+             Serial.print("Mac address has previous attempt");
+             Serial.println(attempted[i].attemptCount);
+             Serial.println(COINSLOT_BAN_COUNT);
+             if( attempted[i].attemptCount >= COINSLOT_BAN_COUNT){
+                isValid = false;
+                Serial.print(mac);
+                Serial.println(" mac address currenly banned");
+             }
+          }
+      }
+    }
+  }
+  return isValid;
 }
 
 void setupCORSPolicy(){
@@ -797,7 +929,7 @@ void populateSystemConfiguration(){
   Serial.print("Data: ");
   Serial.println(data);
 
-  String rows[9];
+  String rows[17];
   split(rows, data, '|');
   String ip[4];
   split(ip, rows[3], '.');
@@ -806,12 +938,21 @@ void populateSystemConfiguration(){
   mikrotikRouterIp[1] = ip[1].toInt();
   mikrotikRouterIp[2] = ip[2].toInt();
   mikrotikRouterIp[3] = ip[3].toInt();
+  vendorName = rows[0];
   ssid = rows[1];
   password = rows[2];
   user = rows[4];
   pwd = rows[5];
   MAX_WAIT_COIN_SEC = rows[6].toInt() * 1000;
-  adminAuth = base64::encode(rows[7]+":"+rows[8]);  
+  adminAuth = base64::encode(rows[7]+":"+rows[8]);
+  COINSLOT_BAN_COUNT = rows[9].toInt();
+  COINSLOT_BAN_MINUTES = rows[10].toInt();
+  COIN_SELECTOR_PIN = rows[11].toInt();
+  COIN_SET_PIN = rows[12].toInt();
+  SYSTEM_READY_LED = rows[13].toInt();
+  INSERT_COIN_LED = rows[14].toInt();
+  LCD_TYPE = rows[15].toInt();
+  INSERT_COIN_BTN_PIN = rows[16].toInt();
 }
 
 
@@ -874,6 +1015,40 @@ void loop () {
   
   if(wifiConnected){
     unsigned long currentMilis = millis();
+
+   //handling for disconnection of AP
+   if (!client.connected()) {
+      handleSystemAbnormal();
+      return;
+   }
+
+    //insert button led will work only when have lcd
+    if( LCD_TYPE > 0 ){
+      int insertCoinButton = digitalRead(INSERT_COIN_BTN_PIN);
+      if(insertCoinButton == LOW){
+          printPleaseWait();
+          if(!manualVoucher){
+            if(welcomePrinted){
+              bool result = activateManualVoucherPurchase();
+              if(!result){
+                //when no internet available, return back to normal to try later
+                lastSaleTime = millis();
+                thankyou_cooldown = 5000;
+                welcomePrinted = false;
+                return;  
+              }
+            }else{
+              //clear thank you message after button press
+              thankyou_cooldown = 0;  
+              delay(1000);
+            }
+          }else{
+            //make coinslot expired when button is pressed
+            targetMilis = currentMilis;
+          }
+      }
+    }
+       
     //insert coin logic
     if(acceptCoin){
       if((targetMilis > currentMilis)){
@@ -891,14 +1066,28 @@ void loop () {
             Serial.println(coin);
             coinsChange = 0;
             acceptCoin = false;
+
+            //if manual voucher mode
+            if(manualVoucher){
+              totalCoin += coin;
+              timeToAdd = calculateAddTime();
+              activateCoinSlot();
+            }
+          }
+          if(timeToAdd > 0){
+            printTransactionDetail();
+          }else{
+            printInsertCoinNow();
           }
       }else{
         disableCoinSlot();
         acceptCoin = false;
         coinExpired = true;
+        manualVoucher = false;
         timeToAdd = calculateAddTime();
         //Auto add time no need to use voucher
         if(timeToAdd > 0 ) {
+          clearAttemptToCoinSlot();
           Serial.print("Coin insert waiting expired, Auto using the voucher ");
           Serial.print(currentActiveVoucher);
           if(isNewVoucher){
@@ -906,15 +1095,164 @@ void loop () {
           }
           updateStatistic();
           addTimeToVoucher(currentActiveVoucher, timeToAdd);
+          printThankYou();
+        }else{
+          addAttemptToCoinslot();
         }
         resetGlobalVariables();
       }
+    }else{
+      //if coinslot is disable
+      //print welcome again after x seconds after thank you message
+      if(currentMilis > (lastSaleTime + thankyou_cooldown)){
+        printWelcome();
+      }
     }
-    
   }else{
     dnsServer.processNextRequest();
   }
   
   server.handleClient();
   MDNS.update();
+}
+
+void handleSystemAbnormal(){
+    Serial.println("AP disconnected!!!!!!!!!!!!!!!");
+    mikrotekConnectionSuccess = false;
+    printSystemNotAvailable();
+    digitalWrite(INSERT_COIN_LED, LOW);
+    digitalWrite(SYSTEM_READY_LED, LOW);
+    //Reconnect after 10 seconds
+    delay(10000);
+    ESP.restart();
+}
+
+void printInsertCoinNow(){
+  if(LCD_TYPE > 0 ){
+    long currentMilis = millis();
+    //print only after 1 second to avoid performance issue
+    if(currentMilis > (lastPrinted + 1000)){
+      long remain = targetMilis - currentMilis;
+      welcomePrinted = false;
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Pls insert");
+      lcd.setCursor(14, 0);
+      lcd.print(String(remain/1000));
+      lcd.setCursor(0, 1);
+      lcd.print("coin now, 1/5/10");
+      lastPrinted = currentMilis;
+    }
+  }
+}
+
+void printTransactionDetail(){
+  if(LCD_TYPE > 0 ){
+    long currentMilis = millis();
+    //print only after 1 second to avoid performance issue
+    if(currentMilis > (lastPrinted + 1000)){
+      long remain = targetMilis - currentMilis;
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("PHP: "+String(totalCoin) + " ");
+      lcd.setCursor(14, 0);
+      lcd.print(String(remain/1000));
+      lcd.setCursor(0, 1);
+     
+      int days = timeToAdd / (3600*24);
+      int hr =  timeToAdd % (3600*24) / 3600;
+      int min =  timeToAdd % 3600 / 60;
+  
+      String t = "T: ";
+      t += String(days);
+      t += "d ";
+      t += String(hr);
+      t += "h ";
+      t += String(min);
+      t += "m ";
+      lcd.print(t);
+      lastPrinted = currentMilis;
+    }
+  }
+}
+
+void printThankYou(){
+  if(LCD_TYPE > 0 ){
+    welcomePrinted = false;
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Code: "+currentActiveVoucher);
+    lcd.setCursor(0, 1);
+    lcd.print("Thank you!"); 
+    lastSaleTime = millis();
+  }
+}
+
+void printWelcome(){
+  
+  if(LCD_TYPE > 0 && (!welcomePrinted)){
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Welcome to");
+      lcd.setCursor(0, 1);
+      lcd.print(vendorName);
+      welcomePrinted = true;
+  }  
+}
+
+bool activateManualVoucherPurchase(){
+  bool hasInternetConnection = hasInternetConnect();
+  if(!hasInternetConnection){
+    printInternetNotAvailable();
+    return false;
+  }
+
+  if(!checkIfSystemIsAvailable()){
+      printSystemNotAvailable();
+      return false;
+  }
+
+  currentMacAttempt = currentMacAddress;
+  currentValidity = 0;
+  isNewVoucher = true;
+  resetGlobalVariables();
+  activateCoinSlot();
+  currentActiveVoucher = generateVoucher();
+  manualVoucher = true;
+  //show 30 sec the voucher code
+  thankyou_cooldown = 30000;
+  return true;
+}
+
+void printSystemNotAvailable(){
+  
+  if(LCD_TYPE > 0){
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("System not");
+      lcd.setCursor(0, 1);
+      lcd.print("Available");
+  }  
+}
+
+void printInternetNotAvailable(){
+  
+  if(LCD_TYPE > 0){
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Internet not");
+      lcd.setCursor(0, 1);
+      lcd.print("Available");
+  }  
+}
+
+void printPleaseWait(){
+  
+  if(LCD_TYPE > 0){
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Please wait...");
+      lcd.setCursor(0, 1);
+      lcd.print("");
+  }  
 }

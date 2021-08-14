@@ -58,6 +58,15 @@ input[type=text], input[type=password], input[type=number] {
   background: #f1f1f1;
 }
 
+select {
+  width: 100%;
+  padding: 15px;
+  margin: 5px 0 22px 0;
+  display: inline-block;
+  border: none;
+  background: #f1f1f1;
+}
+
 input[type=text]:focus, input[type=password]:focus, input[type=number]:focus {
   background-color: #ddd;
   outline: none;
@@ -154,14 +163,14 @@ tr:nth-child(even) {
 </head>
 <body onload="openDashboard(this)">
 
-<h2>Piso Wifi Admin Console</h2>
+<h2>JuanFi Admin Console</h2>
 
 <div class="tab">
   <button class="tablinks" onclick="openDashboard(event)">Dashboard</button>
   <button class="tablinks" onclick="openSystemConfig(event)">System Configration</button>
   <button class="tablinks" onclick="openPromoRates(event)">Promo Rates</button>
   <button class="tablinks" onclick="openTab(event, 'About')">About</button>
-
+  <button class="tablinks" onclick="logout()">Logout</button>
 </div>
 
 <div id="Dashboard" class="tabcontent">
@@ -224,6 +233,73 @@ tr:nth-child(even) {
 	
 	<label for="email"><b>Admin Password</b></label>
     <input type="password" placeholder="Admin Password" id="adminPw" required>
+	
+	<label for="email"><b>Coins Slot Abuse Count</b></label>
+    <input type="text" placeholder="Coins Slot Abuse Count" id="coinSlotAbuseCount" required>
+	
+	<label for="email"><b>Coins Slot Ban Minutes</b></label>
+    <input type="text" placeholder="Coins Slot Ban Minutes" id="coinSlotBanMinutes" required>
+	
+	<label for="coinSlotPin"><b>Coinslot Pin</b></label>
+    <select name="coinSlotPin" id="coinSlotPin">
+	  <option value="16">D0</option>
+	  <option value="0">D3</option>
+	  <option value="2">D4</option>
+	  <option value="14">D5</option>
+	  <option value="12" selected>D6</option>
+	  <option value="13">D7</option>
+	  <option value="15">D8</option>
+	</select>
+	
+	<label for="coinSlotSetPin"><b>Coinslot Set Pin</b></label>
+    <select name="coinSlotSetPin" id="coinSlotSetPin">
+	  <option value="16">D0</option>
+	  <option value="2">D3</option>
+	  <option value="0">D4</option>
+	  <option value="14">D5</option>
+	  <option value="12">D6</option>
+	  <option value="13" selected>D7</option>
+	  <option value="15">D8</option>
+	</select>
+	
+	<label for="systemReadyLEDPin"><b>System Ready LED Pin</b></label>
+    <select name="systemReadyLEDPin" id="systemReadyLEDPin">
+      <option value="16">D0</option>		
+	  <option value="0" selected>D3</option>
+	  <option value="2">D4</option>
+	  <option value="14">D5</option>
+	  <option value="12">D6</option>
+	  <option value="13">D7</option>
+	  <option value="15">D8</option>
+	</select>
+	
+	<label for="insertCoinLEDPin"><b>Insert Coin LED Pin</b></label>
+    <select name="insertCoinLEDPin" id="insertCoinLEDPin">
+	  <option value="16">D0</option>	
+	  <option value="0">D3</option>
+	  <option value="2" selected>D4</option>
+	  <option value="14">D5</option>
+	  <option value="12">D6</option>
+	  <option value="13">D7</option>
+	  <option value="15">D8</option>
+	</select>
+	
+	<label for="lcdScreen"><b>LCD Screen</b></label>
+    <select name="lcdScreen" id="lcdScreen">
+	  <option value="0" selected>None</option>
+	  <option value="1">16x2</option>
+	</select>
+	
+	<label for="insertCoinBtnPin"><b>Insert Coin Button Pin</b></label>
+    <select name="insertCoinBtnPin" id="insertCoinBtnPin">
+	  <option value="16">D0</option>
+	  <option value="0">D3</option>
+	  <option value="2">D4</option>
+	  <option value="14" selected>D5</option>
+	  <option value="12">D6</option>
+	  <option value="13">D7</option>
+	  <option value="15">D8</option>
+	</select>
 
     <button onClick="saveSystemConfig()" type="button" class="registerbtn">Save</button>
   </div>
@@ -264,6 +340,25 @@ var separator = "|";
 var rowSeparator = "#";
 
 function saveSystemConfig(){
+
+	var coinSlotPin = $('#coinSlotPin').val();
+	var coinSlotSetPin = $('#coinSlotSetPin').val();
+	var systemReadyLEDPin = $('#systemReadyLEDPin').val();
+	var insertCoinLEDPin = $('#insertCoinLEDPin').val();
+	var insertCoinBtnPin = $('#insertCoinBtnPin').val();
+	
+	var pinMap = [];
+	pinMap['Coinslot Pin'] = coinSlotPin;
+	pinMap['Coinslot Set Pin'] = coinSlotSetPin;
+	pinMap['System Ready Pin'] = systemReadyLEDPin;
+	pinMap['Insert Coin LED Pin'] = insertCoinLEDPin;
+	pinMap['Insert Coin Button Pin'] = insertCoinBtnPin;
+	
+	if(!validateCoinSlotPin(pinMap)){
+		return;
+	}
+	
+
 	var postData = createParam([
 					$('#vendoName').val(),
 					$('#wifiSSID').val(),
@@ -273,7 +368,15 @@ function saveSystemConfig(){
 					$('#mikrotikPw').val(),
 					$('#coinSlotWaitTime').val(),
 					$('#adminUser').val(),
-					$('#adminPw').val()
+					$('#adminPw').val(),
+					$('#coinSlotAbuseCount').val(),
+					$('#coinSlotBanMinutes').val(),
+					coinSlotPin,
+					coinSlotSetPin,
+					systemReadyLEDPin,
+					insertCoinLEDPin,
+					$('#lcdScreen').val(),
+					insertCoinBtnPin
 				 ]);
 				 
 	$.ajax({
@@ -288,6 +391,21 @@ function saveSystemConfig(){
 	  } 
 	});
 }
+
+function validateCoinSlotPin(pinMap){
+	for(var i in pinMap){
+		for(var j in pinMap){
+			if(i != j){
+				if(pinMap[i] == pinMap[j]){
+					alert(i + ' is already used by ' + j);
+					return false;
+				}
+			}
+		}
+	}
+	return true;
+}
+
 
 function savePromoRates(){
 	var params = [];
@@ -389,7 +507,15 @@ function openSystemConfig(evt){
 		$('#mikrotikPw').val(configData[5]);
 		$('#coinSlotWaitTime').val(configData[6]);
 		$('#adminUser').val(configData[7]);
-		$('#adminPw').val(configData[8])
+		$('#adminPw').val(configData[8]);
+		$('#coinSlotAbuseCount').val(configData[9]);
+		$('#coinSlotBanMinutes').val(configData[10]);
+		$('#coinSlotPin').val(configData[11]);
+		$('#coinSlotSetPin').val(configData[12]);
+		$('#systemReadyLEDPin').val(configData[13]);
+		$('#insertCoinLEDPin').val(configData[14]);
+		$('#lcdScreen').val(configData[15]);
+		$('#insertCoinBtnPin').val(configData[16]);
 	  }
 	});
 	openTab(evt, 'SystemConfigration');
@@ -465,6 +591,19 @@ function openTab(evt, tabName) {
 	evt.currentTarget.className += " active";
   }
   
+}
+
+function logout(){
+	var r = confirm("Are you sure you want to logout?");
+	if (r == true) {
+	  $.ajax({
+		  type: "GET",
+		  url: "admin/api/logout?query="+new Date().getTime(),
+		  success: function(data){
+			window.location.reload();
+	  }
+	});
+	}
 }
 
 function secondsToDhms(seconds) {
