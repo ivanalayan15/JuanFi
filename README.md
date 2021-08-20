@@ -42,8 +42,15 @@ JuanFi is an open source system for coinslot integration for mikrotik hotspot
 
 ## Installation
 
+
+
 ### NodeMCU Setup
 
+There are 2 ways how to upload the software in NodeMCU
+
+#### a.) Install the binary release file, follow this guide on how to flash the bin file https://github.com/ivanalayan15/JuanFi/tree/master/release
+
+#### b.) Build and compile the code
 
 1.) Download and install Arduino IDE
 https://www.arduino.cc/en/software
