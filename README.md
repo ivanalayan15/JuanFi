@@ -12,6 +12,7 @@ JuanFi is an open source system for coinslot integration for mikrotik hotspot
  * Anti Coinslot abuse system
  * LCD Display
  * Code generation in vendo using LCD without device needed
+ * Multi vendo system
  
  ### Admin System
  * Initial setup of the system
