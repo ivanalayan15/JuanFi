@@ -9,7 +9,9 @@ body {font-family: Arial;}
 .tab {
   overflow: hidden;
   border: 1px solid #ccc;
-  background-color: #f1f1f1;
+  background-color: #2A2E2F;
+   font-family: courier; 
+  font-weight: bold;
 }
 
 /* Style the buttons inside the tab */
@@ -23,10 +25,13 @@ body {font-family: Arial;}
   transition: 0.3s;
   font-size: 17px;
 }
+.tablinks{
+	color: white;
+}
 
 /* Change background color of buttons on hover */
 .tab button:hover {
-  background-color: #ddd;
+  background-color: #85E7F2;
 }
 
 /* Create an active/current tablink class */
@@ -35,12 +40,6 @@ body {font-family: Arial;}
 }
 
 /* Style the tab content */
-.tabcontent {
-  display: none;
-  padding: 6px 12px;
-  border: 1px solid #ccc;
-  border-top: none;
-}
 * {box-sizing: border-box}
 
 /* Add padding to containers */
@@ -81,7 +80,7 @@ hr {
 
 /* Set a style for the submit/register button */
 .registerbtn {
-  background-color: #04AA6D;
+  background-color: #85E7F2;
   color: white;
   padding: 16px 20px;
   margin: 8px 0;
@@ -89,6 +88,8 @@ hr {
   cursor: pointer;
   width: 100%;
   opacity: 0.9;
+   font-family: courier; 
+  font-weight: bold;
 }
 
 .registerbtn:hover {
@@ -113,10 +114,13 @@ a {
   cursor: pointer;
   padding: 18px;
   width: 100%;
-  text-align: left;
+  text-align: center;
   border: none;
   outline: none;
   transition: 0.4s;
+   font-family: courier; 
+  font-weight: bold;
+
 }
 
 /* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
@@ -132,26 +136,43 @@ a {
   overflow: hidden;
 }
 table {
-  font-family: arial, sans-serif;
-  border-collapse: collapse;
+   font-family: courier; 
+  font-weight: bold;
+	border-collapse: collapse;
+  border-spacing: 0;
   width: 100%;
+  border: 1px solid #ddd;
 }
 
-td, th {
-  border: 1px solid ##f1f1f1;
-  text-align: left;
-  padding: 8px;
+th {
+  text-align: center;
+  padding: 50px 50px 50px 50px;
+  margin: 50px;
+
+}
+tbody{
+	 text-align: center;
+  	padding: 50px 50px 50px 50px;
+  	margin: 50px 50px 50px 50px;
 }
 
 tr:nth-child(even) {
   background-color: #f1f1f1;
 }
-
+p{
+	text-align: center;
+}
 .btn {
   border: none; /* Remove borders */
   color: white; /* Add a text color */
   padding: 14px 28px; /* Add some padding */
   cursor: pointer; /* Add a pointer cursor on mouse-over */
+   font-family: courier; 
+  font-weight: bold;
+}
+label{
+	 font-family: courier; 
+  font-weight: bold;
 }
 
 .default {background-color: #e7e7e7; color: black;} /* Gray */
@@ -159,6 +180,18 @@ tr:nth-child(even) {
 
 .danger {background-color: #f44336;} /* Red */
 .danger:hover {background: #da190b;}
+.rstbnt{ 
+	background-color: #85E7F2;
+  color: black;
+  padding: 16px 20px;
+  margin: 8px 0;
+  border: none;
+  cursor: pointer;
+  width: 200px;
+  opacity: 0.9;
+  font-family: courier; 
+  font-weight: bold;
+}
 </style>
 </head>
 <body onload="openDashboard(this)">
@@ -188,17 +221,17 @@ tr:nth-child(even) {
 	</div>
 	<button onClick="resetStats('coinCount')" class="accordion">Coin/Sales Count(Click here to reset)</button>
 	<div class="panel">
-	  <p id="coinCount">0<button onClick="addRate()" class="btn default" id="addRateButton">Add</button></p>
+	  <p id="coinCount">0</p>
 	</div>
 	<button onClick="resetStats('customerCount')"  class="accordion">Customer Count(Click here to reset)</button>
 	<div class="panel">
 	  <p id="customerCount">0</p>
 	</div>
-	<button class="accordion">Internet Staus</button>
+	<button class="accordion">Internet Status</button>
 	<div class="panel">
 		<p id="internetStatus">Online</p>
 	</div>
-	<button class="accordion">Mikrotik Staus</button>
+	<button class="accordion">Mikrotik Status</button>
 	<div class="panel">
 		<p id="mikrotikStatus">Online</p>
 	</div>
@@ -325,7 +358,7 @@ tr:nth-child(even) {
 </div>
 
 <div id="About" class="tabcontent">
-	<p>System Version: 1.0</p>
+	<p>System Version: 1.5</p>
 	<p>Developer: Ivan Julius Alayan</p>
 	<p>Contact me ivanalayan@gmail.com</p>
 </div>
