@@ -34,6 +34,22 @@ $(document).ready(function(){
 			delay: 5000
 		});
 	}
+  
+  if(isMultiVendo){
+	  for(var i=0;i<multiVendoAddresses.length;i++){
+		  $("#vendoSelected").append($('<option>', {
+			value: multiVendoAddresses[i].vendoIp,
+			text: multiVendoAddresses[i].vendoName
+		  }));
+	  }
+	  $("#vendoSelected").val(vendorIpAdress);
+	  $("#vendoSelected").change(function(){
+		vendorIpAdress = $("#vendoSelected").val();
+	  });
+	  
+  }else{
+	  $("#vendoSelectDiv").attr("style", "display: none");
+  }
 });
 if(voucher == null){
 	voucher = "";
@@ -46,6 +62,22 @@ $( "#promoRateBtn" ).click(function() {
 	$('#promoRatesModal').modal('show');
 });
 
+//this is to enable multi vendo setup
+var isMultiVendo = true;
+
+//list here all node mcu address for multi vendo setup
+var multiVendoAddresses = [
+	{
+		vendoName: "Vendo 1", //change accordingly to your vendo name
+		vendoIp: "10.0.10.253" //change accordingly to your vendo name
+	},
+	{
+		vendoName: "Vendo 2", //change accordingly to your vendo name
+		vendoIp: "10.0.10.253" //change accordingly to your vendo name
+	}
+];
+
+//put here the default selected address
 var vendorIpAdress = "10.0.10.253";
 var timer = null;
 
@@ -59,6 +91,8 @@ $( "#insertBtn" ).click(function() {
 	$('#totalTime').html(secondsToDhms(parseInt(0)));
 	callTopupAPI(0);
 });
+
+
 
 $('#promoRatesModal').on('shown.bs.modal', function (e) {
   $.ajax({
@@ -99,6 +133,9 @@ function callTopupAPI(retryCount){
 			$('#insertCoinModal').modal('show');
 			if(timer == null){
 				timer = setInterval(checkCoin, 1000);
+			}
+			if(isMultiVendo){
+				$("#insertCoinModalTitle").html("Please insert the coin on "+$("#vendoSelected option:selected").text());
 			}
 			insertcoinbg.play();
 		}else{
@@ -189,6 +226,8 @@ function checkCoin(){
 				}
 				if(remainTime == 0){
 					$('#insertCoinModal').modal('hide');
+					insertcoinbg.pause();
+					insertcoinbg.currentTime = 0.0;
 					if(totalCoinReceived > 0){
 						$.toast({
 						  title: 'Success',
