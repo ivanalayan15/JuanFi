@@ -101,7 +101,7 @@ d.) Configure Promo rates
 3.) Add IP Bindings exception on hotspot
 ![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Mikrotik-Step2.PNG?raw=true)
 
-4.) Modify vendoIpAddress (NodeMcu IPaddress) in the core.js file
+4.) Modify vendoIpAddress (NodeMcu IPaddress) in the core.js file, you can do a multivendo setup just follow the comment in javascript for instruction
 ![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Mikrotik-Step5.PNG?raw=true)
 
 5.) Upload html template to mikrotik in Files option of mikrotik
