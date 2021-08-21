@@ -189,7 +189,7 @@ void setup () {
     digitalWrite(INSERT_COIN_LED, LOW);
     digitalWrite(SYSTEM_READY_LED, LOW);
     digitalWrite(COIN_SET_PIN, LOW);
-    attachInterrupt(D6, coinInserted, RISING);
+    attachInterrupt(COIN_SELECTOR_PIN, coinInserted, RISING);
 
     loginMirotik();
     if (MDNS.begin("esp8266")) {
@@ -219,11 +219,13 @@ void setup () {
       server.sendHeader("Location", String("/admin"), true);
       server.send ( 302, "text/plain", "");
     });
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("JuanFi");
-    lcd.setCursor(0, 1);
-    lcd.print("Initial Setup"); 
+    if(LCD_TYPE > 0){
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("JuanFi");
+      lcd.setCursor(0, 1);
+      lcd.print("Initial Setup");
+    }
   }
   
   server.on("/admin/api/dashboard", handleAdminDashboard);
