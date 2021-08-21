@@ -62,8 +62,8 @@ $( "#promoRateBtn" ).click(function() {
 	$('#promoRatesModal').modal('show');
 });
 
-//this is to enable multi vendo setup
-var isMultiVendo = true;
+//this is to enable multi vendo setup, set to true when multi vendo is supported
+var isMultiVendo = false;
 
 //list here all node mcu address for multi vendo setup
 var multiVendoAddresses = [
