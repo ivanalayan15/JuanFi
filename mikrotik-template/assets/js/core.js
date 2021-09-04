@@ -131,6 +131,8 @@ function callTopupAPI(retryCount){
 		if(data.status == "true"){
 			voucher = data.voucher;
 			$('#insertCoinModal').modal('show');
+			$('#codeGenerated').html(voucher);
+			$('#codeGeneratedBlock').attr('style', 'display: none');
 			if(timer == null){
 				timer = setInterval(checkCoin, 1000);
 			}
@@ -157,7 +159,7 @@ function callTopupAPI(retryCount){
 }
 
 $( "#saveVoucherButton" ).click(function() {
-	totalCoinReceived = 0;
+
 	$("#loaderDiv").attr("class","spinner");
 	localStorage.setItem('activeVoucher', voucher);
 	$('#voucherInput').val(voucher);
@@ -168,6 +170,7 @@ $( "#saveVoucherButton" ).click(function() {
 	  url: "http://"+vendorIpAdress+"/useVoucher",
 	  data: "voucher="+voucher,
 	  success: function(data){
+		totalCoinReceived = 0;
 		$("#loaderDiv").attr("class","spinner hidden");
 		console.log(data);
 		if(data.status == "true"){
@@ -194,6 +197,16 @@ $( "#saveVoucherButton" ).click(function() {
 		}else{
 			notifyCoinSlotError(data.errorCode);
 		}
+	  },error: function (jqXHR, exception) {
+		 $("#loaderDiv").attr("class","spinner hidden");
+		 if(totalCoinReceived > 0){
+		    $.toast({
+			  title: 'Warning',
+			  content: 'Connect/Login failed, however coin has been process, please manually connect using this voucher: '+voucher,
+			  type: 'info',
+			  delay: 8000
+			});
+		 }
 	  }
 	});
 });
@@ -209,6 +222,7 @@ function checkCoin(){
 			totalCoinReceived = parseInt(data.totalCoin);
 			$('#totalCoin').html(data.totalCoin);	
 			$('#totalTime').html(secondsToDhms(parseInt(data.timeAdded)));
+			$('#codeGeneratedBlock').attr('style', 'display: block');
 			localStorage.setItem('activeVoucher', voucher);
 			localStorage.setItem(voucher+"tempValidity", data.validity);
 			$('#voucherInput').val(voucher);
@@ -246,6 +260,7 @@ function checkCoin(){
 					if(totalCoinReceived > 0 ){
 						$( "#saveVoucherButton" ).prop('disabled', false);
 						$( "#cncl" ).prop('disabled', true);
+						$('#codeGeneratedBlock').attr('style', 'display: block');
 					}
 					$('#totalCoin').html(data.totalCoin);
 					$('#totalTime').html(secondsToDhms(parseInt(data.timeAdded)));
