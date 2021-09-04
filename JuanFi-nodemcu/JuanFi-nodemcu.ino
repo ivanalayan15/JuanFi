@@ -1,4 +1,4 @@
-/*
+/*waitTime
  * 
  * JuanFi v1.0
  * 
@@ -89,7 +89,8 @@ int COIN_SET_PIN = D7;
 int INSERT_COIN_LED = D2;
 int SYSTEM_READY_LED = D1;
 int INSERT_COIN_BTN_PIN = D5;
-
+int CHECK_INTERNET_CONNECTION = 0;
+String VOUCHER_PREFIX = "P";
 
 int MAX_WAIT_COIN_SEC = 30000;
 int COINSLOT_BAN_COUNT = 0;
@@ -118,7 +119,7 @@ const byte DNS_PORT = 53;
 IPAddress apIP(172, 217, 28, 1);
 DNSServer dnsServer;
 
-const int WIFI_CONNECT_TIMEOUT = 15000;
+const int WIFI_CONNECT_TIMEOUT = 45000;
 const int WIFI_CONNECT_DELAY = 500;
 
 bool wifiConnected = false;
@@ -539,6 +540,7 @@ bool checkIfSystemIsAvailable(){
 String INTERNET_CHECK_URL = "http://ifconfig.me";
 
 bool hasInternetConnect(){
+
     HTTPClient http;  
 
     http.begin(client2, INTERNET_CHECK_URL); //HTTP
@@ -724,7 +726,10 @@ bool validateVoucher(String voucher){
 void topUp() {
   manualVoucher = false;
   thankyou_cooldown = 5000;
-  bool hasInternetConnection = hasInternetConnect();
+  bool hasInternetConnection = true;
+  if(CHECK_INTERNET_CONNECTION == 1){
+        hasInternetConnection = hasInternetConnect();
+  }
   if(!hasInternetConnection){
     char * keys[] = {"status", "errorCode"};
     char * values[] = {"false", "no.internet.detected"};
@@ -844,7 +849,7 @@ String toJson(char * keys[],char * values[],int nField){
 
 String generateVoucher(){
   int randomNumber = random(1000, 9999);
-  String voucher = "P"+String(randomNumber);
+  String voucher = VOUCHER_PREFIX+String(randomNumber);
   return voucher;
 }
 
@@ -931,7 +936,7 @@ void populateSystemConfiguration(){
   Serial.print("Data: ");
   Serial.println(data);
 
-  String rows[17];
+  String rows[19];
   split(rows, data, '|');
   String ip[4];
   split(ip, rows[3], '.');
@@ -955,6 +960,8 @@ void populateSystemConfiguration(){
   INSERT_COIN_LED = rows[14].toInt();
   LCD_TYPE = rows[15].toInt();
   INSERT_COIN_BTN_PIN = rows[16].toInt();
+  CHECK_INTERNET_CONNECTION = rows[17].toInt();
+  VOUCHER_PREFIX = rows[18];
 }
 
 
@@ -1203,7 +1210,10 @@ void printWelcome(){
 }
 
 bool activateManualVoucherPurchase(){
-  bool hasInternetConnection = hasInternetConnect();
+  bool hasInternetConnection = true;
+  if(CHECK_INTERNET_CONNECTION == 1){
+        hasInternetConnection = hasInternetConnect();
+  }
   if(!hasInternetConnection){
     printInternetNotAvailable();
     return false;
