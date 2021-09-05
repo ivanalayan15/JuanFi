@@ -37,6 +37,7 @@
 
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
+LiquidCrystal_I2C lcd20x4(0x27, 20, 4);
 
 volatile int coin = 0;
 volatile int totalCoin = 0;
@@ -130,6 +131,8 @@ int lastSaleTime = 0;
 int thankyou_cooldown = 5000;
 long lastPrinted = 0;
 
+String MARQUEE_MESSAGE = "This is marquee";
+
 void setup () { 
                                 
   Serial.begin (9600);
@@ -148,9 +151,16 @@ void setup () {
   pinMode(INSERT_COIN_BTN_PIN, INPUT_PULLUP);
   
   if(LCD_TYPE > 0){
-     lcd.init();   // initializing the LCD
-     lcd.backlight(); // Enable or Turn On the backlight 
-     lcd.print("Initializing.."); 
+     if(LCD_TYPE == 1){
+       lcd.init();   // initializing the LCD
+       lcd.backlight(); // Enable or Turn On the backlight 
+       lcd.print("Initializing.."); 
+     }else if(LCD_TYPE == 2){
+       lcd20x4.init();   // initializing the LCD
+       lcd20x4.backlight(); // Enable or Turn On the backlight 
+       lcd20x4.print("Initializing.."); 
+     }
+     
   }
 
   // We start by connecting to a WiFi network
@@ -205,6 +215,7 @@ void setup () {
     server.on("/testInsertCoin", testInsertCoin);
     server.onNotFound(handleNotFound);
     printWelcome();
+    welcomePrinted = true;
     
   }else{
     //Soft AP setup
@@ -221,11 +232,19 @@ void setup () {
       server.send ( 302, "text/plain", "");
     });
     if(LCD_TYPE > 0){
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("JuanFi");
-      lcd.setCursor(0, 1);
-      lcd.print("Initial Setup");
+      if(LCD_TYPE == 1){
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("JuanFi");
+        lcd.setCursor(0, 1);
+        lcd.print("Initial Setup");
+      }else if(LCD_TYPE == 2){
+        lcd20x4.clear();
+        lcd20x4.setCursor(0, 0);
+        lcd20x4.print("JuanFi");
+        lcd20x4.setCursor(0, 1);
+        lcd20x4.print("Initial Setup");
+      }
     }
   }
   
@@ -936,7 +955,7 @@ void populateSystemConfiguration(){
   Serial.print("Data: ");
   Serial.println(data);
 
-  String rows[19];
+  String rows[20];
   split(rows, data, '|');
   String ip[4];
   split(ip, rows[3], '.');
@@ -962,6 +981,7 @@ void populateSystemConfiguration(){
   INSERT_COIN_BTN_PIN = rows[16].toInt();
   CHECK_INTERNET_CONNECTION = rows[17].toInt();
   VOUCHER_PREFIX = rows[18];
+  MARQUEE_MESSAGE = rows[19];
 }
 
 
@@ -1113,7 +1133,8 @@ void loop () {
     }else{
       //if coinslot is disable
       //print welcome again after x seconds after thank you message
-      if(currentMilis > (lastSaleTime + thankyou_cooldown)){
+      if(targetMilis < currentMilis && currentMilis > (lastSaleTime + thankyou_cooldown)){
+        welcomePrinted = true;
         printWelcome();
       }
     }
@@ -1143,13 +1164,27 @@ void printInsertCoinNow(){
     if(currentMilis > (lastPrinted + 1000)){
       long remain = targetMilis - currentMilis;
       welcomePrinted = false;
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("Pls insert");
-      lcd.setCursor(14, 0);
-      lcd.print(String(remain/1000));
-      lcd.setCursor(0, 1);
-      lcd.print("coin now, 1/5/10");
+      
+     
+      if(LCD_TYPE == 1){
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("Pls insert");
+        lcd.setCursor(14, 0);
+        lcd.print(String(remain/1000));
+        lcd.setCursor(0, 1);
+        lcd.print("coin now, 1/5/10");
+      }else if(LCD_TYPE == 2){
+        lcd20x4.clear();
+        lcd20x4.setCursor(startCenterIndex(vendorName), 0);
+        lcd20x4.print(vendorName);
+        lcd20x4.setCursor(0, 1);
+        lcd20x4.print("Pls insert");
+        lcd20x4.setCursor(18, 1);
+        lcd20x4.print(String(remain/1000));
+        lcd20x4.setCursor(0, 2);
+        lcd20x4.print("coin now, 1/5/10");
+      }
       lastPrinted = currentMilis;
     }
   }
@@ -1161,25 +1196,45 @@ void printTransactionDetail(){
     //print only after 1 second to avoid performance issue
     if(currentMilis > (lastPrinted + 1000)){
       long remain = targetMilis - currentMilis;
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("PHP: "+String(totalCoin) + " ");
-      lcd.setCursor(14, 0);
-      lcd.print(String(remain/1000));
-      lcd.setCursor(0, 1);
-     
       int days = timeToAdd / (3600*24);
       int hr =  timeToAdd % (3600*24) / 3600;
       int min =  timeToAdd % 3600 / 60;
   
-      String t = "T: ";
-      t += String(days);
-      t += "d ";
-      t += String(hr);
-      t += "h ";
-      t += String(min);
-      t += "m ";
-      lcd.print(t);
+     
+     
+      if(LCD_TYPE == 1){
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("PHP: "+String(totalCoin) + " ");
+        lcd.setCursor(14, 0);
+        lcd.print(String(remain/1000));
+        lcd.setCursor(0, 1);
+        String t = "T: ";
+        t += String(days);
+        t += "d ";
+        t += String(hr);
+        t += "h ";
+        t += String(min);
+        t += "m ";
+        lcd.print(t);
+      }else if(LCD_TYPE == 2){
+        lcd20x4.clear();
+        lcd20x4.setCursor(startCenterIndex(vendorName), 0);
+        lcd20x4.print(vendorName);
+        lcd20x4.setCursor(0, 1);
+        lcd20x4.print("PHP: "+String(totalCoin) + " ");
+        lcd20x4.setCursor(18, 1);
+        lcd20x4.print(String(remain/1000));
+        lcd20x4.setCursor(0, 2);
+        String t = "T: ";
+        t += String(days);
+        t += "day ";
+        t += String(hr);
+        t += "hr ";
+        t += String(min);
+        t += "min ";
+        lcd20x4.print(t);
+      }
       lastPrinted = currentMilis;
     }
   }
@@ -1188,24 +1243,81 @@ void printTransactionDetail(){
 void printThankYou(){
   if(LCD_TYPE > 0 ){
     welcomePrinted = false;
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("Code: "+currentActiveVoucher);
-    lcd.setCursor(0, 1);
-    lcd.print("Thank you!"); 
+    if(LCD_TYPE == 1){
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Code: "+currentActiveVoucher);
+      lcd.setCursor(0, 1);
+      lcd.print("Thank you!"); 
+    }else if(LCD_TYPE == 2){
+      lcd20x4.clear();
+      lcd20x4.setCursor(startCenterIndex(vendorName), 0);
+      lcd20x4.print(vendorName);
+      lcd20x4.setCursor(0, 1);
+      lcd20x4.print("Code: "+currentActiveVoucher);
+      String thankYouText = "Thank you!";
+      lcd20x4.setCursor(startCenterIndex(vendorName), 2);
+      lcd20x4.print(thankYouText); 
+    }
+   
     lastSaleTime = millis();
   }
 }
 
+long lastWelcome = 0;
+int welcomeBlinkState = 0;
+int currentIndex=0;
 void printWelcome(){
-  
-  if(LCD_TYPE > 0 && (!welcomePrinted)){
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("Welcome to");
-      lcd.setCursor(0, 1);
-      lcd.print(vendorName);
-      welcomePrinted = true;
+  long currentMilis = millis();
+  if(LCD_TYPE > 0 && currentMilis > (lastWelcome + 500)){
+     
+      if(LCD_TYPE == 1){
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("Welcome to");
+        lcd.setCursor(0, 1);
+        if(welcomeBlinkState == 0){
+          lcd.print(vendorName);
+          welcomeBlinkState = 1;
+        }else if(welcomeBlinkState == 1){
+          lcd.print("");
+          welcomeBlinkState = 0;
+        }
+      }else if(LCD_TYPE ==2){
+        String text = "Welcome to";
+        lcd20x4.clear();
+        lcd20x4.setCursor(startCenterIndex(text), 0);
+        lcd20x4.print(text);
+        text = vendorName;
+        lcd20x4.setCursor(startCenterIndex(text), 1);
+        if(welcomeBlinkState == 0){
+          lcd20x4.print(text);
+          welcomeBlinkState = 1;
+        }else if(welcomeBlinkState == 1){
+          lcd20x4.print("");
+          welcomeBlinkState = 0;
+        }
+        lcd20x4.setCursor(0, 3);
+        String message = "                    ";
+        int l = 0;
+        for(int i=currentIndex;i<20;i++){
+          if(l < MARQUEE_MESSAGE.length()){
+            message[i] = MARQUEE_MESSAGE[l];
+            l++;
+          }
+        }
+        int a = l;
+        for(int i=0;i<(MARQUEE_MESSAGE.length()-l);i++){
+          message[i] = MARQUEE_MESSAGE[a];
+          a++;
+        }
+        lcd20x4.print(message);
+        currentIndex++;
+        if(currentIndex >= 20){
+          currentIndex = 0;
+        }
+      }
+      lastWelcome = currentMilis;
   }  
 }
 
@@ -1239,32 +1351,71 @@ bool activateManualVoucherPurchase(){
 void printSystemNotAvailable(){
   
   if(LCD_TYPE > 0){
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("System not");
-      lcd.setCursor(0, 1);
-      lcd.print("Available");
+    
+      if(LCD_TYPE == 1){
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("System not");
+        lcd.setCursor(0, 1);
+        lcd.print("Available");
+      }else if(LCD_TYPE == 2){
+        String text = "System not";
+        lcd20x4.clear();
+        lcd20x4.setCursor(startCenterIndex(text), 1);
+        lcd20x4.print(text);
+        text = "Available";
+        lcd20x4.setCursor(startCenterIndex(text), 2);
+      }
   }  
 }
 
 void printInternetNotAvailable(){
   
   if(LCD_TYPE > 0){
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("Internet not");
-      lcd.setCursor(0, 1);
-      lcd.print("Available");
-  }  
+      if(LCD_TYPE == 1){
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("Internet not");
+        lcd.setCursor(0, 1);
+        lcd.print("Available");
+      }else if(LCD_TYPE == 2){
+        String text = "Internet not";
+        lcd20x4.clear();
+        lcd20x4.setCursor(startCenterIndex(text), 1);
+        lcd20x4.print(text);
+        text = "Available";
+        lcd20x4.setCursor(startCenterIndex(text), 2);
+      }
+  }
 }
 
 void printPleaseWait(){
   
   if(LCD_TYPE > 0){
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("Please wait...");
-      lcd.setCursor(0, 1);
-      lcd.print("");
-  }  
+      if(LCD_TYPE == 1){
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("Please wait...");
+        lcd.setCursor(0, 1);
+        lcd.print("");
+      }else if(LCD_TYPE == 2){
+        lcd20x4.clear();
+        lcd20x4.setCursor(startCenterIndex(vendorName), 0);
+        lcd20x4.print(vendorName);
+        String text = "Please wait...";
+        lcd20x4.setCursor(startCenterIndex(text), 1);
+        lcd20x4.print(text);
+      }
+  }
+}
+
+int startCenterIndex(String text){
+    int totalSize = 20;
+    int textLength = text.length();
+    int blankCharCount = totalSize - textLength;
+    int startCenterIndex = (blankCharCount / 2);
+    if(blankCharCount%2 != 0){
+        startCenterIndex--;
+    }
+    return startCenterIndex;
 }
