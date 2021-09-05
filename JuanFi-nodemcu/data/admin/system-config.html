@@ -321,6 +321,7 @@ label{
     <select name="lcdScreen" id="lcdScreen">
 	  <option value="0" selected>None</option>
 	  <option value="1">16x2</option>
+	  <option value="2">20x4</option>
 	</select>
 	
 	<label for="insertCoinBtnPin"><b>Insert Coin Button Pin</b></label>
@@ -333,6 +334,18 @@ label{
 	  <option value="13">D7</option>
 	  <option value="15">D8</option>
 	</select>
+	
+	<label for="checkInternetStatus"><b>Check Internet Status when insert coin</b></label>
+    <select name="checkInternetStatus" id="checkInternetStatus">
+	  <option value="1">Yes</option>
+	  <option value="0">No</option>
+	</select>
+	
+	<label for="voucherPrefix"><b>Voucher Prefix(max 2)</b></label>
+    <input type="text" value="P" placeholder="Voucher Prefix, e.g. P, S" id="voucherPrefix" maxlength="2" required>
+	
+	<label for="welcomeLCDMarquee"><b>Welcome LCD Marquee(only for 20x4)</b></label>
+    <input type="text" placeholder="Welcome LCD Marquee" id="welcomeLCDMarquee" maxlength="20" required>
 
     <button onClick="saveSystemConfig()" type="button" class="registerbtn">Save</button>
   </div>
@@ -358,7 +371,7 @@ label{
 </div>
 
 <div id="About" class="tabcontent">
-	<p>System Version: 1.5</p>
+	<p>System Version: 2.0</p>
 	<p>Developer: Ivan Julius Alayan</p>
 	<p>Contact me ivanalayan@gmail.com</p>
 </div>
@@ -409,7 +422,10 @@ function saveSystemConfig(){
 					systemReadyLEDPin,
 					insertCoinLEDPin,
 					$('#lcdScreen').val(),
-					insertCoinBtnPin
+					insertCoinBtnPin,
+					$('#checkInternetStatus').val(),
+					$('#voucherPrefix').val(),
+					$('#welcomeLCDMarquee').val()
 				 ]);
 				 
 	$.ajax({
@@ -549,6 +565,9 @@ function openSystemConfig(evt){
 		$('#insertCoinLEDPin').val(configData[14]);
 		$('#lcdScreen').val(configData[15]);
 		$('#insertCoinBtnPin').val(configData[16]);
+		$('#checkInternetStatus').val(configData[17]);
+		$('#voucherPrefix').val(configData[18]);
+		$('#welcomeLCDMarquee').val(configData[19]);
 	  }
 	});
 	openTab(evt, 'SystemConfigration');
