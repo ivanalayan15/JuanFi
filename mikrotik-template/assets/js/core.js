@@ -58,7 +58,7 @@ if(voucher != ""){
 	$('#voucherInput').val(voucher);
 }
 
-$( "#promoRateBtn" ).click(function() {
+$( "#promoRateBtn" ).on('click touchstart',function() {
 	$('#promoRatesModal').modal('show');
 });
 
@@ -81,7 +81,7 @@ var multiVendoAddresses = [
 var vendorIpAdress = "10.0.10.253";
 var timer = null;
 
-$( "#insertBtn" ).click(function() {
+$( "#insertBtn" ).on('click touchstart',function() {
 	$("#progressDiv").attr('style','width: 100%')
 	$( "#saveVoucherButton" ).prop('disabled', true);
 	$( "#cncl" ).prop('disabled', false);
@@ -158,7 +158,7 @@ function callTopupAPI(retryCount){
 	});
 }
 
-$( "#saveVoucherButton" ).click(function() {
+$( "#saveVoucherButton" ).on('click touchstart',function() {
 
 	$("#loaderDiv").attr("class","spinner");
 	localStorage.setItem('activeVoucher', voucher);
