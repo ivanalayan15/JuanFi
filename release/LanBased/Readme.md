@@ -1,6 +1,6 @@
 # JuanFi
 
-JuanFi v1.5 Bin File Release
+JuanFi v2.1 Bin File Release
 
 
 ## How to Flash Instruction
