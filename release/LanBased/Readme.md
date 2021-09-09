@@ -5,31 +5,30 @@ JuanFi v1.5 Bin File Release
 
 ## How to Flash Instruction
  
-### Download Custom Flasher
-I had forked a the pyflasher repository https://github.com/marcelstoer/nodemcu-pyflasher and make a custom changes for the custom flasher required for SPIFFS flashing, if your interested here is the repository https://github.com/ivanalayan15/nodemcu-pyflasher 
+esptool.exe is being use for flashing the esp32 hardware, to flash simply download all the contents of this folder
+https://github.com/ivanalayan15/JuanFi/tree/master/release/LanBased and follow the instruction below
 
-Download here
+### Double click start_flash.bat 
 
-Custom flasher download link : https://github.com/ivanalayan15/JuanFi/blob/master/release/NodeMCU-PyFlasher.exe?raw=true
+![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Lan-FlashFile1.PNG?raw=true)
 
-### Flash the JuanFi-FlashFile1.bin
+Once done, a command propmt screen will appear to let you select available com port for your esp32 device
+![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Lan-FlashFile2.PNG?raw=true)
 
-Download JuanFi-FlashFile1.bin at https://github.com/ivanalayan15/JuanFi/blob/master/release/JuanFi-FlashFile1.bin?raw=true 
+### Select Port
 
-![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-FlashFile1.PNG?raw=true)
+E.G. COM9 and press enter
 
-* select the file JuanFi-FlashFile1.bin
-* make sure the offset is 0x000000 
-* click Flash Nodemcu and wait to complete
+![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Lan-FlashFile3.PNG?raw=true)
 
-### Flash the JuanFi-FlashFile2.bin
+you will notice that a connecting message will prompt and it will be ALWAYS connecting if you not do any press button on the flash button
 
-Download JuanFi-FlashFile2.bin at https://github.com/ivanalayan15/JuanFi/blob/master/release/JuanFi-FlashFile2.bin?raw=true 
+![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Lan-FlashFile4.PNG?raw=true)
 
-![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-FlashFile2.PNG?raw=true)
+Press and hold this button arround 3 - 5 secs until the flash starts
 
-* select the file JuanFi-FlashFile2.bin
-* make sure the offset is 0x200000 
-* click Flash Nodemcu and wait to complete
+### Wait for the flash process to finish 
 
-### Restart the NodeMCU and begin the setup
+![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Lan-FlashFile5.PNG?raw=true)
+
+and thats it. you can now use your esp32 for your LAN base JuanFi system
