@@ -4,6 +4,10 @@ JuanFi is an open source system for coinslot integration for mikrotik hotspot
 
 
 ## Features
+
+ ### Hardware Option
+ * Wireless based
+ * Lan based
  
  ### Coinslot System
  * Mikrotik integration
@@ -23,7 +27,7 @@ JuanFi is an open source system for coinslot integration for mikrotik hotspot
  * coinslot abuse system config
 
 ## Requirements
-1.) NodeMCU
+1.) NodeMCU(ESP8266) for wireless or NodemCU(ESP32) for LAN Based
 
 2.) Coinslot
 
@@ -31,14 +35,21 @@ JuanFi is an open source system for coinslot integration for mikrotik hotspot
 
 4.) Access Point
 
-5.) Node MCU baseboard( Optional )
+5.) Node MCU baseboard( Optional for wireless)
 
 6.) Power Supply (12v for nodemcu, another 12v for Mikrotik)
+
+7.) W5500 for Lan based
+
+8.) LM2596 or any DC to DC buck that can convert to 5v for (Lan based only since no available baseboard for ESP32)
 
 ## Architecture
 ![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Architecture.PNG?raw=true)
 
-## Connection Diagram
+## LAN Based Connection Diagram
+![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi%20Connection%20LanBase%20Diagram.PNG?raw=true)
+
+## Wireless Based Connection Diagram
 ![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi%20Connection%20Diagram.PNG?raw=true)
 
 ## Installation
