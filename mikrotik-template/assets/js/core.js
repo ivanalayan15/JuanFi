@@ -9,8 +9,9 @@ var totalCoinReceived = 0;
 var insertcoinbg = new Audio('assets/insertcoinbg.mp3');
 insertcoinbg.loop = true;
 var coinCount = new Audio('assets/coin-received.mp3');
-var voucher = localStorage.getItem('activeVoucher');
-	
+var voucher = getStorageValue('activeVoucher');
+var insertingCoin = false;
+
 
 $(document).ready(function(){
   $( "#saveVoucherButton" ).prop('disabled', true);	
@@ -21,11 +22,12 @@ $(document).ready(function(){
   $('#insertCoinModal').on('hidden.bs.modal', function () {
 		clearInterval(timer);
 		timer = null;
+		insertingCoin = false;
 	});
 
 	if(loginError != "" && ((voucher != null && voucher != ""))){
-		localStorage.removeItem("activeVoucher");
-		cleanUpLocalStorage(voucher);
+		
+		removeStorageValue("activeVoucher");
 		voucher = "";
 		$.toast({
 			title: 'Error',
@@ -42,16 +44,18 @@ $(document).ready(function(){
 			text: multiVendoAddresses[i].vendoName
 		  }));
 	  }
-	  var selectedVendo = localStorage.getItem('selectedVendo');
+	  var selectedVendo = getStorageValue('selectedVendo');
 	  if(selectedVendo != null){
 		  vendorIpAdress = selectedVendo;
 	  }
 	  $("#vendoSelected").val(vendorIpAdress);
 	  $("#vendoSelected").change(function(){
 		vendorIpAdress = $("#vendoSelected").val();
-		localStorage.setItem('selectedVendo', vendorIpAdress);
+		setStorageValue('selectedVendo', vendorIpAdress);
 	  });
 	  
+	  $("#vendoSelected").trigger("change");
+
   }else{
 	  $("#vendoSelectDiv").attr("style", "display: none");
   }
@@ -69,7 +73,7 @@ function promoBtnAction(){
 }
 
 //this is to enable multi vendo setup, set to true when multi vendo is supported
-var isMultiVendo = false;
+var isMultiVendo = true;
 
 //list here all node mcu address for multi vendo setup
 var multiVendoAddresses = [
@@ -130,12 +134,13 @@ function callTopupAPI(retryCount){
 	
 	var type = $( "#saveVoucherButton" ).attr('data-save-type');
 	if(type != "extend"){
-		var storedVoucher = localStorage.getItem('activeVoucher');
+		var storedVoucher = getStorageValue('activeVoucher');
 		if(storedVoucher != null){
 			voucher = "";
 			$("#voucherInput").val('');
-			localStorage.removeItem("activeVoucher");
+			removeStorageValue("activeVoucher");
 		}
+		
 	}
 	
 	$.ajax({
@@ -147,6 +152,7 @@ function callTopupAPI(retryCount){
 		if(data.status == "true"){
 			voucher = data.voucher;
 			$('#insertCoinModal').modal('show');
+			insertingCoin = true;
 			$('#codeGenerated').html(voucher);
 			$('#codeGeneratedBlock').attr('style', 'display: none');
 			if(timer == null){
@@ -176,7 +182,7 @@ function callTopupAPI(retryCount){
 
 function saveVoucherBtnAction(){
 	$("#loaderDiv").attr("class","spinner");
-	localStorage.setItem('activeVoucher', voucher);
+	setStorageValue('activeVoucher', voucher);
 	$('#voucherInput').val(voucher);
 	clearInterval(timer);
 	timer = null;
@@ -187,10 +193,10 @@ function saveVoucherBtnAction(){
 	  success: function(data){
 		totalCoinReceived = 0;
 		$("#loaderDiv").attr("class","spinner hidden");
-		console.log(data);
 		if(data.status == "true"){
 			
-			localStorage.setItem(voucher+"tempValidity", data.validity);
+			setStorageValue(voucher+"tempValidity", data.validity);
+			
 			$.toast({
 			  title: 'Success',
 			  content: 'Thank you for the purchase!, will do auto login shortly',
@@ -201,7 +207,7 @@ function saveVoucherBtnAction(){
 			var type = $( "#saveVoucherButton" ).attr('data-save-type');
 
 			if(type == "extend"){
-				localStorage.setItem('reLogin', '1');
+				setStorageValue('reLogin', '1');
 				document.logout.submit();
 			}else{
 				setTimeout(function (){
@@ -239,13 +245,16 @@ function checkCoin(){
 			$('#totalCoin').html(data.totalCoin);	
 			$('#totalTime').html(secondsToDhms(parseInt(data.timeAdded)));
 			$('#codeGeneratedBlock').attr('style', 'display: block');
-			localStorage.setItem('activeVoucher', voucher);
-			localStorage.setItem(voucher+"tempValidity", data.validity);
+			
+			setStorageValue('activeVoucher', voucher);
+			setStorageValue(voucher+"tempValidity", data.validity);
+			
 			$('#voucherInput').val(voucher);
 			notifyCoinSuccess(data.newCoin);
 		}else{
 			if(data.errorCode == "coin.not.inserted"){
-				localStorage.setItem(voucher+"tempValidity", data.validity);
+				setStorageValue(voucher+"tempValidity", data.validity);
+				
 				var remainTime = parseInt(parseInt(data.remainTime)/1000);
 				var waitTime = parseFloat(data.waitTime);
 				var percent = parseInt(((remainTime*1000) / waitTime) * 100);
@@ -328,7 +337,49 @@ function secondsToDhms(seconds) {
 	return dDisplay + hDisplay + mDisplay + sDisplay;
 }
 
-function cleanUpLocalStorage(v){
+function setStorageValue(key, value){
+	if(localStorage != null){
+		localStorage.setItem(key, value);
+	}else{
+		setCookie(key,value,364);
+	}
+}
 
+function removeStorageValue(key){
+	if(localStorage != null){
+		localStorage.removeItem(key);
+	}else{
+		eraseCookie(key);
+	}
+}
 
+function getStorageValue(key){
+	if(localStorage!= null){
+		return localStorage.getItem(key);
+	}else{
+		return getCookie(key);
+	}
+}
+
+function setCookie(name,value,days) {
+    var expires = "";
+    if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + (days*24*60*60*1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+}
+function getCookie(name) {
+    var nameEQ = name + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0;i < ca.length;i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1,c.length);
+        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+    }
+    return null;
+}
+function eraseCookie(name) {   
+    document.cookie = name+'=; Max-Age=-99999999;';  
 }

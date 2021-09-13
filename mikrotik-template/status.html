@@ -146,7 +146,7 @@
 				window.name="hotspot_status";
 				
 				$(document).ready(function(){
-					var validity = localStorage.getItem(voucher+"validity");
+					var validity = getStorageValue(voucher+"validity");
 					if(validity != null){
 						$("#expirationTime").html(new Date(parseInt(validity)));
 					}
@@ -163,7 +163,6 @@
 								delay: 5000
 							});
 							clearInterval(zz);
-							cleanUpLocalStorage(voucher);
 							setTimeout(function(){
 								document.logout.submit();
 							}, 6000);
@@ -174,8 +173,7 @@
 				
 				$(if refresh-timeout)
 					setInterval(function(){
-						var inserting = $("#insertCoinModal").data('bs.modal')?._isShown;
-						if(!inserting){
+						if(!insertingCoin){
 							location.reload();
 						}
 					}, $(refresh-timeout-secs) * 1000);
