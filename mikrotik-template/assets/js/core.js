@@ -42,9 +42,14 @@ $(document).ready(function(){
 			text: multiVendoAddresses[i].vendoName
 		  }));
 	  }
+	  var selectedVendo = localStorage.getItem('selectedVendo');
+	  if(selectedVendo != null){
+		  vendorIpAdress = selectedVendo;
+	  }
 	  $("#vendoSelected").val(vendorIpAdress);
 	  $("#vendoSelected").change(function(){
 		vendorIpAdress = $("#vendoSelected").val();
+		localStorage.setItem('selectedVendo', vendorIpAdress);
 	  });
 	  
   }else{
@@ -58,9 +63,10 @@ if(voucher != ""){
 	$('#voucherInput').val(voucher);
 }
 
-$( "#promoRateBtn" ).on('click touchstart',function() {
+function promoBtnAction(){
 	$('#promoRatesModal').modal('show');
-});
+	return false;
+}
 
 //this is to enable multi vendo setup, set to true when multi vendo is supported
 var isMultiVendo = false;
@@ -73,7 +79,7 @@ var multiVendoAddresses = [
 	},
 	{
 		vendoName: "Vendo 2", //change accordingly to your vendo name
-		vendoIp: "10.0.10.253" //change accordingly to your vendo name
+		vendoIp: "10.0.10.254" //change accordingly to your vendo name
 	}
 ];
 
@@ -81,7 +87,7 @@ var multiVendoAddresses = [
 var vendorIpAdress = "10.0.10.253";
 var timer = null;
 
-$( "#insertBtn" ).on('click touchstart',function() {
+function insertBtnAction(){
 	$("#progressDiv").attr('style','width: 100%')
 	$( "#saveVoucherButton" ).prop('disabled', true);
 	$( "#cncl" ).prop('disabled', false);
@@ -90,9 +96,8 @@ $( "#insertBtn" ).on('click touchstart',function() {
 	$('#totalCoin').html("0");
 	$('#totalTime').html(secondsToDhms(parseInt(0)));
 	callTopupAPI(0);
-});
-
-
+	return false;
+}
 
 $('#promoRatesModal').on('shown.bs.modal', function (e) {
   $.ajax({
@@ -122,6 +127,17 @@ $('#promoRatesModal').on('shown.bs.modal', function (e) {
 })
 
 function callTopupAPI(retryCount){
+	
+	var type = $( "#saveVoucherButton" ).attr('data-save-type');
+	if(type != "extend"){
+		var storedVoucher = localStorage.getItem('activeVoucher');
+		if(storedVoucher != null){
+			voucher = "";
+			$("#voucherInput").val('');
+			localStorage.removeItem("activeVoucher");
+		}
+	}
+	
 	$.ajax({
 	  type: "POST",
 	  url: "http://"+vendorIpAdress+"/topUp",
@@ -158,8 +174,7 @@ function callTopupAPI(retryCount){
 	});
 }
 
-$( "#saveVoucherButton" ).on('click touchstart',function() {
-
+function saveVoucherBtnAction(){
 	$("#loaderDiv").attr("class","spinner");
 	localStorage.setItem('activeVoucher', voucher);
 	$('#voucherInput').val(voucher);
@@ -209,7 +224,8 @@ $( "#saveVoucherButton" ).on('click touchstart',function() {
 		 }
 	  }
 	});
-});
+	
+}
 
 function checkCoin(){
 	$.ajax({
@@ -273,6 +289,8 @@ function checkCoin(){
 				clearInterval(timer);
 			}
 		}
+	  },error: function (jqXHR, exception) {
+			console.log('error!!!');
 	  }
 	});
 }

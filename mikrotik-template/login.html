@@ -83,10 +83,10 @@
 						</select>
 					</div>
                     <br>
-					<button type="button" id="insertBtn" class="btn btn-success btn-block"  data-toggle="modal" >INSERT COIN</button>
+					<button type="button" id="insertBtn" onclick="insertBtnAction(); return false" class="btn btn-success btn-block"  data-toggle="modal" >INSERT COIN</button>
                     <div style="margin-bottom:-5px"></div>
 					<br>
-					<button type="button" id="promoRateBtn" class="btn btn-warning btn-block">PROMO RATES</button>
+					<button type="button" id="promoRateBtn" onclick="promoBtnAction(); return false" class="btn btn-warning btn-block">PROMO RATES</button>
 					<div style="margin-bottom:-5px"></div>
 					<br>
 					<div class="form-group">
@@ -128,7 +128,7 @@
 								
 						  </div>
 						  <div class="modal-footer">
-							<button type="button" id="saveVoucherButton" class="btn btn-primary" data-dismiss="modal">
+							<button type="button" id="saveVoucherButton" onclick="saveVoucherBtnAction(); return false" class="btn btn-primary" data-dismiss="modal">
 							  Save and Connect
 							</button>
 							<button type="button" id="cncl" class="btn btn-danger" data-dismiss="modal">Cancel</button>
