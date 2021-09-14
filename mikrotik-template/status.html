@@ -143,9 +143,11 @@
 			<script>
 				var sessiontime = "$(session-time-left-secs)";
 				var uptime = "$(uptime-secs)";
+				var currentVoucher = "$(username)";
 				window.name="hotspot_status";
 				
 				$(document).ready(function(){
+					voucher = currentVoucher;
 					var validity = getStorageValue(voucher+"validity");
 					if(validity != null){
 						$("#expirationTime").html(new Date(parseInt(validity)));
