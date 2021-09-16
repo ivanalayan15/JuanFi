@@ -1,6 +1,6 @@
 # JuanFi
 
-JuanFi v1.5 Bin File Release
+JuanFi v2.1 Bin File Release
 
 
 ## How to Flash Instruction
@@ -10,7 +10,7 @@ I had forked a the pyflasher repository https://github.com/marcelstoer/nodemcu-p
 
 Download here
 
-Custom flasher download link : https://github.com/ivanalayan15/JuanFi/blob/master/release/NodeMCU-PyFlasher.exe?raw=true
+Custom flasher download link : https://github.com/ivanalayan15/JuanFi/blob/master/release/WirelessBase/NodeMCU-PyFlasher.exe?raw=true
 
 ### Flash the JuanFi-FlashFile1.bin
 
