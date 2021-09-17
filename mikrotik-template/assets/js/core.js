@@ -23,6 +23,8 @@ $(document).ready(function(){
 		clearInterval(timer);
 		timer = null;
 		insertingCoin = false;
+		insertcoinbg.pause();
+		insertcoinbg.currentTime = 0.0;
 	});
 
 	if(loginError != "" && ((voucher != null && voucher != ""))){
@@ -186,6 +188,8 @@ function saveVoucherBtnAction(){
 	$('#voucherInput').val(voucher);
 	clearInterval(timer);
 	timer = null;
+	insertcoinbg.pause();
+	insertcoinbg.currentTime = 0.0;
 	$.ajax({
 	  type: "POST",
 	  url: "http://"+vendorIpAdress+"/useVoucher",
