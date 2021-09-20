@@ -1,6 +1,6 @@
 /*waitTime
  * 
- * JuanFi v1.0
+ * JuanFi v2.1
  * 
  * PisoWifi coinslot system with integration to Mikrotik Hotspot, 
  * Using
@@ -18,6 +18,7 @@
  *   - Promo Rates configuration ( Rates, expiration)
  *   - Dashboard, Sales report
  * 
+ * Supported ESP32 Lanbase and ESP8266 
  * 
  * Created by Ivan Julius Alayan
  * 
@@ -42,6 +43,9 @@
 #include "FS.h"
 #include <base64.h>
 #include <LiquidCrystal_I2C.h>
+
+int TURN_OFF = 0;
+int TURN_ON = 1;
 
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
@@ -106,6 +110,10 @@ int INSERT_COIN_LED = 0;
 int SYSTEM_READY_LED = 0;
 int INSERT_COIN_BTN_PIN = 0;
 int CHECK_INTERNET_CONNECTION = 0;
+int LED_TRIGGER_TYPE = 1;
+int VOUCHER_LOGIN_OPTION = 0;
+int VOUCHER_VALIDITY_OPTION = 0;
+String VOUCHER_PROFILE = "default";
 String VOUCHER_PREFIX = "P";
 
 int MAX_WAIT_COIN_SEC = 30000;
@@ -228,14 +236,14 @@ void setup () {
       if(networkConnected){
         break;
       }
-      digitalWrite(SYSTEM_READY_LED, LOW);
+      digitalWrite(SYSTEM_READY_LED, evaluateTriggerOutput(TURN_OFF));
       delay(WIFI_CONNECT_DELAY);
-      digitalWrite(SYSTEM_READY_LED, HIGH);
+      digitalWrite(SYSTEM_READY_LED, evaluateTriggerOutput(TURN_ON));
       second += WIFI_CONNECT_DELAY;
     }
     currentIpAddress = WiFi.localIP().toString().c_str();
     currentMacAddress = WiFi.macAddress();
-    digitalWrite(SYSTEM_READY_LED, LOW);
+    digitalWrite(SYSTEM_READY_LED, evaluateTriggerOutput(TURN_OFF));
   #endif
   
   
@@ -247,8 +255,8 @@ void setup () {
     Serial.print("Mac address: ");
     Serial.println(currentMacAddress);
     Serial.println("Connecting.... ");
-    digitalWrite(INSERT_COIN_LED, LOW);
-    digitalWrite(SYSTEM_READY_LED, LOW);
+    digitalWrite(INSERT_COIN_LED, evaluateTriggerOutput(TURN_OFF));
+    digitalWrite(SYSTEM_READY_LED, evaluateTriggerOutput(TURN_OFF));
     digitalWrite(COIN_SET_PIN, LOW);
     Serial.print("Attaching interrupt ");
     attachInterrupt(COIN_SELECTOR_PIN, coinInserted, RISING);
@@ -339,7 +347,7 @@ void setup () {
   server.begin();
   
   if(mikrotekConnectionSuccess){
-    digitalWrite(SYSTEM_READY_LED, HIGH);
+    digitalWrite(SYSTEM_READY_LED, evaluateTriggerOutput(TURN_ON));
   }
 
 }
@@ -1095,7 +1103,7 @@ void activateCoinSlot(){
   acceptCoin = true;
   coinSlotActive = true;
   targetMilis = millis() + MAX_WAIT_COIN_SEC;
-  digitalWrite(INSERT_COIN_LED, HIGH);
+  digitalWrite(INSERT_COIN_LED, evaluateTriggerOutput(TURN_ON));
 }
 
 String toJson(char * keys[],char * values[],int nField){
@@ -1126,6 +1134,14 @@ void registerNewVoucher(String voucher){
   String addCoinScript = "/ip hotspot user add name=";
   addCoinScript += voucher;
   addCoinScript += " limit-uptime=0 comment=0";
+  if(VOUCHER_LOGIN_OPTION == 1){
+    addCoinScript += " password=";
+    addCoinScript += voucher;
+  }
+  if(VOUCHER_PROFILE != "" && VOUCHER_PROFILE != "default"){
+    addCoinScript += " profile=";
+    addCoinScript += VOUCHER_PROFILE;   
+  }
   sendCommand(addCoinScript);
 }
 
@@ -1166,7 +1182,7 @@ void resetGlobalVariables(){
 void disableCoinSlot(){
   coinSlotActive = false;
   digitalWrite(COIN_SET_PIN, LOW);
-  digitalWrite(INSERT_COIN_LED, LOW);
+  digitalWrite(INSERT_COIN_LED, evaluateTriggerOutput(TURN_OFF));
 }
 
 int calculateAddTime(){
@@ -1185,7 +1201,13 @@ int calculateAddTime(){
       }
     }
     if( candidateIndex != -1 ){
-      currentValidity += rates[candidateIndex].validity;
+      //when extend time and voucher validity option is  First Validity + extend time, add the extend time instead of validity
+      if((!isNewVoucher) && VOUCHER_VALIDITY_OPTION == 1){
+        currentValidity += rates[candidateIndex].minutes;
+      }else{
+        currentValidity += rates[candidateIndex].validity;
+      }
+      
       totalTime += rates[candidateIndex].minutes;
       remainingCoin -= rates[candidateIndex].price;
     }else{
@@ -1204,7 +1226,7 @@ void populateSystemConfiguration(){
   String data = readFile("/admin/config/system.data");
   Serial.print("Data: ");
   Serial.println(data);
-  int rowSize = 21;
+  int rowSize = 25;
   String rows[rowSize];
   split(rows, data, '|');
   String ip[4];
@@ -1233,6 +1255,10 @@ void populateSystemConfiguration(){
   VOUCHER_PREFIX = rows[18];
   MARQUEE_MESSAGE = rows[19];
   macRandomIndex = rows[20].toInt();
+  VOUCHER_LOGIN_OPTION = rows[21].toInt();
+  VOUCHER_PROFILE = rows[22];
+  VOUCHER_VALIDITY_OPTION = rows[23].toInt();
+  LED_TRIGGER_TYPE = rows[24].toInt();
 
   #ifdef ESP32
   //this is for LAN base for generating MAC address, if already have existing in the setting we will reuse that mac address
@@ -1340,7 +1366,8 @@ void loop () {
               }
             }else{
               //clear thank you message after button press
-              thankyou_cooldown = 0;  
+              thankyou_cooldown = 0;
+              targetMilis = currentMilis;
               delay(1000);
             }
           }else{
@@ -1440,8 +1467,8 @@ void handleSystemAbnormal(){
     Serial.println("AP disconnected!!!!!!!!!!!!!!!");
     mikrotekConnectionSuccess = false;
     printSystemNotAvailable();
-    digitalWrite(INSERT_COIN_LED, LOW);
-    digitalWrite(SYSTEM_READY_LED, LOW);
+    digitalWrite(INSERT_COIN_LED, evaluateTriggerOutput(TURN_OFF));
+    digitalWrite(SYSTEM_READY_LED, evaluateTriggerOutput(TURN_OFF));
     //Reconnect after 30 seconds
     delay(30000);
     ESP.restart();
@@ -1708,4 +1735,21 @@ int startCenterIndex(String text){
         startCenterIndex--;
     }
     return startCenterIndex;
+}
+
+
+int evaluateTriggerOutput(int state){
+  if(LED_TRIGGER_TYPE == 1){
+    if(state == TURN_ON){
+        return HIGH;
+    }else{
+        return LOW;
+    }
+  }else{
+    if(state == TURN_ON){
+        return LOW;
+    }else{
+        return HIGH;
+    }
+  }
 }
