@@ -152,7 +152,7 @@ IPAddress apIP(172, 217, 28, 1);
 
 
 
-const int WIFI_CONNECT_TIMEOUT = 30000;
+const int WIFI_CONNECT_TIMEOUT = 45000;
 const int WIFI_CONNECT_DELAY = 500;
 
 bool networkConnected = false;
