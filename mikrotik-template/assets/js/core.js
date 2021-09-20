@@ -76,7 +76,7 @@ function promoBtnAction(){
 }
 
 //this is to enable multi vendo setup, set to true when multi vendo is supported
-var isMultiVendo = true;
+var isMultiVendo = false;
 
 //list here all node mcu address for multi vendo setup
 var multiVendoAddresses = [
@@ -91,10 +91,10 @@ var multiVendoAddresses = [
 ];
 
 //0 means its login by username only, 1 = means if login by username + password
-var loginOption = 1; //replace 1 if you want login voucher by username + password
+var loginOption = 0; //replace 1 if you want login voucher by username + password
 
 //put here the default selected address
-var vendorIpAddress = "10.0.10.254";
+var vendorIpAddress = "10.0.10.253";
 var timer = null;
 
 function insertBtnAction(){
