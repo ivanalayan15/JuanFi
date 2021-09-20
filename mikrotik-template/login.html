@@ -5,11 +5,72 @@
     <link rel="stylesheet" href="assets/css/bootstrap.min.css">
 	<link rel="stylesheet" href="assets/css/toast.min.css">
 	<link rel="stylesheet" href="assets/css/core.css">
+	<link rel="stylesheet" href="assets/css/JuanFi.css">
     <title>JuanFi Login Portal</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <script src="assets/js/md5.js"></script>
+	
+<style>
+#insertBtn {
+  display: block;
+  width: 100%;
+  height: 50px;
+  font-family: 'Droid Sans Mono', sans-serif;
+  font-size: 14px;
+  color: #fff;
+  background-color: #9b59b6;
+  border-radius: 5px;
+  box-shadow: 0px 3px 0px #8e44ad;
+  text-align: center;
+  line-height: 30px;
+  text-decoration: none;
+  text-shadow: 0px 1px 3px #000;
+  margin: 5px auto 0;
+  margin-top: -25px;
+  font-weight: bold;
+  border: none;
+  -webkit-animation: btnWiggle 3s infinite;
+  -moz-animation: btnWiggle 3s infinite;
+  -o-animation: btnWiggle 3s infinite;
+  animation: btnWiggle 3s infinite;
+}
+
+/* animation */
+@-webkit-keyframes btnWiggle {
+	0% {-webkit-transform: rotate(0deg);}
+	2% {-webkit-transform: rotate(-5deg);}
+	3.5% {-webkit-transform: rotate(3deg);}
+	5% {-webkit-transform: rotate(0deg);}
+	10.5% {-webkit-transform: rotate(-5deg);}
+	20% {-webkit-transform: rotate(3deg);}
+	23% {-webkit-transform: rotate(0deg);}
+	100% {-webkit-transform: rotate(0deg);}
+}
+@-o-keyframes btnWiggle {
+	0% {-webkit-transform: rotate(0deg);}
+	2% {-webkit-transform: rotate(-5deg);}
+	3.5% {-webkit-transform: rotate(3deg);}
+	5% {-webkit-transform: rotate(0deg);}
+	10.5% {-webkit-transform: rotate(-5deg);}
+	20% {-webkit-transform: rotate(3deg);}
+	23% {-webkit-transform: rotate(0deg);
+	100% {-webkit-transform: rotate(0deg);}
+}
+}
+@keyframes btnWiggle {
+	0% {-webkit-transform: rotate(0deg);}
+	2% {-webkit-transform: rotate(-5deg);}
+	3.5% {-webkit-transform: rotate(3deg);}
+	5% {-webkit-transform: rotate(0deg);}
+	10.5% {-webkit-transform: rotate(-5deg);}
+	20% {-webkit-transform: rotate(3deg);}
+	23% {-webkit-transform: rotate(0deg);
+	100% {-webkit-transform: rotate(0deg);}
+}
+}
+</style>
 </head>
 
 <body id="loginBody">
@@ -46,7 +107,11 @@
 				removeStorageValue(vc+"tempValidity");
 			}
             document.sendin.username.value = vc;
-            document.sendin.password.value = hexMD5('$(chap-id)' + "" + '$(chap-challenge)');
+			if(loginOption == 0){
+				document.sendin.password.value = hexMD5('$(chap-id)' + "" + '$(chap-challenge)');
+			}else{
+				document.sendin.password.value = hexMD5('$(chap-id)' + vc + '$(chap-challenge)');
+			}
             document.sendin.submit();
             return false;
         }
@@ -63,7 +128,7 @@
         <div class="row">
 			
             <div class="col-sm-6">
-                <div class="row">
+                <div class="row" style="margin-bottom: 20px">
                     <img src="assets/MainPic.PNG" class="img-fluid" />
                 </div>
             </div>
@@ -71,11 +136,19 @@
             <div class="col-sm-4">
                 <div class="login">
                     <center>
-						<ul class="list-group">
-						  <li class="list-group-item active" style="background-color: #e82020">Disconnected</li>
-						  <li class="list-group-item">IP: $(ip)</li>
-						  <li class="list-group-item">Mac: $(mac)</li>
-						</ul>
+					
+					<table class="info">
+						<tr>
+						<th style="width: 50%"><img src="assets/img/ip.png" width="20px" height="20px" /></th>
+						<th><img src="assets/img/mac.png" width="20px" height="20px" /></th>
+						</tr>
+						<tr>
+						<td>$(ip)</td>
+						<td>$(mac)</td>
+						</tr>
+					</table>
+					
+					<span class="status-disconnected">Disconnected</span><br>
                     </center>
 					<div id="vendoSelectDiv">
 						<label for="exampleFormControlSelect2">Select Vendo: </label>
@@ -91,10 +164,10 @@
 					<div style="margin-bottom:-5px"></div>
 					<br>
 					<div class="form-group">
-						<input type="voucher" class="form-control" id="voucherInput" aria-describedby="voucherHelp" placeholder="Voucher Code">
+						<input type="voucher" class="form-control" id="voucherInput" aria-describedby="voucherHelp" placeholder="Voucher Code Here..">
 						<small id="voucherHelp" class="form-text text-muted">Please enter voucher code if have existing</small>
 					</div>
-					<button type="button" onClick="doLogin(); return false" class="btn btn-info btn-block">Connect</button>
+					<button type="button" onClick="doLogin(); return false" class="btn btn-info btn-block">CONNECT</button>
 					
 					<div class="modal fade" id="insertCoinModal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="insertCoinModalTitle" aria-hidden="true">
 					  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -106,26 +179,32 @@
 							</button>
 						  </div>
 						  <div class="modal-body">
-							    <img src="assets/insert-coin-animation.gif" class="insertCoinImg"/>
-								<br/>
-								<h3 id="codeGeneratedBlock">Your code is: <span id="codeGenerated">AAA</span></h3>
-								<div class="progress">
+							    <div class="progress" style="margin-bottom: 20px">
 									<div id="progressDiv" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>
 								</div>
-								<table class="table">
-								  <thead>
-									<tr>
-									  <th scope="col">Coin</th>
-									  <th scope="col">Total Time</th>
-									</tr>
-								  </thead>
-								  <tbody>
-									<tr>
-									  <td id="totalCoin">0</td>
-									  <td id="totalTime">0 Day 0 Hour 0 Min 0 Sec</td>
-									</tr>
-								  </tbody>
-								</table>
+								
+								<div class="inscoin">
+								<center>
+								<div class="inscoinholder" style="border: 2px solid #eee; padding: 5px; height: 70px">
+								<span style="color: #747d8c">Your code is</span><br>
+								<span id="codeGeneratedBlock">
+									<span id="codeGenerated" style="font-size: 25px; font-weight: bold; color: #8e44ad">*****</span>
+								</span>
+								</div>
+								
+								<div class="inscoinholder">
+								<span id="totalCoin" style="font-size: 20px; font-weight: bold; color: #57606f">0</span><span style="font-size: 20px; font-weight: bold; color: #57606f">.00 Php</span><br>
+								<span style="color: #747d8c">Coin</span>
+								</div>
+								
+								<div class="inscoinholder">
+								<span id="totalTime" style="font-size: 20px; font-weight: bold; color: #57606f"></span><br>
+								<span style="color: #747d8c">Time</span>
+								</div>						
+								</center>
+								</div>
+								
+								
 								
 						  </div>
 						  <div class="modal-footer">
@@ -189,7 +268,11 @@
 					<img src="assets/loading.svg" />
 				</center>
 			</div>
-			
+	</div>	
+
+</div>	
+</div>
+</div>
 </body>
 
 </html>
