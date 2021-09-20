@@ -5,9 +5,7 @@
 	<link rel="stylesheet" href="assets/css/bootstrap.min.css">
 	<link rel="stylesheet" href="assets/css/toast.min.css">
 	<link rel="stylesheet" href="assets/css/core.css">
-	$(if refresh-timeout)
-	<meta http-equiv="refresh" content="$(refresh-timeout-secs)">
-	$(endif)
+
     <title>JuanFi - Status</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
@@ -53,10 +51,10 @@
 						</select>
 					</div>
                     <br>
-					<button type="button" id="insertBtn" class="btn btn-success btn-block"  data-toggle="modal" >ADD TIME</button>
+					<button type="button" id="insertBtn" onclick="insertBtnAction(); return false" class="btn btn-success btn-block"  data-toggle="modal" >ADD TIME</button>
                     <div style="margin-bottom:-5px"></div>
 					<br>
-					<button type="button" id="promoRateBtn" class="btn btn-warning btn-block">PROMO RATES</button>
+					<button type="button" id="promoRateBtn" onclick="promoBtnAction(); return false" class="btn btn-warning btn-block">PROMO RATES</button>
 					<div style="margin-bottom:-5px"></div>
 					<br>
 					<button type="button" onClick="document.logout.submit();" class="btn btn-danger btn-block">LOGOUT</button>
@@ -93,7 +91,7 @@
 								
 						  </div>
 						  <div class="modal-footer">
-							<button type="button" id="saveVoucherButton" data-save-type="extend" class="btn btn-primary" data-dismiss="modal">
+							<button type="button" id="saveVoucherButton" data-save-type="extend" onclick="saveVoucherBtnAction(); return false" class="btn btn-primary" data-dismiss="modal">
 							  Save and Connect
 							</button>
 							<button type="button" id="cncl" class="btn btn-danger" data-dismiss="modal">Cancel</button>
@@ -145,10 +143,12 @@
 			<script>
 				var sessiontime = "$(session-time-left-secs)";
 				var uptime = "$(uptime-secs)";
+				var currentVoucher = "$(username)";
 				window.name="hotspot_status";
 				
 				$(document).ready(function(){
-					var validity = localStorage.getItem(voucher+"validity");
+					voucher = currentVoucher;
+					var validity = getStorageValue(voucher+"validity");
 					if(validity != null){
 						$("#expirationTime").html(new Date(parseInt(validity)));
 					}
@@ -165,7 +165,6 @@
 								delay: 5000
 							});
 							clearInterval(zz);
-							cleanUpLocalStorage(voucher);
 							setTimeout(function(){
 								document.logout.submit();
 							}, 6000);
@@ -173,6 +172,14 @@
 					}, 1000);
 					
 				});
+				
+				$(if refresh-timeout)
+					setInterval(function(){
+						if(!insertingCoin){
+							location.reload();
+						}
+					}, $(refresh-timeout-secs) * 1000);
+				$(endif)
 			</script>
 			
 			

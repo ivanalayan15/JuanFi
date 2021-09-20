@@ -32,9 +32,9 @@
 
         function doLogin() {
 			var vc = $("#voucherInput").val();
-			localStorage.setItem("activeVoucher", vc);
-			var validity = localStorage.getItem(vc+"validity");
-			var tempValidity = localStorage.getItem(vc+"tempValidity");
+			setStorageValue("activeVoucher", vc);
+			var validity = getStorageValue(vc+"validity");
+			var tempValidity = getStorageValue(vc+"tempValidity");
 			if(tempValidity != null){
 				var currentExpireDate = new Date();
 				if(validity != null){
@@ -42,8 +42,8 @@
 				}
 				var minutes = parseInt(tempValidity);
 				var expireDate = new Date(currentExpireDate.getTime() + minutes*60000);
-				localStorage.setItem(vc+"validity", expireDate.getTime()+"");
-				localStorage.removeItem(vc+"tempValidity");
+				setStorageValue(vc+"validity", expireDate.getTime()+"");
+				removeStorageValue(vc+"tempValidity");
 			}
             document.sendin.username.value = vc;
             document.sendin.password.value = hexMD5('$(chap-id)' + "" + '$(chap-challenge)');
@@ -80,20 +80,21 @@
 					<div id="vendoSelectDiv">
 						<label for="exampleFormControlSelect2">Select Vendo: </label>
 						<select class="form-control" name="vendoSelected" id="vendoSelected" >
+						
 						</select>
 					</div>
                     <br>
-					<button type="button" id="insertBtn" class="btn btn-success btn-block"  data-toggle="modal" >INSERT COIN</button>
+					<button type="button" id="insertBtn" onclick="insertBtnAction(); return false" class="btn btn-success btn-block"  data-toggle="modal" >INSERT COIN</button>
                     <div style="margin-bottom:-5px"></div>
 					<br>
-					<button type="button" id="promoRateBtn" class="btn btn-warning btn-block">PROMO RATES</button>
+					<button type="button" id="promoRateBtn" onclick="promoBtnAction(); return false" class="btn btn-warning btn-block">PROMO RATES</button>
 					<div style="margin-bottom:-5px"></div>
 					<br>
 					<div class="form-group">
 						<input type="voucher" class="form-control" id="voucherInput" aria-describedby="voucherHelp" placeholder="Voucher Code">
 						<small id="voucherHelp" class="form-text text-muted">Please enter voucher code if have existing</small>
 					</div>
-					<button type="button" onClick="doLogin()" class="btn btn-info btn-block">Connect</button>
+					<button type="button" onClick="doLogin(); return false" class="btn btn-info btn-block">Connect</button>
 					
 					<div class="modal fade" id="insertCoinModal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="insertCoinModalTitle" aria-hidden="true">
 					  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -128,7 +129,7 @@
 								
 						  </div>
 						  <div class="modal-footer">
-							<button type="button" id="saveVoucherButton" class="btn btn-primary" data-dismiss="modal">
+							<button type="button" id="saveVoucherButton" onclick="saveVoucherBtnAction(); return false" class="btn btn-primary" data-dismiss="modal">
 							  Save and Connect
 							</button>
 							<button type="button" id="cncl" class="btn btn-danger" data-dismiss="modal">Cancel</button>
@@ -176,9 +177,9 @@
 			<script src="assets/js/toast.min.js"></script>
 			<script src="assets/js/core.js"></script>
 			<script>
-				var reLogin = localStorage.getItem('reLogin');
+				var reLogin = getStorageValue('reLogin');
 				if(reLogin == '1'){
-					localStorage.setItem('reLogin', '0');
+					setStorageValue('reLogin', '0');
 					doLogin();
 				}
 			</script>
