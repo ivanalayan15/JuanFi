@@ -1,6 +1,7 @@
 var errorCodeMap = [];
 errorCodeMap['coins.wait.expired'] = 'Coin slot expired';
 errorCodeMap['coin.not.inserted'] = 'Coin not inserted';
+errorCodeMap['coinslot.cancelled'] = 'Coinslot was cancelled';
 errorCodeMap['coinslot.busy'] = 'Coin slot is busy';
 errorCodeMap['coin.slot.banned'] = 'You have been banned from using coin slot, due to multiple request for insert coin, please try again later!';
 errorCodeMap['coin.slot.notavailable'] = 'Coin slot is not available as of the moment, Please try again later';
@@ -48,12 +49,12 @@ $(document).ready(function(){
 	  }
 	  var selectedVendo = getStorageValue('selectedVendo');
 	  if(selectedVendo != null){
-		  vendorIpAdress = selectedVendo;
+		  vendorIpAddress = selectedVendo;
 	  }
-	  $("#vendoSelected").val(vendorIpAdress);
+	  $("#vendoSelected").val(vendorIpAddress);
 	  $("#vendoSelected").change(function(){
-		vendorIpAdress = $("#vendoSelected").val();
-		setStorageValue('selectedVendo', vendorIpAdress);
+		vendorIpAddress = $("#vendoSelected").val();
+		setStorageValue('selectedVendo', vendorIpAddress);
 	  });
 	  
 	  $("#vendoSelected").trigger("change");
@@ -75,7 +76,7 @@ function promoBtnAction(){
 }
 
 //this is to enable multi vendo setup, set to true when multi vendo is supported
-var isMultiVendo = true;
+var isMultiVendo = false;
 
 //list here all node mcu address for multi vendo setup
 var multiVendoAddresses = [
@@ -89,8 +90,11 @@ var multiVendoAddresses = [
 	}
 ];
 
+//0 means its login by username only, 1 = means if login by username + password
+var loginOption = 0; //replace 1 if you want login voucher by username + password
+
 //put here the default selected address
-var vendorIpAdress = "10.0.10.253";
+var vendorIpAddress = "10.0.10.253";
 var timer = null;
 
 function insertBtnAction(){
@@ -108,7 +112,7 @@ function insertBtnAction(){
 $('#promoRatesModal').on('shown.bs.modal', function (e) {
   $.ajax({
 	  type: "GET",
-	  url: "http://"+vendorIpAdress+"/getRates?date="+(new Date().getTime()),
+	  url: "http://"+vendorIpAddress+"/getRates?date="+(new Date().getTime()),
 	  crossOrigin: true,
 	  contentType: 'text/plain',
 	  success: function(data){
@@ -147,7 +151,7 @@ function callTopupAPI(retryCount){
 	
 	$.ajax({
 	  type: "POST",
-	  url: "http://"+vendorIpAdress+"/topUp",
+	  url: "http://"+vendorIpAddress+"/topUp",
 	  data: "voucher="+voucher+"&mac="+mac,
 	  success: function(data){
 		$("#loaderDiv").attr("class","spinner hidden");
@@ -192,7 +196,7 @@ function saveVoucherBtnAction(){
 	insertcoinbg.currentTime = 0.0;
 	$.ajax({
 	  type: "POST",
-	  url: "http://"+vendorIpAdress+"/useVoucher",
+	  url: "http://"+vendorIpAddress+"/useVoucher",
 	  data: "voucher="+voucher,
 	  success: function(data){
 		totalCoinReceived = 0;
@@ -240,7 +244,7 @@ function saveVoucherBtnAction(){
 function checkCoin(){
 	$.ajax({
 	  type: "POST",
-	  url: "http://"+vendorIpAdress+"/checkCoin",
+	  url: "http://"+vendorIpAddress+"/checkCoin",
 	  data: "voucher="+voucher,
 	  success: function(data){
 		
@@ -297,6 +301,13 @@ function checkCoin(){
 					$("#progressDiv").attr('style','width: '+percent+'%')
 				}
 				
+			}else if(data.errorCode == "coinslot.busy"){
+				//when manually cleared the button
+				insertcoinbg.pause();
+				insertcoinbg.currentTime = 0.0;
+				notifyCoinSlotError("coinslot.cancelled");
+				clearInterval(timer);
+				$('#insertCoinModal').modal('hide');
 			}else{
 				notifyCoinSlotError(data.errorCode);
 				clearInterval(timer);

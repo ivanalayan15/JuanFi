@@ -5,7 +5,7 @@
 	<link rel="stylesheet" href="assets/css/bootstrap.min.css">
 	<link rel="stylesheet" href="assets/css/toast.min.css">
 	<link rel="stylesheet" href="assets/css/core.css">
-
+	<link rel="stylesheet" href="assets/css/JuanFi.css">
     <title>JuanFi - Status</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
@@ -26,32 +26,67 @@
         <div class="row">
 			
             <div class="col-sm-6">
-                <div class="row">
+                <div class="row" style="margin-bottom: 20px">
                     <img src="assets/MainPic.PNG" class="img-fluid" />
                 </div>
             </div>
 
             <div class="col-sm-4">
                 <div class="login">
-                    <center>
-						<ul class="list-group">
-						  <li class="list-group-item active" style="background-color: #20e88c">Connected</li>
-						  <li class="list-group-item">IP: $(ip)</li>
-						  <li class="list-group-item">Mac: $(mac)</li>
-						  <li class="list-group-item">Voucher: $(username)</li>
-						  <li class="list-group-item">Remaining Time: <span id="remainTime"></span></li>
-						  <li class="list-group-item">Expiration Time: <span id="expirationTime">-</span></li>
-						  <li class="list-group-item"><i class="fa fa-arrow-circle-up"></i>&nbsp;<b>$(bytes-in-nice)</b>&nbsp;<b>|</b>&nbsp;<i class="fa fa-arrow-circle-down"></i>&nbsp;<b>$(bytes-out-nice)</b></li>
-						  
-						</ul>
-                    </center>
-					<div id="vendoSelectDiv">
+				
+				<center>
+					
+					<table class="info">
+						<tr>
+						<th style="width: 50%"><img src="assets/img/ip.png" width="20px" height="20px" /></th>
+						<th><img src="assets/img/mac.png" width="20px" height="20px" /></th>
+						</tr>
+						<tr>
+						<td>$(ip)</td>
+						<td>$(mac)</td>
+						</tr>
+					</table>
+					<span class="status-connected">Connected</span><br>
+                </center>
+				
+				<div class="info-status">
+				<center>
+					<div class="status-holder">
+						<div  class="info-title"><img src="assets/img/voucher.png" width="20px" height="20px" /><span> Voucher</span></div>
+						<span style="font-size: 25px; font-weight: bold">$(username)</span>
+					</div>
+					
+					<div class="break2"></div>
+					
+					<div class="status-holder">						
+						<div class="info-title"><img src="assets/img/time.png" width="20px" height="20px" /><span> Remaining Time</span></div>
+						<span id="remainTime" style="font-size: 16px; font-weight: bold"></span>
+					</div>
+					
+					<div class="break2"></div>
+					
+					<div class="status-holder">					
+						<div class="info-title"><img src="assets/img/timeexpired.png" width="20px" height="20px" /><span> Expiration Time</span></div>
+						<span id="expirationTime" style="font-size: 16px; font-weight: bold"></span>
+					</div>
+					
+					<div class="break2"></div>
+					
+					<div class="status-holder">
+						<div class="info-title"><img src="assets/img/data.png" width="20px" height="20px" /><span> Data Usage</span></div>
+						<div style="display: inline-block"><img src="assets/img/upload.png" width="20px" height="20px" /><span style="font-size: 16px; font-weight: bold">$(bytes-in-nice)</span></div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+						<div style="display: inline-block"><img src="assets/img/download.png" width="20px" height="20px" /><span style="font-size: 16px; font-weight: bold">$(bytes-out-nice)</span></div>
+					</div>
+				</center>
+				</div>
+					
+					<div id="vendoSelectDiv" style="margin-top: 20px">
 						<label for="exampleFormControlSelect2">Select Vendo: </label>
 						<select class="form-control" name="vendoSelected" id="vendoSelected" >
 						</select>
 					</div>
                     <br>
-					<button type="button" id="insertBtn" onclick="insertBtnAction(); return false" class="btn btn-success btn-block"  data-toggle="modal" >ADD TIME</button>
+					<button type="button" id="insertBtn" onclick="insertBtnAction(); return false" class="btn btn-success btn-block"  data-toggle="modal" >EXTEND TIME</button>
                     <div style="margin-bottom:-5px"></div>
 					<br>
 					<button type="button" id="promoRateBtn" onclick="promoBtnAction(); return false" class="btn btn-warning btn-block">PROMO RATES</button>
@@ -69,25 +104,30 @@
 							</button>
 						  </div>
 						  <div class="modal-body">
-								<img src="assets/insert-coin-animation.gif" class="insertCoinImg"/>
-								<br/>
-								<div class="progress">
+								<div class="progress" style="margin-bottom: 20px">
 									<div id="progressDiv" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>
 								</div>
-								<table class="table">
-								  <thead>
-									<tr>
-									  <th scope="col">Coin</th>
-									  <th scope="col">Total Time</th>
-									</tr>
-								  </thead>
-								  <tbody>
-									<tr>
-									  <td id="totalCoin">0</td>
-									  <td id="totalTime">0 Day 0 Hour 0 Min 0 Sec</td>
-									</tr>
-								  </tbody>
-								</table>
+								
+								<div class="inscoin">
+								<center>
+								<div class="inscoinholder" style="border: 2px solid #eee; padding: 5px; height: 70px">
+								<span style="color: #747d8c">Your code is</span><br>
+								<span id="codeGeneratedBlock">
+									<span id="codeGenerated" style="font-size: 25px; font-weight: bold; color: #8e44ad">*****</span>
+								</span>
+								</div>
+								
+								<div class="inscoinholder">
+								<span id="totalCoin" style="font-size: 20px; font-weight: bold; color: #57606f">0</span><span style="font-size: 20px; font-weight: bold; color: #57606f">.00 Php</span><br>
+								<span style="color: #747d8c">Coin</span>
+								</div>
+								
+								<div class="inscoinholder">
+								<span id="totalTime" style="font-size: 20px; font-weight: bold; color: #57606f"></span><br>
+								<span style="color: #747d8c">Time</span>
+								</div>						
+								</center>
+								</div>
 								
 						  </div>
 						  <div class="modal-footer">
@@ -188,6 +228,8 @@
 					<img src="assets/loading.svg" />
 				</center>
 			</div>
+</div>
+</div>
 </body>
 
 </html>
