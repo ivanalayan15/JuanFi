@@ -4,10 +4,14 @@ JuanFi is an open source system for coinslot integration for mikrotik hotspot
 
 ## Donation
 
-Donation is very welcome, if you want to donate, you can donate using this GCASH account
+Donation is very welcome, if you want to donate, you can donate using 
 
+Gcash account:
 Ivan Julius Alayan
 09175425572
+
+Paypal account:
+https://www.paypal.com/paypalme/ivanalayan
 
 
 ## Features
