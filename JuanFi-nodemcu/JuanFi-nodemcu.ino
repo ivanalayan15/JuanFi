@@ -28,6 +28,7 @@
   #include <TelnetClient.h>
   #include "lan_definition.h"
   #include <SPIFFS.h>
+  #include <WiFi.h>
 #else
   #include <ESP8266TelnetClient.h>
   #include <ESP8266WiFi.h>
@@ -359,29 +360,7 @@ void initializeLANSetup(){
   Serial.println(" with " + String(SHIELD_TYPE));
   Serial.println(ETHERNET_WEBSERVER_VERSION);
 
-  #if USE_ETHERNET_WRAPPER
-  
-    EthernetInit();
-  
-  #else
-
-  #if USE_NATIVE_ETHERNET
-    ET_LOGWARN(F("======== USE_NATIVE_ETHERNET ========"));
-  #elif USE_ETHERNET
-    ET_LOGWARN(F("=========== USE_ETHERNET ==========="));
-  #elif USE_ETHERNET2
-    ET_LOGWARN(F("=========== USE_ETHERNET2 ==========="));
-  #elif USE_ETHERNET3
-    ET_LOGWARN(F("=========== USE_ETHERNET3 ==========="));
-  #elif USE_ETHERNET_LARGE
-    ET_LOGWARN(F("=========== USE_ETHERNET_LARGE ==========="));
-  #elif USE_ETHERNET_ESP8266
-    ET_LOGWARN(F("=========== USE_ETHERNET_ESP8266 ==========="));
-  #elif USE_ETHERNET_ENC
-    ET_LOGWARN(F("=========== USE_ETHERNET_ENC ==========="));
-  #else
-    ET_LOGWARN(F("========================="));
-  #endif
+  ET_LOGWARN(F("=========== USE_ETHERNET ==========="));
 
   ET_LOGWARN(F("Default SPI pinout:"));
   ET_LOGWARN1(F("MOSI:"), MOSI);
@@ -390,104 +369,51 @@ void initializeLANSetup(){
   ET_LOGWARN1(F("SS:"),   SS);
   ET_LOGWARN(F("========================="));
 
-  // You can use Ethernet.init(pin) to configure the CS pin
-  //Ethernet.init(10);  // Most Arduino shields
-  //Ethernet.init(5);   // MKR ETH shield
-  //Ethernet.init(0);   // Teensy 2.0
-  //Ethernet.init(20);  // Teensy++ 2.0
-  //Ethernet.init(15);  // ESP8266 with Adafruit Featherwing Ethernet
-  //Ethernet.init(33);  // ESP32 with Adafruit Featherwing Ethernet
-
   #ifndef USE_THIS_SS_PIN
     #define USE_THIS_SS_PIN   5   //22    // For ESP32
   #endif
 
   ET_LOGWARN1(F("ESP32 setCsPin:"), USE_THIS_SS_PIN);
+  Ethernet.init (USE_THIS_SS_PIN);
+  // start the ethernet connection and the server:
+  Serial.println("Ethernet initialized...");
 
-  // For other boards, to change if necessary
-  #if ( USE_ETHERNET || USE_ETHERNET_LARGE || USE_ETHERNET2 || USE_ETHERNET_ENC )
-    // Must use library patch for Ethernet, EthernetLarge libraries
-    // ESP32 => GPIO2,4,5,13,15,21,22 OK with Ethernet, Ethernet2, EthernetLarge
-    // ESP32 => GPIO2,4,5,15,21,22 OK with Ethernet3
-  
-    //Ethernet.setCsPin (USE_THIS_SS_PIN);
-    Ethernet.init (USE_THIS_SS_PIN);
-  
-  #elif USE_ETHERNET3
-    // Use  MAX_SOCK_NUM = 4 for 4K, 2 for 8K, 1 for 16K RX/TX buffer
-  #ifndef ETHERNET3_MAX_SOCK_NUM
-  #define ETHERNET3_MAX_SOCK_NUM      4
-  #endif
-  
-    Ethernet.setCsPin (USE_THIS_SS_PIN);
-    Ethernet.init (ETHERNET3_MAX_SOCK_NUM);
-  
-  #elif USE_CUSTOM_ETHERNET
-  
-    // You have to add initialization for your Custom Ethernet here
-    // This is just an example to setCSPin to USE_THIS_SS_PIN, and can be not correct and enough
-    Ethernet.init(USE_THIS_SS_PIN);
-  
-  #endif  //( USE_ETHERNET || USE_ETHERNET2 || USE_ETHERNET3 || USE_ETHERNET_LARGE )
+  //Use the ESP32 wifi mac address for our LAN
+  byte mac[6];
+  WiFi.macAddress(mac);
 
-  #endif  //USE_ETHERNET_WRAPPER
-     // start the ethernet connection and the server:
-    Serial.println("Ethernet initialized...");
-
-    if (Ethernet.linkStatus() == LinkOFF) {
-      Serial.println("Cable not detected!!!");
-      networkConnected = false;
-      cableNotConnected = true;
-    }else if(Ethernet.begin(mac[macRandomIndex]) != 0){
-      networkConnected = true;
-    }else{
-      networkConnected = false;
-      Serial.println("Cannot connect to dhcp server");
-      Ethernet.begin(mac[macRandomIndex], apIP, apIP, apIP, IPAddress(255, 255, 255, 0));
-    }
-    // Just info to know how to connect correctly
-    Serial.println(F("========================="));
-    Serial.println(F("Currently Used SPI pinout:"));
-    Serial.print(F("MOSI:"));
-    Serial.println(MOSI);
-    Serial.print(F("MISO:"));
-    Serial.println(MISO);
-    Serial.print(F("SCK:"));
-    Serial.println(SCK);
-    Serial.print(F("SS:"));
-    Serial.println(SS);
-  #if USE_ETHERNET3
-    Serial.print(F("SPI_CS:"));
-    Serial.println(SPI_CS);
-  #endif
-    Serial.println("=========================");
+  if (Ethernet.linkStatus() == LinkOFF) {
+    Serial.println("Cable not detected!!!");
+    networkConnected = false;
+    cableNotConnected = true;
+  }else if(Ethernet.begin(mac) != 0){
+    networkConnected = true;
+  }else{
+    networkConnected = false;
+    Serial.println("Cannot connect to dhcp server");
+    Ethernet.begin(mac, apIP, apIP, apIP, IPAddress(255, 255, 255, 0));
+  }
+  // Just info to know how to connect correctly
+  Serial.println(F("========================="));
+  Serial.println(F("Currently Used SPI pinout:"));
+  Serial.print(F("MOSI:"));
+  Serial.println(MOSI);
+  Serial.print(F("MISO:"));
+  Serial.println(MISO);
+  Serial.print(F("SCK:"));
+  Serial.println(SCK);
+  Serial.print(F("SS:"));
+  Serial.println(SS);
+  Serial.println("=========================");
   
-    Serial.print(F("Connected! IP address: "));
-    Serial.println(Ethernet.localIP());
+  Serial.print(F("Connected! IP address: "));
+  Serial.println(Ethernet.localIP());
 
-    currentIpAddress = Ethernet.localIP().toString().c_str();
-    char str[12] = "";
-    array_to_string(mac[macRandomIndex], 6, str);
-    for(int i=0;i<12;i++){
-      if(i > 0 && i%2 == 0){
-        currentMacAddress += ":";
-      }
-      currentMacAddress += str[i];
-    }
+  currentIpAddress = Ethernet.localIP().toString().c_str();
+  //Use the ESP32 wifi mac address for our LAN
+  currentMacAddress = WiFi.macAddress();
 }
 #endif
-
-void array_to_string(byte array[], unsigned int len, char buffer[])
-{
-    for (unsigned int i = 0; i < len; i++)
-    {
-        byte nib1 = (array[i] >> 4) & 0x0F;
-        byte nib2 = (array[i] >> 0) & 0x0F;
-        buffer[i*2+0] = nib1  < 0xA ? '0' + nib1  : 'A' + nib1  - 0xA;
-        buffer[i*2+1] = nib2  < 0xA ? '0' + nib2  : 'A' + nib2  - 0xA;
-    }
-    buffer[len*2] = '\0';
-}
 
 void initializeLCD(){
   if(LCD_TYPE > 0){
@@ -1260,24 +1186,6 @@ void populateSystemConfiguration(){
   VOUCHER_VALIDITY_OPTION = rows[23].toInt();
   LED_TRIGGER_TYPE = rows[24].toInt();
 
-  #ifdef ESP32
-  //this is for LAN base for generating MAC address, if already have existing in the setting we will reuse that mac address
-  if(macRandomIndex < 0 || macRandomIndex > NUMBER_OF_MAC){
-    macRandomIndex = random(0, NUMBER_OF_MAC-1);
-    Serial.println("No mac address found yet on EEPROM, assigning new address");
-    Serial.print(macRandomIndex);
-    rows[20] = macRandomIndex;
-    //save the random mac address
-    String newData = "";
-    for(int i=0;i<rowSize;i++){
-      if(i>0){
-        newData += ROW_DELIMETER;
-      }
-      newData += rows[i];
-    }
-    handleFileWrite("/admin/config/system.data", newData);
-  }
-  #endif
 }
 
 
