@@ -167,40 +167,6 @@ long lastPrinted = 0;
 
 String MARQUEE_MESSAGE = "This is marquee";
 
-void heartBeatPrint()
-{
-  static int num = 1;
-
-  Serial.print(F("H"));        // H means alive
-
-  if (num == 80)
-  {
-    Serial.println();
-    num = 1;
-  }
-  else if (num++ % 10 == 0)
-  {
-    Serial.print(F(" "));
-  }
-}
-
-void check_status()
-{
-  static ulong checkstatus_timeout  = 0;
-  static ulong current_millis;
-
-#define HEARTBEAT_INTERVAL    10000L
-
-  current_millis = millis();
-  
-  // Print hearbeat every HEARTBEAT_INTERVAL (10) seconds.
-  if ((current_millis > checkstatus_timeout) || (checkstatus_timeout == 0))
-  {
-    heartBeatPrint();
-    checkstatus_timeout = current_millis + HEARTBEAT_INTERVAL;
-  }
-}
-
 void setup () { 
                                 
   Serial.begin (115200);
@@ -683,7 +649,7 @@ bool handleFileWrite(String path, String content){  // send the right file to th
       return false;
     }
     file.close();
-    Serial.println(String("\Write file: ") + path);
+    Serial.println(String("Write file: ") + path);
     return true;
   }
   Serial.println(String("\tFile Not Found: ") + path);
@@ -730,7 +696,7 @@ bool checkIfSystemIsAvailable(){
   EthernetHttpClient  httpClient(client2, internetServerAddress, internetCheckPort);
 #else
   String INTERNET_CHECK_URL = "http://ifconfig.me";
-#endif;
+#endif
 
 bool hasInternetConnect(){
 
@@ -763,7 +729,7 @@ bool hasInternetConnect(){
         http.end();
         return false;
       }
-    #endif;
+    #endif
 }
 
 void addAttemptToCoinslot(){
