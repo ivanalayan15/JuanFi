@@ -1,8 +1,9 @@
 /*waitTime
  * 
- * JuanFi v1.0
+ * JuanFi v2.1
  * 
- * PisoWifi coinslot system with integration to Mikrotik Hotspot,
+ * PisoWifi coinslot system with integration to Mikrotik Hotspot, 
+ * Using
  * 
  * Features
  * 
@@ -17,23 +18,34 @@
  *   - Promo Rates configuration ( Rates, expiration)
  *   - Dashboard, Sales report
  * 
+ * Supported ESP32 Lanbase and ESP8266 
  * 
  * Created by Ivan Julius Alayan
  * 
 */
 
+#ifdef ESP32
+  #include <TelnetClient.h>
+  #include "lan_definition.h"
+  #include <SPIFFS.h>
+#else
+  #include <ESP8266TelnetClient.h>
+  #include <ESP8266WiFi.h>
+  #include <ESP8266WebServer.h>
+  #include <ESP8266WiFiMulti.h>
+  #include <ESP8266HTTPClient.h>
+  #include <ESP8266mDNS.h>
+  #include <DNSServer.h>
+#endif
 
-#include <ESP8266TelnetClient.h>
-#include <ESP8266WiFi.h>
-#include <ESP8266WebServer.h>
-#include <ESP8266WiFiMulti.h>
-#include <ESP8266HTTPClient.h>
-#include <ESP8266mDNS.h>
-#include <DNSServer.h>
+
 #include <EEPROM.h>
 #include "FS.h"
 #include <base64.h>
 #include <LiquidCrystal_I2C.h>
+
+int TURN_OFF = 0;
+int TURN_ON = 1;
 
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
@@ -52,6 +64,12 @@ unsigned long targetMilis = 0;
 bool coinExpired = false;
 bool mikrotekConnectionSuccess = false;
 String currentMacAddress = "";
+String currentIpAddress = "";
+#ifdef ESP32
+  String HARDWARE_TYPE = "ESP32";
+#else
+  String HARDWARE_TYPE = "ESP8266";
+#endif
 
 typedef struct {
   String rateName;
@@ -75,6 +93,7 @@ int currentValidity = 0;
 const int LIFETIME_COIN_COUNT_ADDRESS = 0;
 const int COIN_COUNT_ADDRESS = 5;
 const int CUSTOMER_COUNT_ADDRESS = 10;
+const int RANDOM_MAC_ADDRESS = 15;
 
 void ICACHE_RAM_ATTR coinInserted()    
 {
@@ -85,22 +104,27 @@ void ICACHE_RAM_ATTR coinInserted()
 }
 
 
-int COIN_SELECTOR_PIN = D6;
-int COIN_SET_PIN = D7;
-int INSERT_COIN_LED = D2;
-int SYSTEM_READY_LED = D1;
-int INSERT_COIN_BTN_PIN = D5;
+int COIN_SELECTOR_PIN = 0;
+int COIN_SET_PIN = 0;
+int INSERT_COIN_LED = 0;
+int SYSTEM_READY_LED = 0;
+int INSERT_COIN_BTN_PIN = 0;
 int CHECK_INTERNET_CONNECTION = 0;
+int LED_TRIGGER_TYPE = 1;
+int VOUCHER_LOGIN_OPTION = 0;
+int VOUCHER_VALIDITY_OPTION = 0;
+String VOUCHER_PROFILE = "default";
 String VOUCHER_PREFIX = "P";
 
 int MAX_WAIT_COIN_SEC = 30000;
 int COINSLOT_BAN_COUNT = 0;
 int COINSLOT_BAN_MINUTES = 0;
 int LCD_TYPE = 0;
+int macRandomIndex = 0;
 
 
 //put here your raspi ip address, and login details
-IPAddress mikrotikRouterIp (192, 168, 88, 1);
+IPAddress mikrotikRouterIp (10, 0, 0, 1);
 String user = "pisonet";
 String pwd = "abc123";
 String ssid     = "MikrofffffTik-36DA2B";
@@ -108,22 +132,31 @@ String password = "";
 String adminAuth = "";
 String vendorName = "";
 
-ESP8266WiFiMulti WiFiMulti;
 
-WiFiClient client;
-WiFiClient client2;
-                                 
-ESP8266telnetClient tc(client); 
-ESP8266WebServer server(80);
-
-const byte DNS_PORT = 53;
 IPAddress apIP(172, 217, 28, 1);
-DNSServer dnsServer;
+
+#ifdef ESP32
+  EthernetWebServer server(80);
+  EthernetClient client;
+  EthernetClient client2;
+  telnetClient tc(client);
+#else
+  ESP8266WiFiMulti WiFiMulti;
+  WiFiClient client2;
+  WiFiClient client;
+  ESP8266telnetClient tc(client);
+  ESP8266WebServer server(80);
+  const byte DNS_PORT = 53;
+  DNSServer dnsServer;
+#endif
+
+
 
 const int WIFI_CONNECT_TIMEOUT = 45000;
 const int WIFI_CONNECT_DELAY = 500;
 
-bool wifiConnected = false;
+bool networkConnected = false;
+bool cableNotConnected = false;
 bool welcomePrinted = false;
 bool manualVoucher = false;
 
@@ -133,15 +166,48 @@ long lastPrinted = 0;
 
 String MARQUEE_MESSAGE = "This is marquee";
 
+void heartBeatPrint()
+{
+  static int num = 1;
+
+  Serial.print(F("H"));        // H means alive
+
+  if (num == 80)
+  {
+    Serial.println();
+    num = 1;
+  }
+  else if (num++ % 10 == 0)
+  {
+    Serial.print(F(" "));
+  }
+}
+
+void check_status()
+{
+  static ulong checkstatus_timeout  = 0;
+  static ulong current_millis;
+
+#define HEARTBEAT_INTERVAL    10000L
+
+  current_millis = millis();
+  
+  // Print hearbeat every HEARTBEAT_INTERVAL (10) seconds.
+  if ((current_millis > checkstatus_timeout) || (checkstatus_timeout == 0))
+  {
+    heartBeatPrint();
+    checkstatus_timeout = current_millis + HEARTBEAT_INTERVAL;
+  }
+}
+
 void setup () { 
                                 
-  Serial.begin (9600);
-  EEPROM.begin(16);
+  Serial.begin (115200);
+  EEPROM.begin(32);
   if(!SPIFFS.begin()){
     Serial.println("An Error has occurred while mounting SPIFFS");
     return;
   }  
-  
   populateSystemConfiguration(); 
   
   pinMode(COIN_SELECTOR_PIN, INPUT_PULLUP);
@@ -149,63 +215,60 @@ void setup () {
   pinMode(SYSTEM_READY_LED, OUTPUT);
   pinMode(COIN_SET_PIN, OUTPUT);
   pinMode(INSERT_COIN_BTN_PIN, INPUT_PULLUP);
-  
-  if(LCD_TYPE > 0){
-     if(LCD_TYPE == 1){
-       lcd.init();   // initializing the LCD
-       lcd.backlight(); // Enable or Turn On the backlight 
-       lcd.print("Initializing.."); 
-     }else if(LCD_TYPE == 2){
-       lcd20x4.init();   // initializing the LCD
-       lcd20x4.backlight(); // Enable or Turn On the backlight 
-       lcd20x4.print("Initializing.."); 
-     }
-     
-  }
 
-  // We start by connecting to a WiFi network
-  WiFi.mode(WIFI_STA);
-  WiFiMulti.addAP(ssid.c_str(), password.c_str());
+  #ifdef ESP32
+    initializeLANSetup();
+    initializeLCD();
+  #else
+    initializeLCD();
+    // We start by connecting to a WiFi network
+    WiFi.mode(WIFI_STA);
+    WiFiMulti.addAP(ssid.c_str(), password.c_str());
+    Serial.println();
+    Serial.println();
+    Serial.print("Wait for WiFi, connecting to ");
+    Serial.print(ssid);
   
-  Serial.println();
-  Serial.println();
-  Serial.print("Wait for WiFi, connecting to ");
-  Serial.print(ssid);
-
-  int second = 0;
-  while (second <= WIFI_CONNECT_TIMEOUT) {
-    wifiConnected = (WiFiMulti.run() == WL_CONNECTED);
-    Serial.print(".");
-    if(wifiConnected){
-      break;
+    int second = 0;
+    while (second <= WIFI_CONNECT_TIMEOUT) {
+      networkConnected = (WiFiMulti.run() == WL_CONNECTED);
+      Serial.print(".");
+      if(networkConnected){
+        break;
+      }
+      digitalWrite(SYSTEM_READY_LED, evaluateTriggerOutput(TURN_OFF));
+      delay(WIFI_CONNECT_DELAY);
+      digitalWrite(SYSTEM_READY_LED, evaluateTriggerOutput(TURN_ON));
+      second += WIFI_CONNECT_DELAY;
     }
-    digitalWrite(SYSTEM_READY_LED, LOW);
-    delay(WIFI_CONNECT_DELAY);
-    digitalWrite(SYSTEM_READY_LED, HIGH);
-    second += WIFI_CONNECT_DELAY;
-  }
-
+    currentIpAddress = WiFi.localIP().toString().c_str();
+    currentMacAddress = WiFi.macAddress();
+    digitalWrite(SYSTEM_READY_LED, evaluateTriggerOutput(TURN_OFF));
+  #endif
   
-  currentMacAddress = WiFi.macAddress();
-
-  digitalWrite(SYSTEM_READY_LED, LOW);
-  if(wifiConnected){
+  
+  if(networkConnected){
     Serial.println("");
     Serial.println("WiFi connected");
     Serial.print("IP address: ");
-    Serial.println(WiFi.localIP());
+    Serial.println(currentIpAddress);
     Serial.print("Mac address: ");
     Serial.println(currentMacAddress);
     Serial.println("Connecting.... ");
-    digitalWrite(INSERT_COIN_LED, LOW);
-    digitalWrite(SYSTEM_READY_LED, LOW);
+    digitalWrite(INSERT_COIN_LED, evaluateTriggerOutput(TURN_OFF));
+    digitalWrite(SYSTEM_READY_LED, evaluateTriggerOutput(TURN_OFF));
     digitalWrite(COIN_SET_PIN, LOW);
+    Serial.print("Attaching interrupt ");
     attachInterrupt(COIN_SELECTOR_PIN, coinInserted, RISING);
-
     loginMirotik();
-    if (MDNS.begin("esp8266")) {
-      Serial.println("MDNS responder started");
-    }
+   
+    #ifdef ESP32
+      //nothing
+    #else
+      if (MDNS.begin("esp8266")) {
+        Serial.println("MDNS responder started");
+      }
+    #endif
 
     server.on("/topUp", topUp);
     server.on("/checkCoin", checkCoin);
@@ -218,14 +281,17 @@ void setup () {
     welcomePrinted = true;
     
   }else{
-    //Soft AP setup
-    WiFi.mode(WIFI_AP);
-    WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
-    WiFi.softAP("JuanFi Setup");
-
-    //if DNSServer is started with "*" for domain name, it will reply with
-    //provided IP to all DNS request
-    dnsServer.start(DNS_PORT, "*", apIP);
+    #ifdef ESP32
+      //nothing
+    #else
+      //Soft AP setup
+      WiFi.mode(WIFI_AP);
+      WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
+      WiFi.softAP("JuanFi Setup");
+      //if DNSServer is started with "*" for domain name, it will reply with
+      //provided IP to all DNS request
+      dnsServer.start(DNS_PORT, "*", apIP);
+    #endif
 
     server.onNotFound([]() {
       server.sendHeader("Location", String("/admin"), true);
@@ -234,16 +300,34 @@ void setup () {
     if(LCD_TYPE > 0){
       if(LCD_TYPE == 1){
         lcd.clear();
-        lcd.setCursor(0, 0);
-        lcd.print("JuanFi");
-        lcd.setCursor(0, 1);
-        lcd.print("Initial Setup");
+        if(cableNotConnected){
+          lcd.setCursor(0, 0);
+          lcd.print("Cable");
+          lcd.setCursor(0, 1);
+          lcd.print("Not connected");
+        }else{
+          lcd.setCursor(0, 0);
+          lcd.print("Initial Setup");
+          lcd.setCursor(0, 1);
+          lcd.print("IP: 172.217.28.1");
+        }
       }else if(LCD_TYPE == 2){
         lcd20x4.clear();
         lcd20x4.setCursor(0, 0);
         lcd20x4.print("JuanFi");
-        lcd20x4.setCursor(0, 1);
-        lcd20x4.print("Initial Setup");
+        if(cableNotConnected){
+          lcd20x4.setCursor(0, 1);
+          lcd20x4.print("Cable not connected");
+          lcd20x4.setCursor(0, 2);
+          lcd20x4.print("Pls check");
+          lcd20x4.setCursor(0, 3);
+          lcd20x4.print("connections");
+        }else{
+          lcd20x4.setCursor(0, 1);
+          lcd20x4.print("Initial Setup");
+          lcd20x4.setCursor(0, 2);
+          lcd20x4.print("IP: 172.217.28.1");
+        }
       }
     }
   }
@@ -263,7 +347,159 @@ void setup () {
   server.begin();
   
   if(mikrotekConnectionSuccess){
-    digitalWrite(SYSTEM_READY_LED, HIGH);
+    digitalWrite(SYSTEM_READY_LED, evaluateTriggerOutput(TURN_ON));
+  }
+
+}
+
+#ifdef ESP32
+void initializeLANSetup(){
+  delay(3000);
+  Serial.print("\nStarting ESP32_FS_EthernetWebServer on " + String(BOARD_TYPE));
+  Serial.println(" with " + String(SHIELD_TYPE));
+  Serial.println(ETHERNET_WEBSERVER_VERSION);
+
+  #if USE_ETHERNET_WRAPPER
+  
+    EthernetInit();
+  
+  #else
+
+  #if USE_NATIVE_ETHERNET
+    ET_LOGWARN(F("======== USE_NATIVE_ETHERNET ========"));
+  #elif USE_ETHERNET
+    ET_LOGWARN(F("=========== USE_ETHERNET ==========="));
+  #elif USE_ETHERNET2
+    ET_LOGWARN(F("=========== USE_ETHERNET2 ==========="));
+  #elif USE_ETHERNET3
+    ET_LOGWARN(F("=========== USE_ETHERNET3 ==========="));
+  #elif USE_ETHERNET_LARGE
+    ET_LOGWARN(F("=========== USE_ETHERNET_LARGE ==========="));
+  #elif USE_ETHERNET_ESP8266
+    ET_LOGWARN(F("=========== USE_ETHERNET_ESP8266 ==========="));
+  #elif USE_ETHERNET_ENC
+    ET_LOGWARN(F("=========== USE_ETHERNET_ENC ==========="));
+  #else
+    ET_LOGWARN(F("========================="));
+  #endif
+
+  ET_LOGWARN(F("Default SPI pinout:"));
+  ET_LOGWARN1(F("MOSI:"), MOSI);
+  ET_LOGWARN1(F("MISO:"), MISO);
+  ET_LOGWARN1(F("SCK:"),  SCK);
+  ET_LOGWARN1(F("SS:"),   SS);
+  ET_LOGWARN(F("========================="));
+
+  // You can use Ethernet.init(pin) to configure the CS pin
+  //Ethernet.init(10);  // Most Arduino shields
+  //Ethernet.init(5);   // MKR ETH shield
+  //Ethernet.init(0);   // Teensy 2.0
+  //Ethernet.init(20);  // Teensy++ 2.0
+  //Ethernet.init(15);  // ESP8266 with Adafruit Featherwing Ethernet
+  //Ethernet.init(33);  // ESP32 with Adafruit Featherwing Ethernet
+
+  #ifndef USE_THIS_SS_PIN
+    #define USE_THIS_SS_PIN   5   //22    // For ESP32
+  #endif
+
+  ET_LOGWARN1(F("ESP32 setCsPin:"), USE_THIS_SS_PIN);
+
+  // For other boards, to change if necessary
+  #if ( USE_ETHERNET || USE_ETHERNET_LARGE || USE_ETHERNET2 || USE_ETHERNET_ENC )
+    // Must use library patch for Ethernet, EthernetLarge libraries
+    // ESP32 => GPIO2,4,5,13,15,21,22 OK with Ethernet, Ethernet2, EthernetLarge
+    // ESP32 => GPIO2,4,5,15,21,22 OK with Ethernet3
+  
+    //Ethernet.setCsPin (USE_THIS_SS_PIN);
+    Ethernet.init (USE_THIS_SS_PIN);
+  
+  #elif USE_ETHERNET3
+    // Use  MAX_SOCK_NUM = 4 for 4K, 2 for 8K, 1 for 16K RX/TX buffer
+  #ifndef ETHERNET3_MAX_SOCK_NUM
+  #define ETHERNET3_MAX_SOCK_NUM      4
+  #endif
+  
+    Ethernet.setCsPin (USE_THIS_SS_PIN);
+    Ethernet.init (ETHERNET3_MAX_SOCK_NUM);
+  
+  #elif USE_CUSTOM_ETHERNET
+  
+    // You have to add initialization for your Custom Ethernet here
+    // This is just an example to setCSPin to USE_THIS_SS_PIN, and can be not correct and enough
+    Ethernet.init(USE_THIS_SS_PIN);
+  
+  #endif  //( USE_ETHERNET || USE_ETHERNET2 || USE_ETHERNET3 || USE_ETHERNET_LARGE )
+
+  #endif  //USE_ETHERNET_WRAPPER
+     // start the ethernet connection and the server:
+    Serial.println("Ethernet initialized...");
+
+    if (Ethernet.linkStatus() == LinkOFF) {
+      Serial.println("Cable not detected!!!");
+      networkConnected = false;
+      cableNotConnected = true;
+    }else if(Ethernet.begin(mac[macRandomIndex]) != 0){
+      networkConnected = true;
+    }else{
+      networkConnected = false;
+      Serial.println("Cannot connect to dhcp server");
+      Ethernet.begin(mac[macRandomIndex], apIP, apIP, apIP, IPAddress(255, 255, 255, 0));
+    }
+    // Just info to know how to connect correctly
+    Serial.println(F("========================="));
+    Serial.println(F("Currently Used SPI pinout:"));
+    Serial.print(F("MOSI:"));
+    Serial.println(MOSI);
+    Serial.print(F("MISO:"));
+    Serial.println(MISO);
+    Serial.print(F("SCK:"));
+    Serial.println(SCK);
+    Serial.print(F("SS:"));
+    Serial.println(SS);
+  #if USE_ETHERNET3
+    Serial.print(F("SPI_CS:"));
+    Serial.println(SPI_CS);
+  #endif
+    Serial.println("=========================");
+  
+    Serial.print(F("Connected! IP address: "));
+    Serial.println(Ethernet.localIP());
+
+    currentIpAddress = Ethernet.localIP().toString().c_str();
+    char str[12] = "";
+    array_to_string(mac[macRandomIndex], 6, str);
+    for(int i=0;i<12;i++){
+      if(i > 0 && i%2 == 0){
+        currentMacAddress += ":";
+      }
+      currentMacAddress += str[i];
+    }
+}
+#endif
+
+void array_to_string(byte array[], unsigned int len, char buffer[])
+{
+    for (unsigned int i = 0; i < len; i++)
+    {
+        byte nib1 = (array[i] >> 4) & 0x0F;
+        byte nib2 = (array[i] >> 0) & 0x0F;
+        buffer[i*2+0] = nib1  < 0xA ? '0' + nib1  : 'A' + nib1  - 0xA;
+        buffer[i*2+1] = nib2  < 0xA ? '0' + nib2  : 'A' + nib2  - 0xA;
+    }
+    buffer[len*2] = '\0';
+}
+
+void initializeLCD(){
+  if(LCD_TYPE > 0){
+     if(LCD_TYPE == 1){
+       lcd.init();   // initializing the LCD
+       lcd.backlight(); // Enable or Turn On the backlight 
+       lcd.print("Initializing.."); 
+     }else if(LCD_TYPE == 2){
+       lcd20x4.init();   // initializing the LCD
+       lcd20x4.backlight(); // Enable or Turn On the backlight 
+       lcd20x4.print("Initializing.."); 
+     }
   }
 }
 
@@ -460,6 +696,10 @@ void handleAdminDashboard(){
          }
          data += String("|");
          data += currentMacAddress;
+         data += String("|");
+         data += currentIpAddress;
+         data += String("|");
+         data += HARDWARE_TYPE;
          
   server.send(200, "text/plain", data);
 }
@@ -556,30 +796,48 @@ bool checkIfSystemIsAvailable(){
   }
 }
 
-String INTERNET_CHECK_URL = "http://ifconfig.me";
+
+
+#ifdef ESP32
+  char internetServerAddress[] = "ifconfig.me";  // server address
+  int internetCheckPort = 80;
+  EthernetHttpClient  httpClient(client2, internetServerAddress, internetCheckPort);
+#else
+  String INTERNET_CHECK_URL = "http://ifconfig.me";
+#endif;
 
 bool hasInternetConnect(){
 
-    HTTPClient http;  
-
-    http.begin(client2, INTERNET_CHECK_URL); //HTTP
-    http.addHeader("User-Agent", "curl/7.55.1");
-    int httpCode = http.GET();
-    if (httpCode > 0) {
-      const String& payload = http.getString();
-      Serial.println("received payload:\n<<");
-      Serial.println(payload);
-      Serial.println(">>");
-      Serial.println("Internet connection detected!");
-      http.end();
+    #ifdef ESP32
+      httpClient.get("/");
+      int statusCode = httpClient.responseStatusCode();
+      String response = httpClient.responseBody();
+      Serial.print("Status code: ");
+      Serial.println(statusCode);
+      Serial.print("Response: ");
+      Serial.println(response);
       return true;
-    }else{
-      Serial.println("Internet connection not detected!");
-      Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
-      http.end();
-      return false;
-    }
-   
+    #else
+      HTTPClient http;  
+  
+      http.begin(client2, INTERNET_CHECK_URL); //HTTP
+      http.addHeader("User-Agent", "curl/7.55.1");
+      int httpCode = http.GET();
+      if (httpCode > 0) {
+        const String& payload = http.getString();
+        Serial.println("received payload:\n<<");
+        Serial.println(payload);
+        Serial.println(">>");
+        Serial.println("Internet connection detected!");
+        http.end();
+        return true;
+      }else{
+        Serial.println("Internet connection not detected!");
+        Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
+        http.end();
+        return false;
+      }
+    #endif;
 }
 
 void addAttemptToCoinslot(){
@@ -845,7 +1103,7 @@ void activateCoinSlot(){
   acceptCoin = true;
   coinSlotActive = true;
   targetMilis = millis() + MAX_WAIT_COIN_SEC;
-  digitalWrite(INSERT_COIN_LED, HIGH);
+  digitalWrite(INSERT_COIN_LED, evaluateTriggerOutput(TURN_ON));
 }
 
 String toJson(char * keys[],char * values[],int nField){
@@ -876,6 +1134,14 @@ void registerNewVoucher(String voucher){
   String addCoinScript = "/ip hotspot user add name=";
   addCoinScript += voucher;
   addCoinScript += " limit-uptime=0 comment=0";
+  if(VOUCHER_LOGIN_OPTION == 1){
+    addCoinScript += " password=";
+    addCoinScript += voucher;
+  }
+  if(VOUCHER_PROFILE != "" && VOUCHER_PROFILE != "default"){
+    addCoinScript += " profile=";
+    addCoinScript += VOUCHER_PROFILE;   
+  }
   sendCommand(addCoinScript);
 }
 
@@ -916,7 +1182,7 @@ void resetGlobalVariables(){
 void disableCoinSlot(){
   coinSlotActive = false;
   digitalWrite(COIN_SET_PIN, LOW);
-  digitalWrite(INSERT_COIN_LED, LOW);
+  digitalWrite(INSERT_COIN_LED, evaluateTriggerOutput(TURN_OFF));
 }
 
 int calculateAddTime(){
@@ -935,7 +1201,13 @@ int calculateAddTime(){
       }
     }
     if( candidateIndex != -1 ){
-      currentValidity += rates[candidateIndex].validity;
+      //when extend time and voucher validity option is  First Validity + extend time, add the extend time instead of validity
+      if((!isNewVoucher) && VOUCHER_VALIDITY_OPTION == 1){
+        currentValidity += rates[candidateIndex].minutes;
+      }else{
+        currentValidity += rates[candidateIndex].validity;
+      }
+      
       totalTime += rates[candidateIndex].minutes;
       remainingCoin -= rates[candidateIndex].price;
     }else{
@@ -954,8 +1226,8 @@ void populateSystemConfiguration(){
   String data = readFile("/admin/config/system.data");
   Serial.print("Data: ");
   Serial.println(data);
-
-  String rows[20];
+  int rowSize = 25;
+  String rows[rowSize];
   split(rows, data, '|');
   String ip[4];
   split(ip, rows[3], '.');
@@ -982,6 +1254,30 @@ void populateSystemConfiguration(){
   CHECK_INTERNET_CONNECTION = rows[17].toInt();
   VOUCHER_PREFIX = rows[18];
   MARQUEE_MESSAGE = rows[19];
+  macRandomIndex = rows[20].toInt();
+  VOUCHER_LOGIN_OPTION = rows[21].toInt();
+  VOUCHER_PROFILE = rows[22];
+  VOUCHER_VALIDITY_OPTION = rows[23].toInt();
+  LED_TRIGGER_TYPE = rows[24].toInt();
+
+  #ifdef ESP32
+  //this is for LAN base for generating MAC address, if already have existing in the setting we will reuse that mac address
+  if(macRandomIndex < 0 || macRandomIndex > NUMBER_OF_MAC){
+    macRandomIndex = random(0, NUMBER_OF_MAC-1);
+    Serial.println("No mac address found yet on EEPROM, assigning new address");
+    Serial.print(macRandomIndex);
+    rows[20] = macRandomIndex;
+    //save the random mac address
+    String newData = "";
+    for(int i=0;i<rowSize;i++){
+      if(i>0){
+        newData += ROW_DELIMETER;
+      }
+      newData += rows[i];
+    }
+    handleFileWrite("/admin/config/system.data", newData);
+  }
+  #endif
 }
 
 
@@ -1040,14 +1336,16 @@ void populateRates(){
   
 }
 
+int coinWaiting = 0;
+
 void loop () {
-  
-  if(wifiConnected){
+   if(networkConnected){
     unsigned long currentMilis = millis();
 
    //handling for disconnection of AP
    if (!client.connected()) {
       handleSystemAbnormal();
+      server.handleClient();
       return;
    }
 
@@ -1068,7 +1366,8 @@ void loop () {
               }
             }else{
               //clear thank you message after button press
-              thankyou_cooldown = 0;  
+              thankyou_cooldown = 0;
+              targetMilis = currentMilis;
               delay(1000);
             }
           }else{
@@ -1084,7 +1383,16 @@ void loop () {
           coinExpired = false;
           //wait for the coin to insert
           if(coinsChange > 0){
-            delay(1500);
+            //delay(1500); change delay to coin waiting logic to prevent hanging of LCD 
+            if(coinWaiting == 0){
+              coinWaiting = currentMilis + 1500;
+            }
+
+            if(coinWaiting > currentMilis){
+              goto printing;
+            }
+
+            coinWaiting = 0;
             if(coin == 6){
                coin = 5;
             }
@@ -1103,6 +1411,7 @@ void loop () {
               activateCoinSlot();
             }
           }
+          printing:
           if(timeToAdd > 0){
             printTransactionDetail();
           }else{
@@ -1139,21 +1448,29 @@ void loop () {
       }
     }
   }else{
-    dnsServer.processNextRequest();
+    #ifdef ESP32
+      //nothing
+    #else
+     dnsServer.processNextRequest();
+    #endif
   }
   
   server.handleClient();
-  MDNS.update();
+  #ifdef ESP32
+    //nothing
+  #else
+    MDNS.update();
+  #endif
 }
 
 void handleSystemAbnormal(){
     Serial.println("AP disconnected!!!!!!!!!!!!!!!");
     mikrotekConnectionSuccess = false;
     printSystemNotAvailable();
-    digitalWrite(INSERT_COIN_LED, LOW);
-    digitalWrite(SYSTEM_READY_LED, LOW);
-    //Reconnect after 10 seconds
-    delay(10000);
+    digitalWrite(INSERT_COIN_LED, evaluateTriggerOutput(TURN_OFF));
+    digitalWrite(SYSTEM_READY_LED, evaluateTriggerOutput(TURN_OFF));
+    //Reconnect after 30 seconds
+    delay(30000);
     ESP.restart();
 }
 
@@ -1418,4 +1735,21 @@ int startCenterIndex(String text){
         startCenterIndex--;
     }
     return startCenterIndex;
+}
+
+
+int evaluateTriggerOutput(int state){
+  if(LED_TRIGGER_TYPE == 1){
+    if(state == TURN_ON){
+        return HIGH;
+    }else{
+        return LOW;
+    }
+  }else{
+    if(state == TURN_ON){
+        return LOW;
+    }else{
+        return HIGH;
+    }
+  }
 }
