@@ -4,10 +4,14 @@ JuanFi is an open source system for coinslot integration for mikrotik hotspot
 
 ## Donation
 
-Donation is very welcome, if you want to donate, you can donate using this GCASH account
+Donation is very welcome, if you want to donate, you can donate using 
 
+Gcash account:
 Ivan Julius Alayan
 09175425572
+
+Paypal account:
+https://www.paypal.com/paypalme/ivanalayan
 
 
 ## Features
@@ -96,7 +100,14 @@ install dependency libraries at arduino libraries folder
 4.) JuanFi initial setup
 
 a.) Connect to JuanFi Setup SSID
+
+1.) For Nodemcu/esp8622 wireless JuanFI setup will appear
 ![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Step01.PNG?raw=true)
+
+2.) For ESP32 Lanbase, you need to plugin first in your PC/Laptop ethernet and set your IP address as static 172.217.28.2
+
+After you set to static you can access the admin in your browser as 172.217.28.1
+
 
 b.) Login to admin panel,
 Default user and password : admin / admin
