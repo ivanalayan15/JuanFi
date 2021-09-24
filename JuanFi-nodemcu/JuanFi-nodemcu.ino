@@ -565,7 +565,10 @@ void handleAdminDashboard(){
   int lifeTimeCoinCount = eeGetInt(LIFETIME_COIN_COUNT_ADDRESS);
   int coinCount = eeGetInt(COIN_COUNT_ADDRESS);
   int customerCount = eeGetInt(CUSTOMER_COUNT_ADDRESS);
-  bool hasInternetConnection = hasInternetConnect();
+  bool hasInternetConnection = true;
+  if(CHECK_INTERNET_CONNECTION == 1){
+      hasInternetConnection = hasInternetConnect();
+  }
   String data = "";
          data += String(upTime);
          data += String("|");
@@ -1211,13 +1214,24 @@ void populateRates(){
 }
 
 int coinWaiting = 0;
+long lastLinkStatusCheck = 0;
 
 void loop () {
    if(networkConnected){
     unsigned long currentMilis = millis();
 
    //handling for disconnection of AP
-   if (!client.connected()) {
+   bool linkStatusOff = false;
+
+   #ifdef ESP32
+   //check ethernet status every 2 sec
+   if(currentMilis > lastLinkStatusCheck + 2000){
+    linkStatusOff = Ethernet.linkStatus() == LinkOFF;
+    lastLinkStatusCheck = currentMilis;
+   }
+   #endif
+   
+   if (!client.connected() || linkStatusOff) {
       handleSystemAbnormal();
       server.handleClient();
       return;
@@ -1556,6 +1570,7 @@ void printSystemNotAvailable(){
         lcd20x4.print(text);
         text = "Available";
         lcd20x4.setCursor(startCenterIndex(text), 2);
+        lcd20x4.print(text);
       }
   }  
 }
