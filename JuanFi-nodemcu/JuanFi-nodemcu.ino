@@ -1055,7 +1055,7 @@ void addTimeToVoucher(String voucher, int secondsToAdd){
     script += voucher;
     script += " limit-uptime]; ";
     sendCommand(script);
-    script = ":local global [:pick $lpt 0 2]; :global min [:pick $lpt 3 5]; :global sec [:pick $lpt 6 8];";
+    script = ":global hr [:pick $lpt 0 2]; :global min [:pick $lpt 3 5]; :global sec [:pick $lpt 6 8];";
     sendCommand(script);
     script = " :set lpts [(hr*3600+min*60+sec)]; :set nlu [($lpts+";
     script += secondsToAdd;
