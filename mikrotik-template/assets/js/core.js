@@ -62,6 +62,11 @@ $(document).ready(function(){
   }else{
 	  $("#vendoSelectDiv").attr("style", "display: none");
   }
+  
+  if(!dataRateOption){
+	 $("#dataInfoDiv").attr("style", "display: none");
+	 $("#dataInfoDiv2").attr("style", "display: none");
+  }
 });
 if(voucher == null){
 	voucher = "";
@@ -76,7 +81,7 @@ function promoBtnAction(){
 }
 
 //this is to enable multi vendo setup, set to true when multi vendo is supported
-var isMultiVendo = false;
+var isMultiVendo = true;
 
 //list here all node mcu address for multi vendo setup
 var multiVendoAddresses = [
@@ -93,6 +98,7 @@ var multiVendoAddresses = [
 //0 means its login by username only, 1 = means if login by username + password
 var loginOption = 0; //replace 1 if you want login voucher by username + password
 
+var dataRateOption = false; //replace true if you enable data rates
 //put here the default selected address
 var vendorIpAddress = "10.0.10.253";
 var timer = null;
@@ -253,6 +259,7 @@ function checkCoin(){
 			$('#totalCoin').html(data.totalCoin);	
 			$('#totalTime').html(secondsToDhms(parseInt(data.timeAdded)));
 			$('#codeGeneratedBlock').attr('style', 'display: block');
+			$('#totalData').html(data.data);
 			
 			setStorageValue('activeVoucher', voucher);
 			setStorageValue(voucher+"tempValidity", data.validity);
@@ -296,6 +303,7 @@ function checkCoin(){
 						$('#codeGeneratedBlock').attr('style', 'display: block');
 					}
 					$('#totalCoin').html(data.totalCoin);
+					$('#totalData').html(data.data);
 					$('#totalTime').html(secondsToDhms(parseInt(data.timeAdded)));
 					//$( "#remainingTime" ).html(remainTime);
 					$("#progressDiv").attr('style','width: '+percent+'%')
@@ -397,4 +405,10 @@ function getCookie(name) {
 }
 function eraseCookie(name) {   
     document.cookie = name+'=; Max-Age=-99999999;';  
+}
+
+function readablizeBytes(bytes) {
+var s = ['bytes', 'kb', 'MB', 'GB', 'TB', 'PB'];
+var e = Math.floor(Math.log(bytes)/Math.log(1024));
+return (bytes/Math.pow(1024, Math.floor(e))).toFixed(2)+" "+s[e];
 }

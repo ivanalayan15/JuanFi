@@ -583,8 +583,10 @@ function savePromoRates(){
 		var priceText = $("#priceText"+i).val();
 		var minutesText = $("#minutesText"+i).val();
 		var validityText = $("#validityText"+i).val();
+		var dataLimitText = $("#dataLimitText"+i).val();
+		var profileNameText = $("#profileNameText"+i).val();
 		if(rateNameText != null && priceText != null && minutesText != null && validityText != null){
-			params.push(rateNameText+"#"+priceText+"#"+minutesText+"#"+validityText);
+			params.push(rateNameText+"#"+priceText+"#"+minutesText+"#"+validityText+"#"+dataLimitText+"#"+profileNameText);
 		}
 	}
 	var postData = createParam(params);
@@ -743,11 +745,13 @@ var script = " <div id='rateRow' class='rateholder'>";
 			script += "<div><span class='rate-title'>Price</span><input type='number' value='priceValue' placeholder='Price' id='priceText'></div>";
 			script += "<div><span class='rate-title'>Minutes</span><input type='number' value='minutesValue' placeholder='Minutes' id='minutesText'></div>";
 			script += "<div><span class='rate-title'>Validity in minutes</span><input type='number' value='validityValue' placeholder='Validity' id='validityText'></div>";
+			script += "<div><span class='rate-title'>Data(MB) Limit Usage(Optional)</span><input type='number' value='dataLimitValue' placeholder='Data Limit Usage' id='dataLimitText'></div>";
+			script += "<div><span class='rate-title'>User Profile(Optional, it overrides the default profile set in system config)</span><input type='text' value='profileNameValue' placeholder='User Profile' id='profileNameText'></div>";
 			script += "<center><div><button class='delratebtn' onClick='deleteRate(rateIndex)'>Delete</button></div></center>";
 			script += "</div>";
 
 function addRate(){
-	var rowData = ["","",""];
+	var rowData = ["","","","","",""];
 	var rowScript = generateRowScript(rateCount, rowData);
 	$("#promoRateBody").append(rowScript);
 	rateCount++;
@@ -761,6 +765,7 @@ function openPromoRates(evt){
 	$.ajax({
 	  type: "GET",
 	  url: "admin/api/getRates?query="+new Date().getTime(),
+	  //url: "config/rates.data",
 	  success: function(data){
 		var rateData = data.split('|');
 		var html = "";
@@ -785,6 +790,11 @@ function generateRowScript(i , rowData){
 	rowScript = rowScript.replace("minutesValue", rowData[2]);
 	rowScript = rowScript.replace("validityText", "validityText"+i);
 	rowScript = rowScript.replace("validityValue", rowData[3]);
+	rowScript = rowScript.replace("dataLimitText", "dataLimitText"+i);
+	rowScript = rowScript.replace("dataLimitValue", rowData[4]);
+	rowScript = rowScript.replace("profileNameText", "profileNameText"+i);
+	rowScript = rowScript.replace("profileNameValue", rowData[5]);
+	
 	rowScript = rowScript.replace("rateIndex", i);
 	rowScript = rowScript.replace("rateRow", "rateRow"+i);
 	return rowScript;
