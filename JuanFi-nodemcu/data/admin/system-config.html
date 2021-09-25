@@ -328,6 +328,9 @@ function myFunction() {
 
 	<label for="email"><b>Mikrotik Password</b></label><br>
     <input type="password" placeholder="Mikrotik Router Password" id="mikrotikPw" required><br>
+	
+	<label for="email"><b>Confirm Mikrotik Password</b></label><br>
+    <input type="password" placeholder="Confirm Mikrotik Router Password" id="confirmMikrotikPw" required><br>
 	</div>
 	
 	<div class="panel">
@@ -337,6 +340,10 @@ function myFunction() {
 
 	<label for="email"><b>Admin Password</b></label><br>
     <input type="password" placeholder="Admin Password" id="adminPw" required>
+	
+	<label for="email"><b>Confirm Admin Password</b></label><br>
+    <input type="password" placeholder="Confirm Admin Password" id="confirmAdminPw" required>
+	
 	</div>
 	
 	<div class="panel">
@@ -514,6 +521,16 @@ function saveSystemConfig(){
 	pinMap['System Ready Pin'] = systemReadyLEDPin;
 	pinMap['Insert Coin LED Pin'] = insertCoinLEDPin;
 	pinMap['Insert Coin Button Pin'] = insertCoinBtnPin;
+	
+	if($('#mikrotikPw').val() != $('#confirmMikrotikPw').val()){
+		alert('Mikrotik password is not equal to confirm mikrotik password');
+		return;
+	}
+	
+	if($('#adminPw').val() != $('#confirmAdminPw').val()){
+		alert('Admin password is not equal to confirm admin password');
+		return;
+	}
 	
 	if(!validateCoinSlotPin(pinMap)){
 		return;
@@ -714,9 +731,11 @@ function openSystemConfig(evt){
 		$('#mikrotikIp').val(configData[3]);
 		$('#mikrotikUser').val(configData[4]);
 		$('#mikrotikPw').val(configData[5]);
+		$('#confirmMikrotikPw').val(configData[5]);
 		$('#coinSlotWaitTime').val(configData[6]);
 		$('#adminUser').val(configData[7]);
 		$('#adminPw').val(configData[8]);
+		$('#confirmAdminPw').val(configData[8]);
 		$('#coinSlotAbuseCount').val(configData[9]);
 		$('#coinSlotBanMinutes').val(configData[10]);
 		$('#coinSlotPin').val(configData[11]);
