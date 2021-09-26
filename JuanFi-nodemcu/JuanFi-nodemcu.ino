@@ -53,6 +53,7 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 LiquidCrystal_I2C lcd20x4(0x27, 20, 4);
 
 volatile int coin = 0;
+volatile int processCoin = 0;
 volatile int totalCoin = 0;
 boolean isNewVoucher = false;
 int coinsChange = 0;
@@ -463,7 +464,7 @@ void testInsertCoin(){
   }  
   String data = server.arg("coin");
   if(coinSlotActive){
-    coin = data.toInt();  
+    coin += data.toInt();  
     coinsChange = 1;
   }
   server.send(200, "text/plain", "ok");
@@ -806,11 +807,11 @@ void checkCoin(){
   }
 
   if(!acceptCoin){
-    totalCoin += coin;
+    totalCoin += processCoin;
     timeToAdd = calculateAddTime();
     char * keys[] = {"status", "newCoin", "timeAdded", "totalCoin", "validity", "data"};
     char coinStr[16];
-    itoa(coin, coinStr, 10);
+    itoa(processCoin, coinStr, 10);
     char timeToAddStr[16];
     itoa(timeToAdd, timeToAddStr, 10);
     char totalCoinStr[16];
@@ -1003,7 +1004,7 @@ void setupCORSPolicy(){
 void activateCoinSlot(){
   digitalWrite(COIN_SET_PIN, HIGH);
   delay(200);
-  coin = 0;
+  processCoin = 0;
   acceptCoin = true;
   coinSlotActive = true;
   targetMilis = millis() + MAX_WAIT_COIN_SEC;
@@ -1299,7 +1300,7 @@ void loop () {
           if(coinsChange > 0){
             //delay(1500); change delay to coin waiting logic to prevent hanging of LCD 
             if(coinWaiting == 0){
-              coinWaiting = currentMilis + 1500;
+              coinWaiting = currentMilis + 700;
             }
 
             if(coinWaiting > currentMilis){
@@ -1307,20 +1308,16 @@ void loop () {
             }
 
             coinWaiting = 0;
-            if(coin == 6){
-               coin = 5;
-            }
-            if(coin == 11){
-               coin = 10;
-            }
+            processCoin = coin;
+            coin -= processCoin;
             Serial.print("Coin inserted: ");
-            Serial.println(coin);
+            Serial.println(processCoin);
             coinsChange = 0;
             acceptCoin = false;
 
             //if manual voucher mode
             if(manualVoucher){
-              totalCoin += coin;
+              totalCoin += processCoin;
               timeToAdd = calculateAddTime();
               activateCoinSlot();
             }
