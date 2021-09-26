@@ -1051,15 +1051,13 @@ void registerNewVoucher(String voucher){
 
 void addTimeToVoucher(String voucher, int secondsToAdd){
 
-    String script = ":global lpt; :global lpts; :global nlu; :set lpt [/ip hotspot user get ";
+    String script = ":global lpt; :global nlu; :set lpt [/ip hotspot user get ";
     script += voucher;
     script += " limit-uptime]; ";
     sendCommand(script);
-    script = ":global hr [:pick $lpt 0 2]; :global min [:pick $lpt 3 5]; :global sec [:pick $lpt 6 8];";
-    sendCommand(script);
-    script = " :set lpts [(hr*3600+min*60+sec)]; :set nlu [($lpts+";
-    script += secondsToAdd;
-    script += ")]; ";
+    script = ":set nlu [($lpt+";
+    script += (secondsToAdd/60);
+    script += "m)]; ";
     script += "/ip hotspot user set limit-uptime=$nlu comment=";
     script += currentValidity;
     script += "m " ;
