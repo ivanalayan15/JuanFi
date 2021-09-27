@@ -223,6 +223,7 @@ h2 {
 	<button class="tablinks active" onclick="openDashboard(event)">Dashboard</button>
 	<button class="tablinks" onclick="openSystemConfig(event)">System Configuration</button>
 	<button class="tablinks" onclick="openPromoRates(event)">Promo Rates</button>
+	<button class="tablinks" onclick="openVoucherGenerate(event)">Voucher Generation</button>
 	<button class="tablinks" onclick="openTab(event, 'About')">About</button>
 	<button class="tablinks" onclick="logout()">Logout</button>
 	<button href="javascript:void(0);" class="icon" onclick="myFunction()">///</button>
@@ -328,6 +329,9 @@ function myFunction() {
 
 	<label for="email"><b>Mikrotik Password</b></label><br>
     <input type="password" placeholder="Mikrotik Router Password" id="mikrotikPw" required><br>
+	
+	<label for="email"><b>Confirm Mikrotik Password</b></label><br>
+    <input type="password" placeholder="Confirm Mikrotik Router Password" id="confirmMikrotikPw" required><br>
 	</div>
 	
 	<div class="panel">
@@ -337,6 +341,10 @@ function myFunction() {
 
 	<label for="email"><b>Admin Password</b></label><br>
     <input type="password" placeholder="Admin Password" id="adminPw" required>
+	
+	<label for="email"><b>Confirm Admin Password</b></label><br>
+    <input type="password" placeholder="Confirm Admin Password" id="confirmAdminPw" required>
+	
 	</div>
 	
 	<div class="panel">
@@ -482,9 +490,42 @@ function myFunction() {
 </div>
 </div>
 
+<div id="VoucherGenerate" class="tabcontent">
+	<div class="container">
+	<div class="panel">
+	<span class="title">Voucher Generation</span>
+	<label for="voucherGeneratePrefix"><b>Voucher Prefix(max 2, should start with Letters)</b></label><br>
+    <input type="text" value="VC" placeholder="Voucher Prefix, e.g. P, S" id="voucherGeneratePrefix" maxlength="2" required>
+	<label for="voucherAmount"><b>Voucher Amount</b></label><br>
+    <input type="number" value="50" placeholder="Voucher amount" id="voucherAmount" required>
+	<label for="voucherQty"><b>Quantity(PC)</b></label><br>
+    <input type="number" value="1" placeholder="Voucher Qty" id="voucherQty"  required>
+	<label for="addToSales"><b>Add to Sales</b></label><br>
+    <select name="addToSales" id="addToSales">
+	  <option value="1">Yes</option>
+	  <option value="0">No</option>
+	</select>
+	<label for="appendToPrevious"><b>Append to Previous(For printing purpose)</b></label><br>
+    <select name="appendToPrevious" id="appendToPrevious">
+	  <option value="0">No</option>
+	  <option value="1">Yes</option>
+	</select>
+	<label>After you click the generate voucher, a popup window will appear after the generation, please check if you have popup blocker! Please avoid also qty to be more than 15 since it will take time to generate.</label><br>
+	</div>
+
+	<center>
+		<button onClick="generateVoucher()" type="submit" class="registerbtn">Generate Voucher</button>
+	</center>
+	
+	  <div id="voucherGenerateBody">
+			
+	  </div>
+	</div>
+</div>
+
 <div id="About" class="tabcontent">
 	<div class="panel">
-	<p>System Version: 2.1</p>
+	<p>System Version: 2.2</p>
 	<p>Developer: Ivan Julius Alayan</p>
 	<p>Contributors: Kristoffer D. Samole</p>
 	</div>
@@ -514,6 +555,16 @@ function saveSystemConfig(){
 	pinMap['System Ready Pin'] = systemReadyLEDPin;
 	pinMap['Insert Coin LED Pin'] = insertCoinLEDPin;
 	pinMap['Insert Coin Button Pin'] = insertCoinBtnPin;
+	
+	if($('#mikrotikPw').val() != $('#confirmMikrotikPw').val()){
+		alert('Mikrotik password is not equal to confirm mikrotik password');
+		return;
+	}
+	
+	if($('#adminPw').val() != $('#confirmAdminPw').val()){
+		alert('Admin password is not equal to confirm admin password');
+		return;
+	}
 	
 	if(!validateCoinSlotPin(pinMap)){
 		return;
@@ -583,8 +634,10 @@ function savePromoRates(){
 		var priceText = $("#priceText"+i).val();
 		var minutesText = $("#minutesText"+i).val();
 		var validityText = $("#validityText"+i).val();
+		var dataLimitText = $("#dataLimitText"+i).val();
+		var profileNameText = $("#profileNameText"+i).val();
 		if(rateNameText != null && priceText != null && minutesText != null && validityText != null){
-			params.push(rateNameText+"#"+priceText+"#"+minutesText+"#"+validityText);
+			params.push(rateNameText+"#"+priceText+"#"+minutesText+"#"+validityText+"#"+dataLimitText+"#"+profileNameText);
 		}
 	}
 	var postData = createParam(params);
@@ -712,9 +765,11 @@ function openSystemConfig(evt){
 		$('#mikrotikIp').val(configData[3]);
 		$('#mikrotikUser').val(configData[4]);
 		$('#mikrotikPw').val(configData[5]);
+		$('#confirmMikrotikPw').val(configData[5]);
 		$('#coinSlotWaitTime').val(configData[6]);
 		$('#adminUser').val(configData[7]);
 		$('#adminPw').val(configData[8]);
+		$('#confirmAdminPw').val(configData[8]);
 		$('#coinSlotAbuseCount').val(configData[9]);
 		$('#coinSlotBanMinutes').val(configData[10]);
 		$('#coinSlotPin').val(configData[11]);
@@ -743,11 +798,13 @@ var script = " <div id='rateRow' class='rateholder'>";
 			script += "<div><span class='rate-title'>Price</span><input type='number' value='priceValue' placeholder='Price' id='priceText'></div>";
 			script += "<div><span class='rate-title'>Minutes</span><input type='number' value='minutesValue' placeholder='Minutes' id='minutesText'></div>";
 			script += "<div><span class='rate-title'>Validity in minutes</span><input type='number' value='validityValue' placeholder='Validity' id='validityText'></div>";
+			script += "<div><span class='rate-title'>Data(MB) Limit Usage(Optional)</span><input type='number' value='dataLimitValue' placeholder='Data Limit Usage' id='dataLimitText'></div>";
+			script += "<div><span class='rate-title'>User Profile(Optional, it overrides the default profile set in system config)</span><input type='text' value='profileNameValue' placeholder='User Profile' id='profileNameText'></div>";
 			script += "<center><div><button class='delratebtn' onClick='deleteRate(rateIndex)'>Delete</button></div></center>";
 			script += "</div>";
 
 function addRate(){
-	var rowData = ["","",""];
+	var rowData = ["","","","","",""];
 	var rowScript = generateRowScript(rateCount, rowData);
 	$("#promoRateBody").append(rowScript);
 	rateCount++;
@@ -761,6 +818,7 @@ function openPromoRates(evt){
 	$.ajax({
 	  type: "GET",
 	  url: "admin/api/getRates?query="+new Date().getTime(),
+	  //url: "config/rates.data",
 	  success: function(data){
 		var rateData = data.split('|');
 		var html = "";
@@ -776,6 +834,10 @@ function openPromoRates(evt){
 	openTab(evt, 'PromoRate');
 }
 
+function openVoucherGenerate(evt){
+	openTab(evt, 'VoucherGenerate');
+}
+
 function generateRowScript(i , rowData){
 	var rowScript = script.replace("rateNameText", "rateNameText"+i);
 	rowScript = rowScript.replace("rateNameValue", rowData[0]);
@@ -785,6 +847,11 @@ function generateRowScript(i , rowData){
 	rowScript = rowScript.replace("minutesValue", rowData[2]);
 	rowScript = rowScript.replace("validityText", "validityText"+i);
 	rowScript = rowScript.replace("validityValue", rowData[3]);
+	rowScript = rowScript.replace("dataLimitText", "dataLimitText"+i);
+	rowScript = rowScript.replace("dataLimitValue", rowData[4]);
+	rowScript = rowScript.replace("profileNameText", "profileNameText"+i);
+	rowScript = rowScript.replace("profileNameValue", rowData[5]);
+	
 	rowScript = rowScript.replace("rateIndex", i);
 	rowScript = rowScript.replace("rateRow", "rateRow"+i);
 	return rowScript;
@@ -819,6 +886,45 @@ function logout(){
 	  }
 	});
 	}
+}
+
+function generateVoucher(){
+	
+	var appendToPrevious = $("#appendToPrevious").val();
+	var addToSales = $("#addToSales").val();
+	var voucherQty = $("#voucherQty").val();
+	var voucherAmount = $("#voucherAmount").val();
+	var voucherGeneratePrefix = $("#voucherGeneratePrefix").val();
+	
+	var postData = "amt="+voucherAmount+"&pfx="+voucherGeneratePrefix+"&qty="+voucherQty+"&sales="+addToSales;
+	
+	$.ajax({
+	  type: "POST",
+	  url: "admin/api/generateVouchers",
+	  data: postData,
+	  success: function(data){
+	  
+		var voucherData = localStorage.getItem("voucherData");
+		
+		if(appendToPrevious == "1"){
+			if(voucherData != null){
+				voucherData += "~";
+				voucherData += data;
+			}else{
+				voucherData = data;
+			}
+			
+		}else{
+			voucherData = data;
+		}
+	  
+		localStorage.setItem("voucherData", voucherData);
+		window.open("admin/viewGeneratedVouchers?d="+new Date().getTime());
+	  },
+	  error: function(XMLHttpRequest, textStatus, errorThrown) { 
+		alert("Error: " + errorThrown); 
+	  } 
+	});
 }
 
 function secondsToDhms(seconds) {

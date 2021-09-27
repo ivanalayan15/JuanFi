@@ -53,6 +53,7 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 LiquidCrystal_I2C lcd20x4(0x27, 20, 4);
 
 volatile int coin = 0;
+volatile int processCoin = 0;
 volatile int totalCoin = 0;
 boolean isNewVoucher = false;
 int coinsChange = 0;
@@ -77,6 +78,8 @@ typedef struct {
   int price;
   int minutes;
   int validity;
+  int dataLimit;
+  String profileName;
 } PromoRates;
 
 typedef struct {
@@ -90,6 +93,9 @@ AttemptMacAddress attempted[20];
 PromoRates rates[100];
 int ratesCount = 0;
 int currentValidity = 0;
+int currentDataLimit = 0;
+String currentRateProfile = "";
+
 
 const int LIFETIME_COIN_COUNT_ADDRESS = 0;
 const int COIN_COUNT_ADDRESS = 5;
@@ -307,7 +313,9 @@ void setup () {
   server.on("/admin/api/getRates", handleAdminGetRates);
   server.on("/admin/api/saveRates", handleAdminSaveRates);
   server.on("/admin/api/logout", handleLogout);
+  server.on("/admin/api/generateVouchers", handleGenerateVouchers);
   server.on("/admin", handleAdminPage);
+  server.on("/admin/viewGeneratedVouchers", handleAdminGeneratedVoucherPage);
 
   populateRates();
   
@@ -458,7 +466,7 @@ void testInsertCoin(){
   }  
   String data = server.arg("coin");
   if(coinSlotActive){
-    coin = data.toInt();  
+    coin += data.toInt();  
     coinsChange = 1;
   }
   server.send(200, "text/plain", "ok");
@@ -607,6 +615,17 @@ void handleAdminPage(){
   
   handleFileRead("/admin/system-config.html");
 }
+
+void handleAdminGeneratedVoucherPage(){
+  if(!isAuthorized()){
+    handleNotAuthorize();
+    return;
+  }
+  
+  handleFileRead("/admin/voucher-generate.html");
+}
+
+
 
 bool isAuthorized(){
   String auth = server.header("Authorization");
@@ -801,23 +820,25 @@ void checkCoin(){
   }
 
   if(!acceptCoin){
-    totalCoin += coin;
+    totalCoin += processCoin;
     timeToAdd = calculateAddTime();
-    char * keys[] = {"status", "newCoin", "timeAdded", "totalCoin", "validity"};
+    char * keys[] = {"status", "newCoin", "timeAdded", "totalCoin", "validity", "data"};
     char coinStr[16];
-    itoa(coin, coinStr, 10);
+    itoa(processCoin, coinStr, 10);
     char timeToAddStr[16];
     itoa(timeToAdd, timeToAddStr, 10);
     char totalCoinStr[16];
     itoa(totalCoin, totalCoinStr, 10);
     char validityStr[16];
     itoa(currentValidity, validityStr, 10);
-    char * values[] = {"true", coinStr, timeToAddStr, totalCoinStr, validityStr};
+    char currentDataLimitStr[16];
+    itoa(currentDataLimit, currentDataLimitStr, 10);
+    char * values[] = {"true", coinStr, timeToAddStr, totalCoinStr, validityStr, currentDataLimitStr};
     activateCoinSlot();
     setupCORSPolicy();
-    server.send(200, "application/json", toJson(keys, values, 5));
+    server.send(200, "application/json", toJson(keys, values, 6));
   }else{
-    char * keys[] = {"status", "errorCode", "remainTime", "timeAdded", "totalCoin", "waitTime", "validity"};
+    char * keys[] = {"status", "errorCode", "remainTime", "timeAdded", "totalCoin", "waitTime", "validity", "data"};
     char remainTimeStr[20];
     long remain = targetMilis - millis();
     itoa(remain, remainTimeStr, 10);
@@ -829,9 +850,11 @@ void checkCoin(){
     itoa(MAX_WAIT_COIN_SEC, waitTimeStr, 10);
     char validityStr[16];
     itoa(currentValidity, validityStr, 10);
-    char * values[] = {"false", "coin.not.inserted", remainTimeStr, timeToAddStr, totalCoinStr, waitTimeStr, validityStr};
+    char currentDataLimitStr[16];
+    itoa(currentDataLimit, currentDataLimitStr, 10);
+    char * values[] = {"false", "coin.not.inserted", remainTimeStr, timeToAddStr, totalCoinStr, waitTimeStr, validityStr, currentDataLimitStr};
     setupCORSPolicy();
-    server.send(200, "application/json", toJson(keys, values, 7));
+    server.send(200, "application/json", toJson(keys, values, 8));
   }
 }
 
@@ -994,7 +1017,7 @@ void setupCORSPolicy(){
 void activateCoinSlot(){
   digitalWrite(COIN_SET_PIN, HIGH);
   delay(200);
-  coin = 0;
+  processCoin = 0;
   acceptCoin = true;
   coinSlotActive = true;
   targetMilis = millis() + MAX_WAIT_COIN_SEC;
@@ -1042,22 +1065,44 @@ void registerNewVoucher(String voucher){
 
 void addTimeToVoucher(String voucher, int secondsToAdd){
 
-    String script = ":global lpt ; :global lpts; :global nlu; :set lpt [/ip hotspot user get ";
+    String script = ":global lpt; :global nlu; :set lpt [/ip hotspot user get ";
     script += voucher;
     script += " limit-uptime]; ";
     sendCommand(script);
-    script = ":global hours [:pick $lpt 0 2]; :global minutes [:pick $lpt 3 5]; :global seconds [:pick $lpt 6 8];";
-    sendCommand(script);
-    script = " :set lpts [($hours*3600+$minutes*60+$seconds)]; :set nlu [($lpts+";
-    script += secondsToAdd;
-    script += ")]; ";
-    //script += ")]; :global validity [/ip hotspot user get [find name=";
-    //script += voucher;
-    script += "/ip hotspot user set limit-uptime=$nlu comment=";
+    script = ":set nlu [($lpt+";
+    script += (secondsToAdd/60);
+    script += "m)]; ";
+    script += "/ip hotspot user set limit-uptime=$nlu comment=\"";
     script += currentValidity;
-    script += "m " ;
+    script += "m," ;
+    script += String(totalCoin);
+    if(isNewVoucher){
+      script += ",0,";
+    }else{
+      script += ",1,";
+    }
+    script += vendorName;
+    script += "\" ";
+    
+    if(currentRateProfile != ""){
+      script += "profile=" ;
+      script += currentRateProfile;
+      script += " ";
+    }
     script += voucher;
+    script += "; " ;
     sendCommand(script);
+    
+    if(currentDataLimit != 0){
+      String script = ":global tdtl; :global dtl [/ip hotspot user get VOUCHER_HERE  limit-bytes-total];";
+      script.replace("VOUCHER_HERE", voucher);
+      sendCommand(script);
+      script = ":if ($dtl>0) do={ :set tdtl [(dtl+DATA_LIMIT_HERE*1048576)] } else { :set tdtl [(DATA_LIMIT_HERE*1048576)] }; /ip hotspot user set limit-bytes-total=$tdtl VOUCHER_HERE";
+      script.replace("VOUCHER_HERE", voucher);
+      script.replace("DATA_LIMIT_HERE", String(currentDataLimit));
+      sendCommand(script);
+    }
+    
 }
 
 void sendCommand(String script){
@@ -1072,6 +1117,8 @@ void resetGlobalVariables(){
   currentActiveVoucher = "";
   timeToAdd = 0;
   totalCoin = 0;
+  currentDataLimit = 0;
+  currentRateProfile = "";
 }
 
 void disableCoinSlot(){
@@ -1083,7 +1130,9 @@ void disableCoinSlot(){
 int calculateAddTime(){
   int totalTime = 0;
   currentValidity = 0;
+  currentDataLimit = 0;
   int remainingCoin = totalCoin;
+  int highestPrice = 0;
   while(remainingCoin > 0){
     int candidatePrice = 0;
     int candidateIndex = -1;
@@ -1102,6 +1151,16 @@ int calculateAddTime(){
       }else{
         currentValidity += rates[candidateIndex].validity;
       }
+
+      //get the highest user rate profile from the rates
+      if(highestPrice < rates[candidateIndex].price){
+          highestPrice = rates[candidateIndex].price;
+          if(rates[candidateIndex].profileName != ""){
+            currentRateProfile = rates[candidateIndex].profileName;
+          }
+      }
+
+      currentDataLimit += rates[candidateIndex].dataLimit;
       
       totalTime += rates[candidateIndex].minutes;
       remainingCoin -= rates[candidateIndex].price;
@@ -1158,7 +1217,7 @@ void populateSystemConfiguration(){
 }
 
 
-void split(String rows[], String data, char delimeter){
+int split(String rows[], String data, char delimeter){
   int count = 0;
   String elementData = "";
   for(int i=0;i<data.length();i++){
@@ -1173,6 +1232,7 @@ void split(String rows[], String data, char delimeter){
   if(elementData != ""){
      rows[count] = elementData;
   }
+  return count;
 }
 
 
@@ -1184,31 +1244,20 @@ void populateRates(){
   Serial.println(data);
   int dataLength = data.length() + 1;
   char dataChar [dataLength];
-  data.toCharArray(dataChar, dataLength);
-  char * rowsPtr = strtok(dataChar, ROW_DELIMETER);
-  ratesCount = 0;
-  char *rows[100];
-  while(rowsPtr != NULL){
-    rows[ratesCount] = rowsPtr;
-    ratesCount++; 
-    rowsPtr = strtok(NULL, ROW_DELIMETER);
-  }
+  String rows[100];
+  ratesCount = split(rows, data, '|' );
 
   for(int i=0;i<ratesCount;i++){
     Serial.print("Data: ");
     Serial.println(rows[i]);
-    char *column[4];
-    char *colPtr = strtok(rows[i], COLUMN_DELIMETER);
-    int j=0;
-    while(colPtr != NULL){
-      column[j] = colPtr;
-      j++; 
-      colPtr = strtok(NULL, COLUMN_DELIMETER);
-    }
+    String column[6];
+    split(column, rows[i], '#' );
     rates[i].rateName = column[0];
-    rates[i].price = atoi(column[1]);
-    rates[i].minutes = atoi(column[2]);
-    rates[i].validity = atoi(column[3]);
+    rates[i].price = column[1].toInt();
+    rates[i].minutes = (column[2]).toInt();
+    rates[i].validity = (column[3]).toInt();
+    rates[i].dataLimit = (column[4]).toInt();
+    rates[i].profileName = column[5];
   }
   
 }
@@ -1273,7 +1322,7 @@ void loop () {
           if(coinsChange > 0){
             //delay(1500); change delay to coin waiting logic to prevent hanging of LCD 
             if(coinWaiting == 0){
-              coinWaiting = currentMilis + 1500;
+              coinWaiting = currentMilis + 700;
             }
 
             if(coinWaiting > currentMilis){
@@ -1281,20 +1330,16 @@ void loop () {
             }
 
             coinWaiting = 0;
-            if(coin == 6){
-               coin = 5;
-            }
-            if(coin == 11){
-               coin = 10;
-            }
+            processCoin = coin;
+            coin -= processCoin;
             Serial.print("Coin inserted: ");
-            Serial.println(coin);
+            Serial.println(processCoin);
             coinsChange = 0;
             acceptCoin = false;
 
             //if manual voucher mode
             if(manualVoucher){
-              totalCoin += coin;
+              totalCoin += processCoin;
               timeToAdd = calculateAddTime();
               activateCoinSlot();
             }
@@ -1551,6 +1596,37 @@ bool activateManualVoucherPurchase(){
   //show 30 sec the voucher code
   thankyou_cooldown = 30000;
   return true;
+}
+
+void handleGenerateVouchers(){
+
+  if(!isAuthorized()){
+     handleNotAuthorize();
+     return;
+  }  
+  int amount = server.arg("amt").toInt();
+  int qty = server.arg("qty").toInt();
+  int addToSales = server.arg("sales").toInt();
+  String prefix = server.arg("pfx");
+  String voucherGenerated = "";
+  printPleaseWait();
+  for(int i=0;i<qty;i++){
+    int randomNumber = random(1000, 9999);
+    String voucher = prefix+String(randomNumber);
+    totalCoin = amount;
+    timeToAdd = calculateAddTime();
+    registerNewVoucher(voucher);
+    if(addToSales == 1){
+      updateStatistic();
+    }
+    addTimeToVoucher(voucher, timeToAdd);
+    if(i > 0){
+      voucherGenerated += "#";
+    }
+    voucherGenerated += voucher;
+  }
+  String returnData = vendorName +"|"+amount+"|"+String(timeToAdd)+"|"+ voucherGenerated;
+  server.send(200, "text/pain", returnData);
 }
 
 void printSystemNotAvailable(){
