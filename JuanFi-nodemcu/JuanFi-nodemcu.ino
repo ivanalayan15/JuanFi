@@ -1231,6 +1231,7 @@ int split(String rows[], String data, char delimeter){
   }
   if(elementData != ""){
      rows[count] = elementData;
+     count++;
   }
   return count;
 }
