@@ -313,7 +313,9 @@ void setup () {
   server.on("/admin/api/getRates", handleAdminGetRates);
   server.on("/admin/api/saveRates", handleAdminSaveRates);
   server.on("/admin/api/logout", handleLogout);
+  server.on("/admin/api/generateVouchers", handleGenerateVouchers);
   server.on("/admin", handleAdminPage);
+  server.on("/admin/viewGeneratedVouchers", handleAdminGeneratedVoucherPage);
 
   populateRates();
   
@@ -613,6 +615,17 @@ void handleAdminPage(){
   
   handleFileRead("/admin/system-config.html");
 }
+
+void handleAdminGeneratedVoucherPage(){
+  if(!isAuthorized()){
+    handleNotAuthorize();
+    return;
+  }
+  
+  handleFileRead("/admin/voucher-generate.html");
+}
+
+
 
 bool isAuthorized(){
   String auth = server.header("Authorization");
@@ -1574,6 +1587,37 @@ bool activateManualVoucherPurchase(){
   //show 30 sec the voucher code
   thankyou_cooldown = 30000;
   return true;
+}
+
+void handleGenerateVouchers(){
+
+  if(!isAuthorized()){
+     handleNotAuthorize();
+     return;
+  }  
+  int amount = server.arg("amt").toInt();
+  int qty = server.arg("qty").toInt();
+  int addToSales = server.arg("sales").toInt();
+  String prefix = server.arg("pfx");
+  String voucherGenerated = "";
+  printPleaseWait();
+  for(int i=0;i<qty;i++){
+    int randomNumber = random(1000, 9999);
+    String voucher = prefix+String(randomNumber);
+    totalCoin = amount;
+    timeToAdd = calculateAddTime();
+    registerNewVoucher(voucher);
+    if(addToSales == 1){
+      updateStatistic();
+    }
+    addTimeToVoucher(voucher, timeToAdd);
+    if(i > 0){
+      voucherGenerated += "#";
+    }
+    voucherGenerated += voucher;
+  }
+  String returnData = vendorName +"|"+amount+"|"+String(timeToAdd)+"|"+ voucherGenerated;
+  server.send(200, "text/pain", returnData);
 }
 
 void printSystemNotAvailable(){

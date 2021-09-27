@@ -223,6 +223,7 @@ h2 {
 	<button class="tablinks active" onclick="openDashboard(event)">Dashboard</button>
 	<button class="tablinks" onclick="openSystemConfig(event)">System Configuration</button>
 	<button class="tablinks" onclick="openPromoRates(event)">Promo Rates</button>
+	<button class="tablinks" onclick="openVoucherGenerate(event)">Voucher Generation</button>
 	<button class="tablinks" onclick="openTab(event, 'About')">About</button>
 	<button class="tablinks" onclick="logout()">Logout</button>
 	<button href="javascript:void(0);" class="icon" onclick="myFunction()">///</button>
@@ -489,9 +490,42 @@ function myFunction() {
 </div>
 </div>
 
+<div id="VoucherGenerate" class="tabcontent">
+	<div class="container">
+	<div class="panel">
+	<span class="title">Voucher Generation</span>
+	<label for="voucherGeneratePrefix"><b>Voucher Prefix(max 2, should start with Letters)</b></label><br>
+    <input type="text" value="VC" placeholder="Voucher Prefix, e.g. P, S" id="voucherGeneratePrefix" maxlength="2" required>
+	<label for="voucherAmount"><b>Voucher Amount</b></label><br>
+    <input type="number" value="50" placeholder="Voucher amount" id="voucherAmount" required>
+	<label for="voucherQty"><b>Quantity(PC)</b></label><br>
+    <input type="number" value="1" placeholder="Voucher Qty" id="voucherQty"  required>
+	<label for="addToSales"><b>Add to Sales</b></label><br>
+    <select name="addToSales" id="addToSales">
+	  <option value="1">Yes</option>
+	  <option value="0">No</option>
+	</select>
+	<label for="appendToPrevious"><b>Append to Previous(For printing purpose)</b></label><br>
+    <select name="appendToPrevious" id="appendToPrevious">
+	  <option value="0">No</option>
+	  <option value="1">Yes</option>
+	</select>
+	<label>After you click the generate voucher, a popup window will appear after the generation, please check if you have popup blocker! Please avoid also qty to be more than 15 since it will take time to generate.</label><br>
+	</div>
+
+	<center>
+		<button onClick="generateVoucher()" type="submit" class="registerbtn">Generate Voucher</button>
+	</center>
+	
+	  <div id="voucherGenerateBody">
+			
+	  </div>
+	</div>
+</div>
+
 <div id="About" class="tabcontent">
 	<div class="panel">
-	<p>System Version: 2.1</p>
+	<p>System Version: 2.2</p>
 	<p>Developer: Ivan Julius Alayan</p>
 	<p>Contributors: Kristoffer D. Samole</p>
 	</div>
@@ -800,6 +834,10 @@ function openPromoRates(evt){
 	openTab(evt, 'PromoRate');
 }
 
+function openVoucherGenerate(evt){
+	openTab(evt, 'VoucherGenerate');
+}
+
 function generateRowScript(i , rowData){
 	var rowScript = script.replace("rateNameText", "rateNameText"+i);
 	rowScript = rowScript.replace("rateNameValue", rowData[0]);
@@ -848,6 +886,45 @@ function logout(){
 	  }
 	});
 	}
+}
+
+function generateVoucher(){
+	
+	var appendToPrevious = $("#appendToPrevious").val();
+	var addToSales = $("#addToSales").val();
+	var voucherQty = $("#voucherQty").val();
+	var voucherAmount = $("#voucherAmount").val();
+	var voucherGeneratePrefix = $("#voucherGeneratePrefix").val();
+	
+	var postData = "amt="+voucherAmount+"&pfx="+voucherGeneratePrefix+"&qty="+voucherQty+"&sales="+addToSales;
+	
+	$.ajax({
+	  type: "POST",
+	  url: "admin/api/generateVouchers",
+	  data: postData,
+	  success: function(data){
+	  
+		var voucherData = localStorage.getItem("voucherData");
+		
+		if(appendToPrevious == "1"){
+			if(voucherData != null){
+				voucherData += "~";
+				voucherData += data;
+			}else{
+				voucherData = data;
+			}
+			
+		}else{
+			voucherData = data;
+		}
+	  
+		localStorage.setItem("voucherData", voucherData);
+		window.open("admin/viewGeneratedVouchers?d="+new Date().getTime());
+	  },
+	  error: function(XMLHttpRequest, textStatus, errorThrown) { 
+		alert("Error: " + errorThrown); 
+	  } 
+	});
 }
 
 function secondsToDhms(seconds) {

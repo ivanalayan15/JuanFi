@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  padding: 10px
+}
+.voucher-box {
+	margin-top: 5px;
+	margin-left: 5px;
+	padding: 10px;
+	border-radius: 5px;
+	border: 2px solid #485460;
+	width: 200px;
+	height: 100px;
+}
+
+.panel p {
+	font-size: 12px;
+	font-weight: bold;
+	color: #fff
+}
+
+.title {
+	display: block;
+	text-align: center;
+	padding: 5px;
+	color: #ff7f50;
+	border-bottom: 1px solid #485460
+}
+
+/* Create three equal columns that floats next to each other */
+.column {
+  float: left;
+  width: 20.1%;
+  padding: 1	0px;
+}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.info{
+	font-size: 13px;
+}
+</style>
+<script>
+
+	function printMe(){
+		window.print();
+	}
+	
+	function clearAll(){
+		document.getElementById("theBody").innerHTML = "";
+		localStorage.removeItem("voucherData");
+	}
+	
+	var ticketTemplate = " <div class='voucher-box column'>";
+		ticketTemplate += "<span class='title'>REPLACE_VENDO_NAME</span>";
+		ticketTemplate += "<br/>";
+		ticketTemplate += "<label class='info'><b>Code: REPLACE_VOUCHER_CODE</b></label><br>";
+		ticketTemplate += "<label class='info'><b>Duration: REPLACE_DURATION</b></label><br>";
+		ticketTemplate += "<label class='info'><b>Amount: REPLACE_AMOUNT</b></label><br>";
+		ticketTemplate += "</div>";
+		
+	var NUMBER_OF_COLS = 4;
+		
+	function onLoad(){
+	
+		var data = localStorage.getItem("voucherData");
+		var localData = data.split("~");
+		var html = "";
+		for(var k=0;k<localData.length;k++){
+			var voucherData = localData[k].split("|");
+			var voucherRows = voucherData[3].split("#");
+			for(var i=0;i<voucherRows.length;i++){
+				var rowScript = ticketTemplate;
+				rowScript = rowScript.replaceAll("REPLACE_VENDO_NAME",voucherData[0]);
+				rowScript = rowScript.replaceAll("REPLACE_VOUCHER_CODE",voucherRows[i]);
+				rowScript = rowScript.replaceAll("REPLACE_DURATION",secondsToDhms(voucherData[2]));
+				rowScript = rowScript.replaceAll("REPLACE_AMOUNT",voucherData[1]);
+				html += rowScript;
+			}
+		}
+		document.getElementById("theBody").innerHTML+= html;
+	}
+	
+	function secondsToDhms(seconds) {
+		seconds = Number(seconds);
+		var d = Math.floor(seconds / (3600*24));
+		var h = Math.floor(seconds % (3600*24) / 3600);
+		var m = Math.floor(seconds % 3600 / 60);
+		var s = Math.floor(seconds % 60);
+
+		var dDisplay = d > 0 ? d + (d == 1 ? " Day " : " Days ") : "";
+		var hDisplay = h > 0 ? h + (h == 1 ? " Hour " : " Hours ") : "";
+		var mDisplay = m > 0 ? m + (m == 1 ? " Min " : " Mins ") : "";
+		return dDisplay + hDisplay + mDisplay;
+	}
+
+</script>
+
+</head>
+<body  onLoad="onLoad()">
+	<button onclick="printMe(this)">Print</button>
+	<button onclick="clearAll(this)">Clear</button>
+	
+	<div id="theBody"> </div>
+
+</body>
+</html> 
