@@ -1072,9 +1072,18 @@ void addTimeToVoucher(String voucher, int secondsToAdd){
     script = ":set nlu [($lpt+";
     script += (secondsToAdd/60);
     script += "m)]; ";
-    script += "/ip hotspot user set limit-uptime=$nlu comment=";
+    script += "/ip hotspot user set limit-uptime=$nlu comment=\"";
     script += currentValidity;
-    script += "m " ;
+    script += "m," ;
+    script += String(totalCoin);
+    if(isNewVoucher){
+      script += ",0,";
+    }else{
+      script += ",1,";
+    }
+    script += vendorName;
+    script += "\" ";
+    
     if(currentRateProfile != ""){
       script += "profile=" ;
       script += currentRateProfile;
