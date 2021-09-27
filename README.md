@@ -150,11 +150,11 @@ replace 10.0.10.253 with your own nodemcu IP address
 8.) Please add this script in the hotspot user profile on login event
 ```bash
 ### enable telegram notification, change from 0 to 1 if you want to enable telegram
-:local enableTelegram 0;
-###replace telegram token with your own, you can use this also
+:local enableTelegram 1;
+###replace telegram token
 :local telegramToken "2021159313:AAHEBoOLogYjLCpSwVeKPVmKKO4TIxa02vQ";
 ###replace telegram chat id / group id
-:local chatId "";
+:local chatId "-";
 ### enable Random MAC synchronizer
 :local enableRandomMacSyncFix 0;
 :local com [/ip hotspot user get [find name=$user] comment];
@@ -171,7 +171,7 @@ replace 10.0.10.253 with your own nodemcu IP address
 		:local amt [:pick $infoArray 0];
 		:local ext [:pick $infoArray 1];
 		:local vendo [:pick $infoArray 2];
-		/tool fetch url="https://api.telegram.org/bot$telegramToken/sendmessage?chat_id=$chatId&text=<<==========New Sales==========>> %0A Vendo: $vendo %0A Voucher: $user %0A IP: $address %0A MAC: $mac %0A Amount: $amt %0A Extended: $ext %0A Total Time: $totaltime %0A <<=============================>>" keep-result=no;
+		/tool fetch url="https://api.telegram.org/bot$telegramToken/sendmessage?chat_id=$chatId&text=<<======New Sales======>> %0A Vendo: $vendo %0A Voucher: $user %0A IP: $address %0A MAC: $mac %0A Amount: $amt %0A Extended: $ext %0A Total Time: $totaltime %0A <<=====================>>" keep-result=no;
 	}
 };
 
