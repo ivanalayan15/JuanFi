@@ -150,7 +150,7 @@ replace 10.0.10.253 with your own nodemcu IP address
 8.) Please add this script in the hotspot user profile on login event
 ```bash
 ### enable telegram notification, change from 0 to 1 if you want to enable telegram
-:local enableTelegram 1;
+:local enableTelegram 0;
 ###replace telegram token with your own, you can use this also
 :local telegramToken "2021159313:AAHEBoOLogYjLCpSwVeKPVmKKO4TIxa02vQ";
 ###replace telegram chat id / group id
