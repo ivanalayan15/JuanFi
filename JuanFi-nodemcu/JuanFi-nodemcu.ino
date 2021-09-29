@@ -33,7 +33,6 @@
   #include <ESP8266TelnetClient.h>
   #include <ESP8266WiFi.h>
   #include <ESP8266WebServer.h>
-  #include <ESP8266WiFiMulti.h>
   #include <ESP8266HTTPClient.h>
   #include <ESP8266mDNS.h>
   #include <DNSServer.h>
@@ -148,7 +147,6 @@ IPAddress apIP(172, 217, 28, 1);
   EthernetClient client2;
   telnetClient tc(client);
 #else
-  ESP8266WiFiMulti WiFiMulti;
   WiFiClient client2;
   WiFiClient client;
   ESP8266telnetClient tc(client);
@@ -196,7 +194,7 @@ void setup () {
     initializeLCD();
     // We start by connecting to a WiFi network
     WiFi.mode(WIFI_STA);
-    WiFiMulti.addAP(ssid.c_str(), password.c_str());
+    WiFi.begin(ssid.c_str(), password.c_str());
     Serial.println();
     Serial.println();
     Serial.print("Wait for WiFi, connecting to ");
@@ -204,7 +202,7 @@ void setup () {
   
     int second = 0;
     while (second <= WIFI_CONNECT_TIMEOUT) {
-      networkConnected = (WiFiMulti.run() == WL_CONNECTED);
+      networkConnected = (WiFi.status() == WL_CONNECTED);
       Serial.print(".");
       if(networkConnected){
         break;
