@@ -289,8 +289,16 @@ function checkCoin(){
 						  type: 'info',
 						  delay: 5000
 						});
+						
+						var type = $( "#saveVoucherButton" ).attr('data-save-type');
 						setTimeout(function (){
-							doLogin();
+
+							if(type == "extend"){
+								setStorageValue('reLogin', '1');
+								document.logout.submit();
+							}else{
+								doLogin();
+							}
 						}, 3000);
 					}else{
 						notifyCoinSlotError('coins.wait.expired');
