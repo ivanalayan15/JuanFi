@@ -159,7 +159,7 @@ Execute on mirkotik terminal
 Put on the on login script 
 ```bash
 ### enable telegram notification, change from 0 to 1 if you want to enable telegram
-:local enableTelegram 1;
+:local enableTelegram 0;
 ###replace telegram token
 :local telegramToken "2021159313:AAHEBoOLogYjLCpSwVeKPVmKKO4TIxa02vQ";
 ###replace telegram chat id / group id
