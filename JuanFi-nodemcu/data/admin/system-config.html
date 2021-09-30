@@ -319,6 +319,25 @@ function myFunction() {
     <input type="password" placeholder="WIFI Password" id="wifiPW">
 	</div>
 	
+	<div class="panel" >
+	<span class="title">IP Address Setting</span>
+    <label for="email"><b>Mode</b></label><br>
+    <select name="ipAddressMode" id="ipAddressMode" onChange="ipAddressModeChange(this)">
+	  <option value="0">DHCP</option>
+	  <option value="1">Static</option>
+	</select><br>
+	<div id="staticIpDiv" style="display: none">
+	<label for="email"><b>Local IP Address</b></label><br>
+    <input type="text" placeholder="Local IP Address" id="localIpAddress" required><br>
+	<label for="email"><b>Subnet Mask</b></label><br>
+	<input type="text" placeholder="Subnet Mask" id="subnetMask" required><br>
+	<label for="email"><b>Gateway IP</b></label><br>
+    <input type="text" placeholder="Gateway IP" id="gatewayIp" required><br>
+	<label for="email"><b>DNS Server</b></label><br>
+    <input type="text" placeholder="DNS Server IP" id="dnsServer" required><br>
+	</div>
+	</div>
+	
 	<div class="panel">
 	<span class="title">MikroTik Setting</span>
 	<label for="email"><b>Mikrotik Router IP</b></label><br>
@@ -570,6 +589,23 @@ function saveSystemConfig(){
 		return;
 	}
 	
+	var ipAddressMode = $("#ipAddressMode").val();
+	
+	var localIpAddress = $("#localIpAddress").val();
+	var gatewayIp = $("#gatewayIp").val();
+	var subnetMask = $("#subnetMask").val();
+	var dnsServer = $("#dnsServer").val();
+	
+	var ipAddressFields = [];
+	ipAddressFields['Local IP Address'] = localIpAddress;
+	ipAddressFields['Gateway IP Address'] = gatewayIp;
+	ipAddressFields['Subnet Mask Address'] = subnetMask;
+	ipAddressFields['DNS Server Address'] = dnsServer;
+	
+	if(ipAddressMode == 1 && (!validateIpAddressFields(ipAddressFields))){
+		return;
+	}
+	
 
 	var postData = createParam([
 				$('#vendoName').val(),
@@ -596,7 +632,12 @@ function saveSystemConfig(){
 				$('#voucherLoginOption').val(),
 				$('#voucherProfile').val(),
 				$('#voucherValidity').val(),
-				$('#ledTriggerType').val()
+				$('#ledTriggerType').val(),
+				ipAddressMode,
+				localIpAddress,
+				gatewayIp,
+				subnetMask,
+				dnsServer
 			 ]);
 				 
 	$.ajax({
@@ -786,6 +827,12 @@ function openSystemConfig(evt){
 		$('#voucherProfile').val(configData[22]);
 		$('#voucherValidity').val(configData[23]);
 		$('#ledTriggerType').val(configData[24]);
+		$("#ipAddressMode").val(configData[25]);
+		$("#ipAddressMode").change();
+		$("#localIpAddress").val(configData[26]);
+		$("#gatewayIp").val(configData[27]);
+		$("#subnetMask").val(configData[28]);
+		$("#dnsServer").val(configData[29]);
 	  }
 	});
 	openTab(evt, 'SystemConfigration');
@@ -951,6 +998,36 @@ $(document).ajaxComplete(function(){
 	$("#loadingText").attr("style","display: none");
  });
  
+ function ipAddressModeChange(evt){
+ 
+	var mode = $(evt).val();
+	
+	if(mode == 0){
+		$("#staticIpDiv").attr("style", "display: none");
+	}else{
+		$("#staticIpDiv").attr("style", "display: block");
+	}
+ 
+}
+
+function validateIpAddressFields(ipAddressFields){
+	for(var i in ipAddressFields){
+		var fieldValue = ipAddressFields[i];
+		if(fieldValue == null || fieldValue == "" || (!validateIPaddress(fieldValue))){
+			alert(i+" is not valid, please check the ip format");
+			return false;
+		}
+	}
+	return true;
+
+}
+
+function validateIPaddress(ipaddress) {  
+  if (/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ipaddress)) {  
+    return (true)  
+  }
+  return (false)  
+}   
 </script>
 </div>
 </body>

@@ -117,6 +117,7 @@ int SYSTEM_READY_LED = 0;
 int INSERT_COIN_BTN_PIN = 0;
 int CHECK_INTERNET_CONNECTION = 0;
 int LED_TRIGGER_TYPE = 1;
+int IP_ADDRESS_MODE = 0;
 int VOUCHER_LOGIN_OPTION = 0;
 int VOUCHER_VALIDITY_OPTION = 0;
 String VOUCHER_PROFILE = "default";
@@ -137,6 +138,13 @@ String ssid     = "MikrofffffTik-36DA2B";
 String password = "";
 String adminAuth = "";
 String vendorName = "";
+
+
+// static address setting
+IPAddress local_IP(192, 168, 10, 15);
+IPAddress gateway(192, 168, 10, 1);
+IPAddress subnet(255, 255, 255, 0);
+IPAddress primaryDNS(192, 168, 10, 1); // this is optional
 
 
 IPAddress apIP(172, 217, 28, 1);
@@ -194,6 +202,13 @@ void setup () {
     initializeLCD();
     // We start by connecting to a WiFi network
     WiFi.mode(WIFI_STA);
+    //for static ip configuration
+    if(IP_ADDRESS_MODE == 1){
+      Serial.print("using static ip address");
+      Serial.println(local_IP);
+      WiFi.config(local_IP, primaryDNS, gateway, subnet);  
+    }
+    
     WiFi.begin(ssid.c_str(), password.c_str());
     Serial.println();
     Serial.println();
@@ -358,7 +373,10 @@ void initializeLANSetup(){
     Serial.println("Cable not detected!!!");
     networkConnected = false;
     cableNotConnected = true;
-  }else if(Ethernet.begin(mac) != 0){
+  }else if(IP_ADDRESS_MODE == 1){ //for static LAN IP
+    Ethernet.begin(mac, local_IP, primaryDNS, gateway, subnet);
+    networkConnected = true;
+  }else if(Ethernet.begin(mac) != 0){ //for dhcp LAN IP
     networkConnected = true;
   }else{
     networkConnected = false;
@@ -1178,7 +1196,7 @@ void populateSystemConfiguration(){
   String data = readFile("/admin/config/system.data");
   Serial.print("Data: ");
   Serial.println(data);
-  int rowSize = 25;
+  int rowSize = 30;
   String rows[rowSize];
   split(rows, data, '|');
   String ip[4];
@@ -1211,6 +1229,42 @@ void populateSystemConfiguration(){
   VOUCHER_PROFILE = rows[22];
   VOUCHER_VALIDITY_OPTION = rows[23].toInt();
   LED_TRIGGER_TYPE = rows[24].toInt();
+  IP_ADDRESS_MODE = rows[25].toInt();
+  
+  if(IP_ADDRESS_MODE == 1){
+    String localIpAddress[4];
+    split(localIpAddress, rows[26], '.');
+   
+    local_IP[0] = localIpAddress[0].toInt();
+    local_IP[1] = localIpAddress[1].toInt();
+    local_IP[2] = localIpAddress[2].toInt();
+    local_IP[3] = localIpAddress[3].toInt();
+
+    String gatewayIpAddress[4];
+    split(gatewayIpAddress, rows[27], '.');
+   
+    gateway[0] = gatewayIpAddress[0].toInt();
+    gateway[1] = gatewayIpAddress[1].toInt();
+    gateway[2] = gatewayIpAddress[2].toInt();
+    gateway[3] = gatewayIpAddress[3].toInt();
+
+    String subnetAddress[4];
+    split(gatewayIpAddress, rows[28], '.');
+   
+    subnet[0] = subnetAddress[0].toInt();
+    subnet[1] = subnetAddress[1].toInt();
+    subnet[2] = subnetAddress[2].toInt();
+    subnet[3] = subnetAddress[3].toInt();
+
+    String primaryDNSAddress[4];
+    split(primaryDNSAddress, rows[29], '.');
+   
+    primaryDNS[0] = primaryDNSAddress[0].toInt();
+    primaryDNS[1] = primaryDNSAddress[1].toInt();
+    primaryDNS[2] = primaryDNSAddress[2].toInt();
+    primaryDNS[3] = primaryDNSAddress[3].toInt();
+  }
+ 
 
 }
 
