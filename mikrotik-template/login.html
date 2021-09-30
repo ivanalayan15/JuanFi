@@ -94,6 +94,7 @@
         function doLogin() {
 			var vc = $("#voucherInput").val();
 			setStorageValue("activeVoucher", vc);
+			removeStorageValue("totalCoinReceived");
 			var validity = getStorageValue(vc+"validity");
 			var tempValidity = getStorageValue(vc+"tempValidity");
 			if(tempValidity != null){

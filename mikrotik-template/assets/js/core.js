@@ -26,6 +26,19 @@ $(document).ready(function(){
 		insertingCoin = false;
 		insertcoinbg.pause();
 		insertcoinbg.currentTime = 0.0;
+		if(totalCoinReceived == 0){
+			$.ajax({
+			  type: "POST",
+			  url: "http://"+vendorIpAddress+"/cancelTopUp",
+			  data: "voucher="+voucher+"&mac="+mac,
+			  success: function(data){
+				$("#loaderDiv").attr("class","spinner hidden");
+			  },error: function (jqXHR, exception) {
+				$("#loaderDiv").attr("class","spinner hidden");
+			  }
+			});
+		}
+		
 	});
 
 	if(loginError != "" && ((voucher != null && voucher != ""))){
@@ -109,6 +122,12 @@ function insertBtnAction(){
 	$( "#cncl" ).prop('disabled', false);
 	$("#loaderDiv").attr("class","spinner");
 	totalCoinReceived = 0;
+	
+	var totalCoinReceivedSaved = getStorageValue("totalCoinReceived");
+	if(totalCoinReceivedSaved != null){
+		totalCoinReceived = totalCoinReceivedSaved;
+	}
+	
 	$('#totalCoin').html("0");
 	$('#totalTime').html(secondsToDhms(parseInt(0)));
 	callTopupAPI(0);
@@ -145,7 +164,7 @@ $('#promoRatesModal').on('shown.bs.modal', function (e) {
 function callTopupAPI(retryCount){
 	
 	var type = $( "#saveVoucherButton" ).attr('data-save-type');
-	if(type != "extend"){
+	if(type != "extend" && totalCoinReceived == 0){
 		var storedVoucher = getStorageValue('activeVoucher');
 		if(storedVoucher != null){
 			voucher = "";
@@ -195,6 +214,7 @@ function callTopupAPI(retryCount){
 function saveVoucherBtnAction(){
 	$("#loaderDiv").attr("class","spinner");
 	setStorageValue('activeVoucher', voucher);
+	removeStorageValue("totalCoinReceived");
 	$('#voucherInput').val(voucher);
 	clearInterval(timer);
 	timer = null;
@@ -262,6 +282,7 @@ function checkCoin(){
 			$('#totalData').html(data.data);
 			
 			setStorageValue('activeVoucher', voucher);
+			setStorageValue('totalCoinReceived', totalCoinReceived);
 			setStorageValue(voucher+"tempValidity", data.validity);
 			
 			$('#voucherInput').val(voucher);

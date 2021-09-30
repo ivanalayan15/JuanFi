@@ -266,6 +266,7 @@ void setup () {
     server.on("/useVoucher", useVoucher);
     server.on("/health", handleHealth);
     server.on("/getRates", handleUserGetRates);
+    server.on("/cancelTopUp", handleCancelTopUp);
     server.on("/testInsertCoin", testInsertCoin);
     server.onNotFound(handleNotFound);
     printWelcome();
@@ -491,6 +492,23 @@ void testInsertCoin(){
     coinsChange = 1;
   }
   server.send(200, "text/plain", "ok");
+}
+
+void handleCancelTopUp(){
+  
+  if(!checkIfSystemIsAvailable()){
+      return;
+  }
+  String voucher = server.arg("voucher");
+  if(!validateVoucher(voucher)){
+      return;
+  }
+  targetMilis = millis();
+  char * keys[] = {"status"};
+  char * values[] = {"true"};
+  setupCORSPolicy();
+  server.send(200, "application/json", toJson(keys, values, 1));
+  
 }
 
 void eeWriteInt(int pos, int val) {
