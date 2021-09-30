@@ -487,7 +487,7 @@ function myFunction() {
 	</select>
 	</div>
 	
-	<input type="hidden"  id="randomMacAddressIndex" />
+	<input type="hidden" value="1" id="setupDoneFlag" />
 	<center>
     <button onClick="saveSystemConfig()" type="button" class="registerbtn">SAVE</button>
 	</center>
@@ -606,6 +606,8 @@ function saveSystemConfig(){
 		return;
 	}
 	
+	//if done first time setup set value to 1
+	$('#setupDoneFlag').val("1");
 
 	var postData = createParam([
 				$('#vendoName').val(),
@@ -628,7 +630,7 @@ function saveSystemConfig(){
 				$('#checkInternetStatus').val(),
 				$('#voucherPrefix').val(),
 				$('#welcomeLCDMarquee').val(),
-				$('#randomMacAddressIndex').val(),
+				$('#setupDoneFlag').val(),
 				$('#voucherLoginOption').val(),
 				$('#voucherProfile').val(),
 				$('#voucherValidity').val(),
@@ -822,7 +824,7 @@ function openSystemConfig(evt){
 		$('#checkInternetStatus').val(configData[17]);
 		$('#voucherPrefix').val(configData[18]);
 		$('#welcomeLCDMarquee').val(configData[19]);
-		$('#randomMacAddressIndex').val(configData[20]);
+		$('#setupDoneFlag').val(configData[20]);
 		$('#voucherLoginOption').val(configData[21]);
 		$('#voucherProfile').val(configData[22]);
 		$('#voucherValidity').val(configData[23]);

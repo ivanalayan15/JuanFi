@@ -127,7 +127,7 @@ int MAX_WAIT_COIN_SEC = 30000;
 int COINSLOT_BAN_COUNT = 0;
 int COINSLOT_BAN_MINUTES = 0;
 int LCD_TYPE = 0;
-int macRandomIndex = 0;
+int SETUP_FINISH = 0;
 
 
 //put here your raspi ip address, and login details
@@ -165,7 +165,7 @@ IPAddress apIP(172, 217, 28, 1);
 
 
 
-const int WIFI_CONNECT_TIMEOUT = 45000;
+const int WIFI_CONNECT_TIMEOUT = 180000;
 const int WIFI_CONNECT_DELAY = 500;
 
 bool networkConnected = false;
@@ -216,20 +216,25 @@ void setup () {
     Serial.print(ssid);
   
     int second = 0;
-    while (second <= WIFI_CONNECT_TIMEOUT) {
-      networkConnected = (WiFi.status() == WL_CONNECTED);
-      Serial.print(".");
-      if(networkConnected){
-        break;
+    if(SETUP_FINISH == 1){
+      while (second <= WIFI_CONNECT_TIMEOUT) {
+        networkConnected = (WiFi.status() == WL_CONNECTED);
+        Serial.print(".");
+        if(networkConnected){
+          break;
+        }
+        digitalWrite(SYSTEM_READY_LED, evaluateTriggerOutput(TURN_OFF));
+        delay(WIFI_CONNECT_DELAY);
+        digitalWrite(SYSTEM_READY_LED, evaluateTriggerOutput(TURN_ON));
+        second += WIFI_CONNECT_DELAY;
       }
+      currentIpAddress = WiFi.localIP().toString().c_str();
+      currentMacAddress = WiFi.macAddress();
       digitalWrite(SYSTEM_READY_LED, evaluateTriggerOutput(TURN_OFF));
-      delay(WIFI_CONNECT_DELAY);
-      digitalWrite(SYSTEM_READY_LED, evaluateTriggerOutput(TURN_ON));
-      second += WIFI_CONNECT_DELAY;
+    }else{
+      Serial.println("Initial setup detected, no need to connect to AP");
+      networkConnected= false;
     }
-    currentIpAddress = WiFi.localIP().toString().c_str();
-    currentMacAddress = WiFi.macAddress();
-    digitalWrite(SYSTEM_READY_LED, evaluateTriggerOutput(TURN_OFF));
   #endif
   
   
@@ -1224,7 +1229,7 @@ void populateSystemConfiguration(){
   CHECK_INTERNET_CONNECTION = rows[17].toInt();
   VOUCHER_PREFIX = rows[18];
   MARQUEE_MESSAGE = rows[19];
-  macRandomIndex = rows[20].toInt();
+  SETUP_FINISH = rows[20].toInt();
   VOUCHER_LOGIN_OPTION = rows[21].toInt();
   VOUCHER_PROFILE = rows[22];
   VOUCHER_VALIDITY_OPTION = rows[23].toInt();
