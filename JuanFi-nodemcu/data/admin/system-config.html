@@ -319,6 +319,25 @@ function myFunction() {
     <input type="password" placeholder="WIFI Password" id="wifiPW">
 	</div>
 	
+	<div class="panel" >
+	<span class="title">IP Address Setting</span>
+    <label for="email"><b>Mode</b></label><br>
+    <select name="ipAddressMode" id="ipAddressMode" onChange="ipAddressModeChange(this)">
+	  <option value="0">DHCP</option>
+	  <option value="1">Static</option>
+	</select><br>
+	<div id="staticIpDiv" style="display: none">
+	<label for="email"><b>Local IP Address</b></label><br>
+    <input type="text" placeholder="Local IP Address" id="localIpAddress" required><br>
+	<label for="email"><b>Subnet Mask</b></label><br>
+	<input type="text" placeholder="Subnet Mask" id="subnetMask" required><br>
+	<label for="email"><b>Gateway IP</b></label><br>
+    <input type="text" placeholder="Gateway IP" id="gatewayIp" required><br>
+	<label for="email"><b>DNS Server</b></label><br>
+    <input type="text" placeholder="DNS Server IP" id="dnsServer" required><br>
+	</div>
+	</div>
+	
 	<div class="panel">
 	<span class="title">MikroTik Setting</span>
 	<label for="email"><b>Mikrotik Router IP</b></label><br>
@@ -468,9 +487,13 @@ function myFunction() {
 	</select>
 	</div>
 	
-	<input type="hidden"  id="randomMacAddressIndex" />
+	<input type="hidden" value="1" id="setupDoneFlag" />
+	<input id='importSystemConfigFile' type='file' accept=".data" onchange="systemConfigFileImportChange(this)" style="display: none"/>
 	<center>
+
     <button onClick="saveSystemConfig()" type="button" class="registerbtn">SAVE</button>
+	<button onClick="exportSystemConfig()" type="button" class="registerbtn">BACKUP</button>
+	<button onClick="importSystemConfig()" type="button" class="registerbtn">RESTORE</button>
 	</center>
   </div>
 </div>
@@ -483,9 +506,11 @@ function myFunction() {
 	  <div id="promoRateBody">
 			
 	  </div>
-
+	<input id='importRateConfigFile' type='file' accept=".data" onchange="rateConfigFileImportChange(this)" style="display: none"/>
 	<center>
     <button onClick="savePromoRates()" type="submit" class="registerbtn">SAVE</button>
+	<button onClick="exportRateConfig()" type="button" class="registerbtn">BACKUP</button>
+	<button onClick="importRateConfig()" type="button" class="registerbtn">RESTORE</button>
 	</center>
 </div>
 </div>
@@ -525,7 +550,7 @@ function myFunction() {
 
 <div id="About" class="tabcontent">
 	<div class="panel">
-	<p>System Version: 2.2</p>
+	<p>System Version: 2.3</p>
 	<p>Developer: Ivan Julius Alayan</p>
 	<p>Contributors: Kristoffer D. Samole</p>
 	</div>
@@ -570,6 +595,25 @@ function saveSystemConfig(){
 		return;
 	}
 	
+	var ipAddressMode = $("#ipAddressMode").val();
+	
+	var localIpAddress = $("#localIpAddress").val();
+	var gatewayIp = $("#gatewayIp").val();
+	var subnetMask = $("#subnetMask").val();
+	var dnsServer = $("#dnsServer").val();
+	
+	var ipAddressFields = [];
+	ipAddressFields['Local IP Address'] = localIpAddress;
+	ipAddressFields['Gateway IP Address'] = gatewayIp;
+	ipAddressFields['Subnet Mask Address'] = subnetMask;
+	ipAddressFields['DNS Server Address'] = dnsServer;
+	
+	if(ipAddressMode == 1 && (!validateIpAddressFields(ipAddressFields))){
+		return;
+	}
+	
+	//if done first time setup set value to 1
+	$('#setupDoneFlag').val("1");
 
 	var postData = createParam([
 				$('#vendoName').val(),
@@ -592,11 +636,16 @@ function saveSystemConfig(){
 				$('#checkInternetStatus').val(),
 				$('#voucherPrefix').val(),
 				$('#welcomeLCDMarquee').val(),
-				$('#randomMacAddressIndex').val(),
+				$('#setupDoneFlag').val(),
 				$('#voucherLoginOption').val(),
 				$('#voucherProfile').val(),
 				$('#voucherValidity').val(),
-				$('#ledTriggerType').val()
+				$('#ledTriggerType').val(),
+				ipAddressMode,
+				localIpAddress,
+				gatewayIp,
+				subnetMask,
+				dnsServer
 			 ]);
 				 
 	$.ajax({
@@ -758,37 +807,47 @@ function openSystemConfig(evt){
 	  type: "GET",
 	  url: "admin/api/getSystemConfig?query="+new Date().getTime(),
 	  success: function(data){
-		var configData = data.split(separator);
-		$('#vendoName').val(configData[0]);
-		$('#wifiSSID').val(configData[1]);
-		$('#wifiPW').val(configData[2]);
-		$('#mikrotikIp').val(configData[3]);
-		$('#mikrotikUser').val(configData[4]);
-		$('#mikrotikPw').val(configData[5]);
-		$('#confirmMikrotikPw').val(configData[5]);
-		$('#coinSlotWaitTime').val(configData[6]);
-		$('#adminUser').val(configData[7]);
-		$('#adminPw').val(configData[8]);
-		$('#confirmAdminPw').val(configData[8]);
-		$('#coinSlotAbuseCount').val(configData[9]);
-		$('#coinSlotBanMinutes').val(configData[10]);
-		$('#coinSlotPin').val(configData[11]);
-		$('#coinSlotSetPin').val(configData[12]);
-		$('#systemReadyLEDPin').val(configData[13]);
-		$('#insertCoinLEDPin').val(configData[14]);
-		$('#lcdScreen').val(configData[15]);
-		$('#insertCoinBtnPin').val(configData[16]);
-		$('#checkInternetStatus').val(configData[17]);
-		$('#voucherPrefix').val(configData[18]);
-		$('#welcomeLCDMarquee').val(configData[19]);
-		$('#randomMacAddressIndex').val(configData[20]);
-		$('#voucherLoginOption').val(configData[21]);
-		$('#voucherProfile').val(configData[22]);
-		$('#voucherValidity').val(configData[23]);
-		$('#ledTriggerType').val(configData[24]);
+		populateSystemConfigFields(data);
 	  }
 	});
 	openTab(evt, 'SystemConfigration');
+}
+
+function populateSystemConfigFields(data){
+	var configData = data.split(separator);
+	$('#vendoName').val(configData[0]);
+	$('#wifiSSID').val(configData[1]);
+	$('#wifiPW').val(configData[2]);
+	$('#mikrotikIp').val(configData[3]);
+	$('#mikrotikUser').val(configData[4]);
+	$('#mikrotikPw').val(configData[5]);
+	$('#confirmMikrotikPw').val(configData[5]);
+	$('#coinSlotWaitTime').val(configData[6]);
+	$('#adminUser').val(configData[7]);
+	$('#adminPw').val(configData[8]);
+	$('#confirmAdminPw').val(configData[8]);
+	$('#coinSlotAbuseCount').val(configData[9]);
+	$('#coinSlotBanMinutes').val(configData[10]);
+	$('#coinSlotPin').val(configData[11]);
+	$('#coinSlotSetPin').val(configData[12]);
+	$('#systemReadyLEDPin').val(configData[13]);
+	$('#insertCoinLEDPin').val(configData[14]);
+	$('#lcdScreen').val(configData[15]);
+	$('#insertCoinBtnPin').val(configData[16]);
+	$('#checkInternetStatus').val(configData[17]);
+	$('#voucherPrefix').val(configData[18]);
+	$('#welcomeLCDMarquee').val(configData[19]);
+	$('#setupDoneFlag').val(configData[20]);
+	$('#voucherLoginOption').val(configData[21]);
+	$('#voucherProfile').val(configData[22]);
+	$('#voucherValidity').val(configData[23]);
+	$('#ledTriggerType').val(configData[24]);
+	$("#ipAddressMode").val(configData[25]);
+	$("#ipAddressMode").change();
+	$("#localIpAddress").val(configData[26]);
+	$("#gatewayIp").val(configData[27]);
+	$("#subnetMask").val(configData[28]);
+	$("#dnsServer").val(configData[29]);
 }
 
 var rateCount = 0;
@@ -820,18 +879,22 @@ function openPromoRates(evt){
 	  url: "admin/api/getRates?query="+new Date().getTime(),
 	  //url: "config/rates.data",
 	  success: function(data){
-		var rateData = data.split('|');
-		var html = "";
-		for(var i=0;i<rateData.length;i++){
-			var rowData = rateData[i].split('#');
-			var rowScript = generateRowScript(i, rowData);
-			html += rowScript;
-			rateCount++;
-		}
-		$("#promoRateBody").html(html);
+		populateRateFields(data);
 	  }
 	});
 	openTab(evt, 'PromoRate');
+}
+
+function populateRateFields(data){
+	var rateData = data.split('|');
+	var html = "";
+	for(var i=0;i<rateData.length;i++){
+		var rowData = rateData[i].split('#');
+		var rowScript = generateRowScript(i, rowData);
+		html += rowScript;
+		rateCount++;
+	}
+	$("#promoRateBody").html(html);
 }
 
 function openVoucherGenerate(evt){
@@ -951,6 +1014,104 @@ $(document).ajaxComplete(function(){
 	$("#loadingText").attr("style","display: none");
  });
  
+ function ipAddressModeChange(evt){
+ 
+	var mode = $(evt).val();
+	
+	if(mode == 0){
+		$("#staticIpDiv").attr("style", "display: none");
+	}else{
+		$("#staticIpDiv").attr("style", "display: block");
+	}
+ 
+}
+
+function validateIpAddressFields(ipAddressFields){
+	for(var i in ipAddressFields){
+		var fieldValue = ipAddressFields[i];
+		if(fieldValue == null || fieldValue == "" || (!validateIPaddress(fieldValue))){
+			alert(i+" is not valid, please check the ip format");
+			return false;
+		}
+	}
+	return true;
+
+}
+
+function validateIPaddress(ipaddress) {  
+  if (/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ipaddress)) {  
+    return (true)  
+  }
+  return (false)  
+}   
+
+function exportSystemConfig(){
+	$.ajax({
+	  type: "GET",
+	  url: "admin/api/getSystemConfig?query="+new Date().getTime(),
+	  success: function(data){
+		var blob = new Blob([data], {type: 'data'});
+		var href = window.URL.createObjectURL(blob);
+		var a = document.createElement("a");
+		a.download = "system.data";
+		a.href = href;
+		a.click();
+	  }
+	});
+}
+
+function importSystemConfig(){
+	$('#importSystemConfigFile').click();
+}
+
+function systemConfigFileImportChange(evt){
+
+ var f = $(evt)[0].files[0];
+
+ var reader = new FileReader();
+ reader.onload = (function(theFile) {
+	return function(e) {
+	  populateSystemConfigFields(e.target.result);
+	  alert("Restore succesfully, please review the values and click the save button");
+	};
+  })(f);
+
+  reader.readAsText(f);
+}
+
+function exportRateConfig(){
+	$.ajax({
+	  type: "GET",
+	  url: "admin/api/getRates?query="+new Date().getTime(),
+	  success: function(data){
+		var blob = new Blob([data], {type: 'data'});
+		var href = window.URL.createObjectURL(blob);
+		var a = document.createElement("a");
+		a.download = "system.data";
+		a.href = href;
+		a.click();
+	  }
+	});
+}
+
+function importRateConfig(){
+	$('#importRateConfigFile').click();
+}
+
+function rateConfigFileImportChange(evt){
+
+ var f = $(evt)[0].files[0];
+
+ var reader = new FileReader();
+ reader.onload = (function(theFile) {
+	return function(e) {
+	  populateRateFields(e.target.result);
+	  alert("Restore succesfully, please review the values and click the save button");
+	};
+  })(f);
+
+  reader.readAsText(f);
+}
 </script>
 </div>
 </body>
