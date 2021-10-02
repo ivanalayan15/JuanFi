@@ -116,6 +116,16 @@ body {
 	color: #fff
 }
 
+.uploadBtn {
+	border: none;
+	padding: 5px;
+	background-color: #05c46b;
+	border-radius: 3px;
+	margin-top: 10px;
+	width: 120px;
+	color: #fff
+}
+
 #addRateButton {
 	border: none;
 	padding: 5px;
@@ -215,15 +225,13 @@ h2 {
 <div class="main-container">
 <h2>JuanFi Admin Console</h2>
 
-
-
-
 <div class="topnav" id="myTopnav">
 
 	<button class="tablinks active" onclick="openDashboard(event)">Dashboard</button>
 	<button class="tablinks" onclick="openSystemConfig(event)">System Configuration</button>
 	<button class="tablinks" onclick="openPromoRates(event)">Promo Rates</button>
 	<button class="tablinks" onclick="openVoucherGenerate(event)">Voucher Generation</button>
+	<button class="tablinks" onclick="openTab(event, 'FirmwareUpdate')">Firmware Update</button>
 	<button class="tablinks" onclick="openTab(event, 'About')">About</button>
 	<button class="tablinks" onclick="logout()">Logout</button>
 	<button href="javascript:void(0);" class="icon" onclick="myFunction()">///</button>
@@ -550,9 +558,33 @@ function myFunction() {
 
 <div id="About" class="tabcontent">
 	<div class="panel">
-	<p>System Version: 2.3</p>
+	<p>System Version: <span id="appVersionAbout">2.3</span></p>
 	<p>Developer: Ivan Julius Alayan</p>
 	<p>Contributors: Kristoffer D. Samole</p>
+	<p>FB Group: <a href="https://www.facebook.com/groups/1172413279934139"/>Juanfi Group</a> </p>
+	<p>Github: <a href="https://github.com/ivanalayan15/JuanFi"> For issues / request</a> </p>
+	</div>
+</div>
+
+<div id="FirmwareUpdate" class="tabcontent">
+	<div class="container">
+	<div class="panel">
+		<span class="title">Firmware Update</span>
+		<label for="currentVersion"><b>Current Firmware Version: <span id="currentVersion">2.3</span></b></label>
+		<label for="mainBin"><b>Bin Type:</b></label><br>
+		<select name="binFileType" id="binFileType">
+		  <option value="sketch">Bin 1(Sketch[JuanFi-FlashFile1.bin or JuanFi-lan.ino.bin])</option>
+		  <option value="filesystem">Bin 2(Filesystem[JuanFi-FlashFile2.bin or JuanFi-lan.spiffs.bin])</option>
+		</select>
+		<label for="mainBin"><b>Bin File:</b></label><br>
+		<input type="file" name="mainBin" id="mainBin" accept=".bin" required>
+		<center>
+		<button onClick="uploadMainBin()" type="button" class="uploadBtn">Update Firmware</button>
+		</center>
+		<br/>
+		<label>Updating of BIN is 1 at a time, if the release have both bin file update, update the bin2 first before the bin1</label><br>
+		<label>If have BIN 2 update, Promo rates configuration will be reset, make sure to backup it first and restore after, ONLY system configuration will be backup automatically</label><br>
+	</div>
 	</div>
 </div>
 
@@ -565,6 +597,7 @@ var upTimeSeconds = 0;
 var separator = "|";
 var rowSeparator = "#";
 var hardwareType = "ESP32";
+var version = "2.3";
 
 function saveSystemConfig(){
 
@@ -762,6 +795,9 @@ function openDashboard(evt){
 		$('#ipAddress').html(dashboardData[7]);
 		hardwareType = dashboardData[8];
 		$('#hardwareType').html(hardwareType);
+		version = dashboardData[9];
+		$('#appVersionAbout').html(version);
+		$('#currentVersion').html(version);
 		if(hardwareType == 'ESP32'){
 			$('#apSettingDiv').attr('style','display: none');
 			
@@ -1111,6 +1147,54 @@ function rateConfigFileImportChange(evt){
   })(f);
 
   reader.readAsText(f);
+}
+
+function uploadMainBin(){
+	var fd = new FormData();
+	var files = $('#mainBin')[0].files;
+	
+	if(files.length > 0 ){
+		var binFileType = $("#binFileType").val();
+		if(!validateFileSize(files[0], binFileType)){
+			return;
+		}
+	    fd.append(binFileType, files[0]);
+		$.ajax({
+		  url: '/admin/updateMainBin',
+		  type: 'post',
+		  data: fd,
+		  contentType: false,
+		  processData: false,
+		  success: function(response){
+			 if(response != 0){
+				alert('Firmware uploaded: '+response);
+			 }else{
+				alert('file not uploaded');
+			 }
+		  },
+		  error: function(XMLHttpRequest, textStatus, errorThrown) { 
+			alert("Error: " + errorThrown); 
+		  } 
+		});
+	}else{
+		alert("Please select bin file!!");
+	}
+}
+
+function validateFileSize(f,type){
+	var size = f.size/1024/1024;
+	if(type == "filesystem"){
+		if(size < 1){
+			alert('File size is invalid for bin type '+type+' expected atleast 1mb, double check your bin file');
+			return false;
+		}
+	}else{
+		if(size > 0.5){
+			alert('File size is invalid for bin type '+type+' expected must be less than 500kb only, double check your bin file');
+			return false;
+		}
+	}
+	return true;
 }
 </script>
 </div>
