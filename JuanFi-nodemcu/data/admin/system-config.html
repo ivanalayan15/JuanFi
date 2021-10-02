@@ -116,6 +116,16 @@ body {
 	color: #fff
 }
 
+.uploadBtn {
+	border: none;
+	padding: 5px;
+	background-color: #05c46b;
+	border-radius: 3px;
+	margin-top: 10px;
+	width: 120px;
+	color: #fff
+}
+
 #addRateButton {
 	border: none;
 	padding: 5px;
@@ -215,15 +225,13 @@ h2 {
 <div class="main-container">
 <h2>JuanFi Admin Console</h2>
 
-
-
-
 <div class="topnav" id="myTopnav">
 
 	<button class="tablinks active" onclick="openDashboard(event)">Dashboard</button>
 	<button class="tablinks" onclick="openSystemConfig(event)">System Configuration</button>
 	<button class="tablinks" onclick="openPromoRates(event)">Promo Rates</button>
 	<button class="tablinks" onclick="openVoucherGenerate(event)">Voucher Generation</button>
+	<button class="tablinks" onclick="openTab(event, 'FirmwareUpdate')">Firmware Update</button>
 	<button class="tablinks" onclick="openTab(event, 'About')">About</button>
 	<button class="tablinks" onclick="logout()">Logout</button>
 	<button href="javascript:void(0);" class="icon" onclick="myFunction()">///</button>
@@ -553,6 +561,25 @@ function myFunction() {
 	<p>System Version: 2.3</p>
 	<p>Developer: Ivan Julius Alayan</p>
 	<p>Contributors: Kristoffer D. Samole</p>
+	</div>
+</div>
+
+<div id="FirmwareUpdate" class="tabcontent">
+	<div class="container">
+	<div class="panel">
+		<span class="title">Firmware Update</span>
+		<label for="mainBin"><b>Bin File 1:</b></label><br>
+		<form method='POST' action='/admin/updateMainBin' enctype='multipart/form-data'>
+			<input type="file" name="mainBin" accept=".bin" required>
+			<input type='submit' class="uploadBtn" value='Update Firmware'>
+		</form>
+		<label for="filesystem"><b>Bin File 2(Flashing bin 2 will reset all config backup all your config first):</b></label><br>
+		<form method='POST' action='/admin/updateMainBin' enctype='multipart/form-data'>
+			<input type="file" name="filesystem" accept=".bin" required>
+			<input type='submit' class="uploadBtn" value='Update Firmware'>
+		</form>
+		<label>Bin update firmware is 1 at a time make sure to update bin file 1 first, before bin file 2</label><br>
+	</div>
 	</div>
 </div>
 

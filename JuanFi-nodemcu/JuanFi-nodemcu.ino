@@ -29,6 +29,7 @@
   #include "lan_definition.h"
   #include <SPIFFS.h>
   #include <WiFi.h>
+  #include <EthernetHttpUpdateServer.h>
 #else
   #include <ESP8266TelnetClient.h>
   #include <ESP8266WiFi.h>
@@ -36,6 +37,7 @@
   #include <ESP8266HTTPClient.h>
   #include <ESP8266mDNS.h>
   #include <DNSServer.h>
+  #include <ESP8266HTTPUpdateServer.h>
 #endif
 
 
@@ -94,6 +96,8 @@ int ratesCount = 0;
 int currentValidity = 0;
 int currentDataLimit = 0;
 String currentRateProfile = "";
+String ADMIN_USER = "";
+String ADMIN_PW = "";
 
 
 const int LIFETIME_COIN_COUNT_ADDRESS = 0;
@@ -154,6 +158,7 @@ IPAddress apIP(172, 217, 28, 1);
   EthernetClient client;
   EthernetClient client2;
   telnetClient tc(client);
+  EthernetHttpUpdateServer httpUpdater;
 #else
   WiFiClient client2;
   WiFiClient client;
@@ -161,6 +166,7 @@ IPAddress apIP(172, 217, 28, 1);
   ESP8266WebServer server(80);
   const byte DNS_PORT = 53;
   DNSServer dnsServer;
+  ESP8266HTTPUpdateServer httpUpdater;
 #endif
 
 
@@ -335,6 +341,7 @@ void setup () {
   server.on("/admin/api/generateVouchers", handleGenerateVouchers);
   server.on("/admin", handleAdminPage);
   server.on("/admin/viewGeneratedVouchers", handleAdminGeneratedVoucherPage);
+  httpUpdater.setup(&server, "/admin/updateMainBin", ADMIN_USER, ADMIN_PW);
 
   populateRates();
   
@@ -1235,7 +1242,9 @@ void populateSystemConfiguration(){
   user = rows[4];
   pwd = rows[5];
   MAX_WAIT_COIN_SEC = rows[6].toInt() * 1000;
-  adminAuth = base64::encode(rows[7]+":"+rows[8]);
+  ADMIN_USER = rows[7];
+  ADMIN_PW = rows[8];
+  adminAuth = base64::encode(ADMIN_USER+":"+ADMIN_PW);
   COINSLOT_BAN_COUNT = rows[9].toInt();
   COINSLOT_BAN_MINUTES = rows[10].toInt();
   COIN_SELECTOR_PIN = rows[11].toInt();
