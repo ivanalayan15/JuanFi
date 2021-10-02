@@ -24,12 +24,15 @@
  * 
 */
 
+//increase always when publishing a new version for tracking
+#define CURRENT_VERSION "2.4"
+
 #ifdef ESP32
   #include <TelnetClient.h>
   #include "lan_definition.h"
   #include <SPIFFS.h>
+  #include <Update.h>
   #include <WiFi.h>
-  #include <EthernetHttpUpdateServer.h>
 #else
   #include <ESP8266TelnetClient.h>
   #include <ESP8266WiFi.h>
@@ -37,7 +40,8 @@
   #include <ESP8266HTTPClient.h>
   #include <ESP8266mDNS.h>
   #include <DNSServer.h>
-  #include <ESP8266HTTPUpdateServer.h>
+  #include <Arduino.h>
+  #include <flash_hal.h>
 #endif
 
 
@@ -104,6 +108,7 @@ const int LIFETIME_COIN_COUNT_ADDRESS = 0;
 const int COIN_COUNT_ADDRESS = 5;
 const int CUSTOMER_COUNT_ADDRESS = 10;
 const int RANDOM_MAC_ADDRESS = 15;
+const int BACKUP_CONFIG_LENGTH_INDEX = 20;
 
 void ICACHE_RAM_ATTR coinInserted()    
 {
@@ -158,7 +163,6 @@ IPAddress apIP(172, 217, 28, 1);
   EthernetClient client;
   EthernetClient client2;
   telnetClient tc(client);
-  EthernetHttpUpdateServer httpUpdater;
 #else
   WiFiClient client2;
   WiFiClient client;
@@ -166,10 +170,7 @@ IPAddress apIP(172, 217, 28, 1);
   ESP8266WebServer server(80);
   const byte DNS_PORT = 53;
   DNSServer dnsServer;
-  ESP8266HTTPUpdateServer httpUpdater;
 #endif
-
-
 
 const int WIFI_CONNECT_TIMEOUT = 180000;
 const int WIFI_CONNECT_DELAY = 500;
@@ -188,7 +189,7 @@ String MARQUEE_MESSAGE = "This is marquee";
 void setup () { 
                                 
   Serial.begin (115200);
-  EEPROM.begin(32);
+  EEPROM.begin(512);
   if(!SPIFFS.begin()){
     Serial.println("An Error has occurred while mounting SPIFFS");
     return;
@@ -341,8 +342,8 @@ void setup () {
   server.on("/admin/api/generateVouchers", handleGenerateVouchers);
   server.on("/admin", handleAdminPage);
   server.on("/admin/viewGeneratedVouchers", handleAdminGeneratedVoucherPage);
-  httpUpdater.setup(&server, "/admin/updateMainBin", ADMIN_USER, ADMIN_PW);
-
+  server.on("/admin/updateMainBin", HTTP_POST, handleFileUploadRequest, handleFileUploadStream);
+  
   populateRates();
   
   server.begin();
@@ -351,6 +352,98 @@ void setup () {
     digitalWrite(SYSTEM_READY_LED, evaluateTriggerOutput(TURN_ON));
   }
 
+}
+
+
+boolean hasUploadError = false;
+boolean isFileSystem = true;
+
+void handleFileUploadRequest(){
+    if (Update.hasError()) {
+      //when esp32 has sometimes error of not enough space, but actually its uploaded some part succesfully so we will just return success
+      if(isFileSystem && HARDWARE_TYPE == "ESP32"){
+        server.send(200, F("text/html"), "Upload done, with warnings");
+        server.client().stop();
+        ESP.restart();
+      }else{
+        server.send(200, F("text/html"), "Upload has error");
+      }
+    }
+    else {
+        #ifdef ESP32
+          //nothing not avaiable at esp32
+        #else
+         server.client().setNoDelay(true);
+        #endif
+        server.send_P(200, PSTR("text/html"), "Upload done");
+        delay(100);
+        server.client().stop();
+        ESP.restart();
+    }
+}
+
+//get from https://github.com/esp8266/Arduino/blob/master/libraries/ESP8266HTTPUpdateServer/src/ESP8266HTTPUpdateServer-impl.h
+void handleFileUploadStream(){
+    HTTPUpload& upload = server.upload();
+    if (upload.status == UPLOAD_FILE_START) {
+        if(!isAuthorized()){
+           handleNotAuthorize();
+           return;
+        }
+        if (upload.name == "filesystem") {
+            isFileSystem = true;
+            backupSystemConfig();
+            #ifdef ESP32
+              if (!Update.begin(SPIFFS.totalBytes(), U_SPIFFS)) {
+                  Serial.println("Upload filesystem start failed");
+                  hasUploadError = true;
+              }
+            #else
+               size_t fsSize = ((size_t) &_FS_end - (size_t) &_FS_start);
+               close_all_fs();
+               if (!Update.begin(fsSize, U_FS)){//start with max available size
+                 Serial.println("Upload filesystem start failed");
+                 hasUploadError = true;
+               }
+            #endif
+        }
+        else {
+            uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
+            if (!Update.begin(maxSketchSpace, U_FLASH)) {//start with max available size
+                Serial.println("Upload sketch start failed");
+                hasUploadError = true;
+            }
+        }
+    }
+    else if (upload.status == UPLOAD_FILE_WRITE && !hasUploadError) {
+        Serial.printf(".");
+        if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
+            Serial.println("Upload write failed");
+            hasUploadError = true;
+        }
+    }
+    else if (upload.status == UPLOAD_FILE_END && !hasUploadError) {
+        if (Update.end(true)) { //true to set the size to the current progress
+            Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
+        }
+        else {
+            Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
+        }
+    }
+    else if (upload.status == UPLOAD_FILE_ABORTED) {
+        Update.end();
+        hasUploadError = true;
+        Serial.println("Upload aborted");
+    }
+    delay(0);
+}
+
+void backupSystemConfig(){
+  Serial.println("Starting to backup system.data");
+  String data = readFile("/admin/config/system.data");
+  int len = data.length();
+  eeWriteInt(BACKUP_CONFIG_LENGTH_INDEX, len);
+  eeWriteString(BACKUP_CONFIG_LENGTH_INDEX+5, data);
 }
 
 #ifdef ESP32
@@ -527,6 +620,25 @@ void eeWriteInt(int pos, int val) {
     EEPROM.commit();
 }
 
+void eeWriteString(int addr, String val) {
+  int str_len = val.length() + 1;
+  for (int i = addr; i < str_len + addr; ++i)
+  {
+    EEPROM.write(i, val.charAt(i - addr));
+  }
+  EEPROM.write(str_len + addr, '\0');
+  EEPROM.commit();
+}
+
+String eeReadString(int addr, int str_len) {
+  String val = "";
+  for (int i = addr; i < str_len + addr; ++i)
+  {
+     val += String(char(EEPROM.read(i)));
+  }
+  return val;
+}
+
 int eeGetInt(int pos) {
   int val;
   byte* p = (byte*) &val;
@@ -649,6 +761,8 @@ void handleAdminDashboard(){
          data += currentIpAddress;
          data += String("|");
          data += HARDWARE_TYPE;
+         data += String("|"); 
+         data += CURRENT_VERSION;
          
   server.send(200, "text/plain", data);
 }
@@ -1222,6 +1336,20 @@ const char * ROW_DELIMETER = "|";
 
 void populateSystemConfiguration(){
 
+  //detect if backup is exists
+  int backupLength = eeGetInt(BACKUP_CONFIG_LENGTH_INDEX);
+  if(backupLength > 0){
+    Serial.print("Backup data found ");
+    Serial.println(backupLength);
+    String backupData = eeReadString(BACKUP_CONFIG_LENGTH_INDEX+5, backupLength);
+    Serial.println(backupData);
+    handleFileWrite("/admin/config/system.data", backupData);
+    eeWriteInt(BACKUP_CONFIG_LENGTH_INDEX, 0);
+    Serial.print("Backup data restored!, restarting....");
+    ESP.restart();
+    return;
+  }
+
   Serial.println("Loading system configuration");
   String data = readFile("/admin/config/system.data");
   Serial.print("Data: ");
@@ -1387,10 +1515,12 @@ void loop () {
                 return;  
               }
             }else{
-              //clear thank you message after button press
-              thankyou_cooldown = 0;
-              targetMilis = currentMilis;
-              delay(1000);
+              if(timeToAdd == 0){
+                //clear thank you message after button press
+                thankyou_cooldown = 0;
+                targetMilis = currentMilis;
+                delay(1000);
+              }
             }
           }else{
             //make coinslot expired when button is pressed
@@ -1466,6 +1596,14 @@ void loop () {
       }
     }
   }else{
+    unsigned long currentMilis = millis();
+    if(SETUP_FINISH == 1){
+      //when setup is already finish and cannnot connect, wait for 10 mins to setup and will auto restart after that
+      //this is to cater slow boot AP
+      if(currentMilis >= 600000){
+        ESP.restart();
+      }
+    }
     #ifdef ESP32
       //nothing
     #else
