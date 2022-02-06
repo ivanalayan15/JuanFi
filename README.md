@@ -216,14 +216,32 @@ Put on the on login script (with telegram support)
 ```
 ![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Mikrotik-Step4.PNG?raw=true)
 
-Miscellaneous Scripts
+## Miscellaneous Scripts
 
 
-You can create a scheduler to restart (System - > Scheduler) add your desired schedule and put this script
-on8vvdi8kg - this is the API KEY you generate in admin panel
-10.5.50.253 - this is your ESP IP Address
+You can create a scheduler to restart (System - > Scheduler) add your desired schedule and put this script or modify the existing template scripts below in your desired settings
+
+38vz2rb6nk - this is the API KEY you generate in admin panel
+10.10.10.251 - this is your ESP IP Address
+
+Replace those value with your own setting
+
+### Restart vendo scheduler
+
+Sample Script that run at 3am:
 ```bash
-/tool fetch http-method=post http-header-field="X-TOKEN: on8vvdi8kg" url="http://10.5.50.253/admin/api/restartSystem"
+  /system scheduler add interval=1d name="Restart Vendo" on-event="/tool fetch http-method=post http-header-field=\"X-TOKEN: 38vz2rb6nk\" url=\"http://10.10.10.251/admin/api/restartSystem\"" policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon start-date=Sep/28/2021 start-time=03:00:00;
+```
+
+### Night Light schedulers
+
+Sample Script that turn on nightlight at 6 pm:
+```bash
+ /system scheduler add interval=1d name="Turn ON Night Light" on-event="/tool fetch http-method=post http-header-field=\"X-TOKEN: 38vz2rb6nk\" url=\"http://10.10.10.251/admin/api/toggerNightLight\?toggle=1\"" policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon start-date=Sep/28/2021 start-time=18:00:00;
+```
+Sample Script that turn off nightlight at 6 am:
+```bash
+ /system scheduler add interval=1d name="Turn OFF Night Light" on-event="/tool fetch http-method=post http-header-field=\"X-TOKEN: 38vz2rb6nk\" url=\"http://10.10.10.251/admin/api/toggerNightLight\?toggle=0\"" policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon start-date=Sep/28/2021 start-time=06:00:00;
 ```
 
 
