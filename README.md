@@ -57,11 +57,17 @@ https://www.paypal.com/paypalme/ivanalayan
 ## Architecture
 ![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Architecture.PNG?raw=true)
 
-## LAN Based Connection Diagram
-![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi%20Connection%20LanBase%20Diagram.PNG?raw=true)
+## ESP32 LAN Based Connection Diagram
+![alt text](https://raw.githubusercontent.com/ivanalayan15/JuanFi/master/docs/esp32-lan-diagram.jpg)
 
-## Wireless Based Connection Diagram
-![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi%20Connection%20Diagram.PNG?raw=true)
+## ESP32 Wireless Based Connection Diagram
+![alt text](https://raw.githubusercontent.com/ivanalayan15/JuanFi/master/docs/esp32-wireless-diagram.jpg)
+
+## ESP8622 Wireless Based Connection Diagram
+![alt text](https://raw.githubusercontent.com/ivanalayan15/JuanFi/master/docs/esp8622-wireles-diagram.jpg)
+
+## ESP8622 LAN Based Connection Diagram
+![alt text](https://raw.githubusercontent.com/ivanalayan15/JuanFi/master/docs/esp8622-lan-diagram.jpg)
 
 ## Installation
 
