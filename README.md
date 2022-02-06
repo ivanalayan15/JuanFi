@@ -164,7 +164,7 @@ Execute on mirkotik terminal
 /system script add dont-require-permissions=no name= monthlyincome owner=admin policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon source="0";
 ```
 
-Put on the on login script 
+Put on the on login script (with telegram support)
 ```bash
 ### enable telegram notification, change from 0 to 1 if you want to enable telegram
 :local enableTelegram 0;
@@ -215,6 +215,16 @@ Put on the on login script
 }
 ```
 ![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Mikrotik-Step4.PNG?raw=true)
+
+Miscellaneous Scripts
+
+
+You can create a scheduler to restart (System - > Scheduler) add your desired schedule and put this script
+on8vvdi8kg - this is the API KEY you generate in admin panel
+10.5.50.253 - this is your ESP IP Address
+```bash
+/tool fetch http-method=post http-header-field="X-TOKEN: on8vvdi8kg" url="http://10.5.50.253/admin/api/restartSystem"
+```
 
 
 ## Usage
