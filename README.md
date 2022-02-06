@@ -38,7 +38,7 @@ https://www.paypal.com/paypalme/ivanalayan
  * coinslot abuse system config
 
 ## Requirements
-1.) NodeMCU(ESP8266) for wireless or NodemCU(ESP32) for LAN Based
+1.) NodeMCU(ESP8266) for wireless/lan or NodemCU(ESP32) for wireless/lan
 
 2.) Coinslot
 
@@ -74,6 +74,8 @@ There are 2 ways how to upload the software in NodeMCU
 #### a.) Install the binary release file, follow this guide on how to flash the bin file https://github.com/ivanalayan15/JuanFi/tree/master/release
 
 #### b.) Build and compile the code
+
+(SKIP THIS STEP IF YOU CHOOSE THE BIN FILES) GOTO Step #4 directly
 
 1.) Download and install Arduino IDE
 https://www.arduino.cc/en/software
