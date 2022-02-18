@@ -13,6 +13,8 @@ Ivan Julius Alayan
 Paypal account:
 https://www.paypal.com/paypalme/ivanalayan
 
+# Community Group
+  FB: https://www.facebook.com/groups/1172413279934139
 
 ## Features
 
