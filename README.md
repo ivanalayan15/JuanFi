@@ -166,7 +166,7 @@ Execute on mirkotik terminal
 /system script add dont-require-permissions=no name= monthlyincome owner=admin policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon source="0";
 ```
 
-Put on the on login script (with telegram support)
+Put on the on login script (with telegram support) please change accordinly with your hotspot folder(hex or haplite)
 ```bash
 ### enable telegram notification, change from 0 to 1 if you want to enable telegram
 :local enableTelegram 0;
@@ -176,36 +176,61 @@ Put on the on login script (with telegram support)
 :local chatId "----";
 ### enable Random MAC synchronizer
 :local enableRandomMacSyncFix 1;
+### hotspot folder for HEX put flash/hotspot for haplite put hotspot only
+:local hotspotFolder "flash/hotspot";
+
+
 :local com [/ip hotspot user get [find name=$user] comment];
 /ip hotspot user set comment="" $user;
 
 :if ($com!="") do={
-	:local sc [/sys scheduler find name=$user]; :if ($sc="") do={ :local a [/ip hotspot user get [find name=$user] limit-uptime]; :local validity [:pick $com 0 [:find $com ","]]; :local c ($validity); :local date [ /system clock get date]; /sys sch add name="$user" disable=no start-date=$date interval=$c on-event="/ip hotspot user remove [find name=$user]; /ip hotspot active remove [find user=$user]; /ip hotspot cookie remove [find user=$user]; /system sche remove [find name=$user]" policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon; :delay 2s; } else={ :local sint [/sys scheduler get $user interval]; :local validity [:pick $com  0 [:find $com ","]]; :if ( $validity!="" ) do={ /sys scheduler set $user interval ($sint+$validity); } };
 
-	:local infoArray [:toarray [:pick $com ([:find $com ","]+1) [:len $com]]]
+	:local mac $"mac-address";
+	:local macNoCol;
+	:for i from=0 to=([:len $mac] - 1) do={ 
+	  :local char [:pick $mac $i]
+	  :if ($char = ":") do={
+		:set $char ""
+	  }
+	  :set macNoCol ($macNoCol . $char)
+	}
+	
+	:local validity [:pick $com 0 [:find $com ","]];
+	
+	:if ( $validity!="0m" ) do={
+		:local sc [/sys scheduler find name=$user]; :if ($sc="") do={ :local a [/ip hotspot user get [find name=$user] limit-uptime]; :local c ($validity); :local date [ /system clock get date]; /sys sch add name="$user" disable=no start-date=$date interval=$c on-event="/ip hotspot user remove [find name=$user]; /ip hotspot active remove [find user=$user]; /file remove \"$hotspotFolder/data/$macNoCol.txt\"; /ip hotspot cookie remove [find user=$user]; /system sche remove [find name=$user]" policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon; :delay 2s; } else={ :local sint [/sys scheduler get $user interval]; :if ( $validity!="" ) do={ /sys scheduler set $user interval ($sint+$validity); } };
+	}
+	
+	:local infoArray [:toarray [:pick $com ([:find $com ","]+1) [:len $com]]];
+	
+	:local totaltime [/ip hotspot user get [find name="$user"] limit-uptime];
+	:local amt [:pick $infoArray 0];
+	:local ext [:pick $infoArray 1];
+	:local vendo [:pick $infoArray 2];
+	:local uactive [/ip hotspot active print count-only];
+	
+	:local getIncome [:put ([/system script get [find name=todayincome] source])];
+	/system script set source="$getIncome" todayincome;
+
+	:local getSales ($amt + $getIncome);
+	/system script set source="$getSales" todayincome;
+
+	:local getMonthlyIncome [:put ([/system script get [find name=monthlyincome] source])];
+	/system script set source="$getMonthlyIncome" monthlyincome;
+
+	:local getMonthlySales ($amt + $getMonthlyIncome);
+	/system script set source="$getMonthlySales" monthlyincome;
+	
+	:local validUntil [/sys scheduler get $user next-run];
+	
+	/file print file="$hotspotFolder/data/$macNoCol"; 
+	:delay 1s; 
+	/file set "$hotspotFolder/data/$macNoCol" contents="$user#$validUntil";
 	
 	:if ($enableTelegram=1) do={
-		:local mac $"mac-address";
-		:local totaltime [/ip hotspot user get [find name="$user"] limit-uptime];
-		:local amt [:pick $infoArray 0];
-		:local ext [:pick $infoArray 1];
-		:local vendo [:pick $infoArray 2];
-		:local uactive [/ip hotspot active print count-only];
-
-		:local getIncome [:put ([/system script get [find name=todayincome] source])];
-		/system script set source="$getIncome" todayincome;
-
-		:local getSales ($amt + $getIncome);
-		/system script set source="$getSales" todayincome;
-
-		:local getMonthlyIncome [:put ([/system script get [find name=monthlyincome] source])];
-		/system script set source="$getMonthlyIncome" monthlyincome;
-
-		:local getMonthlySales ($amt + $getMonthlyIncome);
-		/system script set source="$getMonthlySales" monthlyincome;
-
 		/tool fetch url="https://api.telegram.org/bot$telegramToken/sendmessage?chat_id=$chatId&text=<<======New Sales======>> %0A Vendo: $vendo %0A Voucher: $user %0A IP: $address %0A MAC: $mac %0A Amount: $amt %0A Extended: $ext %0A Total Time: $totaltime %0A %0AToday Sales: $getSales %0AMonthly Sales : $getMonthlySales %0AActive Users: $uactive%0A <<=====================>>" keep-result=no;
 	}
+
 };
 
 :if ($enableRandomMacSyncFix=1) do={
@@ -216,6 +241,28 @@ Put on the on login script (with telegram support)
 	}
 }
 ```
+Put on the on logout script please change accordinly with your hotspot folder(hex or haplite)
+```bash
+### hotspot folder for HEX put flash/hotspot for haplite put hotspot only
+:local hotspotFolder "flash/hotspot";
+
+:local mac $"mac-address";
+:local macNoCol;
+:for i from=0 to=([:len $mac] - 1) do={ 
+  :local char [:pick $mac $i]
+  :if ($char = ":") do={
+	:set $char ""
+  }
+  :set macNoCol ($macNoCol . $char)
+}
+	
+:if ([/ip hotspot user get [/ip hotspot user find where name="$user"] limit-uptime] <= [/ip hotspot user get [/ip hotspot user find where name="$user"] uptime]) do={
+    /ip hotspot user remove $user;
+	/file remove "$hotspotFolder/data/$macNoCol.txt";
+	/system sche remove [find name=$user];
+}
+```
+
 ![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Mikrotik-Step4.PNG?raw=true)
 
 ## Miscellaneous Scripts
