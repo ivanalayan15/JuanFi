@@ -223,7 +223,7 @@ Put on the on login script (with telegram support) please change accordinly with
 	
 	:local validUntil [/sys scheduler get $user next-run];
 	
-	/file print file="$hotspotFolder/data/$macNoCol"; 
+	/file print file="$hotspotFolder/data/$macNoCol" where name="dummyfile"; 
 	:delay 1s; 
 	/file set "$hotspotFolder/data/$macNoCol" contents="$user#$validUntil";
 	
