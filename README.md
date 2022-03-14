@@ -228,7 +228,15 @@ Put on the on login script (with telegram support) please change accordinly with
 	/file set "$hotspotFolder/data/$macNoCol" contents="$user#$validUntil";
 	
 	:if ($enableTelegram=1) do={
-		/tool fetch url="https://api.telegram.org/bot$telegramToken/sendmessage?chat_id=$chatId&text=<<======New Sales======>> %0A Vendo: $vendo %0A Voucher: $user %0A IP: $address %0A MAC: $mac %0A Amount: $amt %0A Extended: $ext %0A Total Time: $totaltime %0A %0AToday Sales: $getSales %0AMonthly Sales : $getMonthlySales %0AActive Users: $uactive%0A <<=====================>>" keep-result=no;
+		:local vendoNew;
+		:for i from=0 to=([:len $vendo] - 1) do={ 
+		  :local char [:pick $vendo $i]
+		  :if ($char = " ") do={
+			:set $char "%20"
+		  }
+		  :set vendoNew ($vendoNew . $char)
+		}
+		/tool fetch url="https://api.telegram.org/bot$telegramToken/sendmessage?chat_id=$chatId&text=<<======New Sales======>> %0A Vendo: $vendoNew %0A Voucher: $user %0A IP: $address %0A MAC: $mac %0A Amount: $amt %0A Extended: $ext %0A Total Time: $totaltime %0A %0AToday Sales: $getSales %0AMonthly Sales : $getMonthlySales %0AActive Users: $uactive%0A <<=====================>>" keep-result=no;
 	}
 
 };
