@@ -1,23 +1,14 @@
 # JuanFi
 
-JuanFi v3.0 Bin File Releases
+JuanFi v2.3 Bin File Releases
 
-JuanFi now has 4 separate release of BIN file for ESP32 variant and ESP8266 variant
+JuanFi now has 2 separate release of BIN file for ESP32(Lan based) and ESP8266(Wireless based) system
 
+Lan Based(new)
+https://github.com/ivanalayan15/JuanFi/blob/master/release/LanBased/Readme.md
 
-Wireless Base ESP32
-https://github.com/ivanalayan15/JuanFi/blob/master/release/WirelessBase/ESP32/Readme.md
-
-Wireless Base ESP8622
-https://github.com/ivanalayan15/JuanFi/blob/master/release/WirelessBase/ES8622/Readme.md
-
-Lan Based ESP32
-https://github.com/ivanalayan15/JuanFi/blob/master/release/LanBased/ESP32/Readme.md
-
-Lan Based ESP8622
-https://github.com/ivanalayan15/JuanFi/blob/master/release/LanBased/ESP8622/Readme.md
-
-
+Wireless Base
+https://github.com/ivanalayan15/JuanFi/blob/master/release/WirelessBase/Readme.md
 
 
 

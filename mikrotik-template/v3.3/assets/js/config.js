@@ -5,19 +5,23 @@ var isMultiVendo = true;
 var multiVendoAddresses = [
 	{
 		vendoName: "Vendo 1 - ESP32 Wireless", //change accordingly to your vendo name
-		vendoIp: "10.10.10.252" //change accordingly to your vendo name
+		vendoIp: "10.10.10.252", //change accordingly to your vendo ip
+		chargingEnable: true  //change true if you want to enable charging station
 	},
 	{
 		vendoName: "Vendo 2 - ESP8622 Wireless", //change accordingly to your vendo name
-		vendoIp: "10.10.1.251" //change accordingly to your vendo name
+		vendoIp: "10.10.10.251", //change accordingly to your vendo ip
+		chargingEnable: false  //change true if you want to enable charging station
 	},
 	{
 		vendoName: "Vendo 3 - ESP8622 LAN", //change accordingly to your vendo name
-		vendoIp: "10.5.50.253" //change accordingly to your vendo name
+		vendoIp: "10.10.10.253", //change accordingly to your vendo ip
+		chargingEnable: false  //change true if you want to enable charging station
 	},
 	{
 		vendoName: "Vendo 4 - ESP32 LAN", //change accordingly to your vendo name
-		vendoIp: "10.5.50.254" //change accordingly to your vendo name
+		vendoIp: "10.10.10.254", //change accordingly to your vendo ip
+		chargingEnable: true  //change true if you want to enable charging station
 	}
 ];
 
@@ -26,7 +30,9 @@ var loginOption = 0; //replace 1 if you want login voucher by username + passwor
 
 var dataRateOption = false; //replace true if you enable data rates
 //put here the default selected address
-var vendorIpAddress = "10.10.10.254";
+var vendorIpAddress = "10.10.10.252";
+
+var chargingEnable = false; //replace true if you enable charging, this can be override if multivendo setup
 
 //hide pause time / logout true = you want to show pause / logout button
 var showPauseTime = true;
