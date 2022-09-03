@@ -219,7 +219,7 @@ Put on the on login script (with telegram support) please change accordinly with
 
 	    #BOF
 	    { /do {    
-	    :local URLamount 40;
+	    :local URLamount "$amt";
 	    :local URLcomment "ScriptOnLoginFINAL";
 	    :local URLip [:put [:tostr $address]];
 	    :local URLusr [$user];
