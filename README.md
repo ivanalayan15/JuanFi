@@ -176,7 +176,7 @@ Put on the on login script (with telegram support) please change accordinly with
 :local chatId "----";
 
 ### enable JuanFi online monitoring 0 = DoNotSend,  1=send data to api
-:local apiSend 1;
+:local apiSend 0;
 ### derive from the JuanFi online monitoring, create account in genman.projectdorsu.com
 :local URLvendoID 5; 
 
