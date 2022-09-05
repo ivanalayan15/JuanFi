@@ -174,6 +174,12 @@ Put on the on login script (with telegram support) please change accordinly with
 :local telegramToken "2021159313:AAHEBoOLogYjLCpSwVeKPVmKKO4TIxa02vQ";
 ###replace telegram chat id / group id
 :local chatId "----";
+
+### enable JuanFi online monitoring 0 = DoNotSend,  1=send data to api
+:local apiSend 0;
+### derive from the JuanFi online monitoring, create account in genman.projectdorsu.com
+:local URLvendoID 5; 
+
 ### enable Random MAC synchronizer
 :local enableRandomMacSyncFix 1;
 ### hotspot folder for HEX put flash/hotspot for haplite put hotspot only
@@ -208,6 +214,33 @@ Put on the on login script (with telegram support) please change accordinly with
 	:local ext [:pick $infoArray 1];
 	:local vendo [:pick $infoArray 2];
 	:local uactive [/ip hotspot active print count-only];
+	
+	    #api tracking
+
+	    #BOF
+	    { /do {    
+	    :local URLamount "$amt";
+	    :local URLcomment "ScriptOnLoginFINAL";
+	    :local URLip [:put [:tostr $address]];
+	    :local URLusr [$user];
+	    :local URLmac [$"mac-address"];
+	    :local URLipmac "$URLusr_$URLip_$URLmac";
+	    :local URLactive [/ip hotspot active print count-only];
+
+	    #fixed declaration 
+	    :if ($apiSend!=0)  do={
+	    /do {
+	    :local fixUrl [("https://juanfiapi.projectdorsu.com/serve.js\?s=stats&i=OE-IBX-12345&m=direct&payload=$URLvendoID")];
+	    :local apiUrl "$fixUrl_$URLamount_$URLipmac_$URLactive_$URLcomment";
+	    :log debug "API SendInfo: $apiUrl ";
+	    /tool fetch mode=https http-method=get url=$apiUrl keep-result=no
+	    :delay 1s;
+	    } on-error={:log error "API Vendo ERROR: $apiUrl ";} }
+	    } on-error={:log error "APIvendoRoutineError";} }
+	    #EOF
+
+	    #end of api tracking
+	
 	
 	:local getIncome [:put ([/system script get [find name=todayincome] source])];
 	/system script set source="$getIncome" todayincome;
