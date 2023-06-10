@@ -169,138 +169,135 @@ Execute on mirkotik terminal
 Put on the on login script (with telegram support) please change accordinly with your hotspot folder(hex or haplite)
 ```bash
 ### enable telegram notification, change from 0 to 1 if you want to enable telegram
-:local enableTelegram 0;
+:local isTelegram 0;
 ###replace telegram token
-:local telegramToken "2021159313:AAHEBoOLogYjLCpSwVeKPVmKKO4TIxa02vQ";
+:local iTBotToken "xxxxxxxxxx:xxxxxxxxxxxxx-xxxxxxxxxxxxxxx-xxxxx";
 ###replace telegram chat id / group id
-:local chatId "----";
+:local iTGrChatID "xxxxxxxxxxxxxx";
+### hotspot folder for HEX put flash/hotspot for haplite put hotspot only
+:local HSFilePath "hotspot";
+### enable Random MAC synchronizer
+:local isRandomMacSyncFix 0;
 
 ### enable JuanFi online monitoring 0 = DoNotSend,  1=send data to api
 :local apiSend 0;
 ### derive from the JuanFi online monitoring, create account in genman.projectdorsu.com
-:local URLvendoID 5; 
+:local URLvendoID 5;
 
-### enable Random MAC synchronizer
-:local enableRandomMacSyncFix 1;
-### hotspot folder for HEX put flash/hotspot for haplite put hotspot only
-:local hotspotFolder "flash/hotspot";
+# Get User Data
+:local aUsrNote [/ip hotspot user get $user comment];
+:local aUsrNote [:toarray $aUsrNote];
+:local iUsrTime [:totime ($aUsrNote->0)];
+:local iSaleAmt [:tonum ($aUsrNote->1)];
+:local iExtCode ($aUsrNote->2);
+:local iVdoName ($aUsrNote->3);
+:local iTimeMin [/ip hotspot user get $user limit-uptime];
+:local iUserReg [/system scheduler find name=$user];
 
-
-:local com [/ip hotspot user get [find name=$user] comment];
-/ip hotspot user set comment="" $user;
-
-:if ($com!="") do={
-
-	:local mac $"mac-address";
-	:local macNoCol;
-	:for i from=0 to=([:len $mac] - 1) do={ 
-	  :local char [:pick $mac $i]
-	  :if ($char = ":") do={
-		:set $char ""
-	  }
-	  :set macNoCol ($macNoCol . $char)
-	}
-	
-	:local validity [:pick $com 0 [:find $com ","]];
-	
-	:if ( $validity!="0m" ) do={
-		:local sc [/sys scheduler find name=$user]; :if ($sc="") do={ :local a [/ip hotspot user get [find name=$user] limit-uptime]; :local c ($validity); :local date [ /system clock get date]; /sys sch add name="$user" disable=no start-date=$date interval=$c on-event="/ip hotspot user remove [find name=$user]; /ip hotspot active remove [find user=$user]; /ip hotspot cookie remove [find user=$user]; /system sche remove [find name=$user]; /file remove \"$hotspotFolder/data/$macNoCol.txt\";" policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon; :delay 2s; } else={ :local sint [/sys scheduler get $user interval]; :if ( $validity!="" ) do={ /sys scheduler set $user interval ($sint+$validity); } };
-	}
-	
-	:local infoArray [:toarray [:pick $com ([:find $com ","]+1) [:len $com]]];
-	
-	:local totaltime [/ip hotspot user get [find name="$user"] limit-uptime];
-	:local amt [:pick $infoArray 0];
-	:local ext [:pick $infoArray 1];
-	:local vendo [:pick $infoArray 2];
-	:local uactive [/ip hotspot active print count-only];
-	
-	    #api tracking
-
-	    #BOF
-	    { /do {    
-	    :local URLamount "$amt";
-	    :local URLcomment "ScriptOnLoginFINAL";
-	    :local URLip [:put [:tostr $address]];
-	    :local URLusr [$user];
-	    :local URLmac [$"mac-address"];
-	    :local URLipmac "$URLusr_$URLip_$URLmac";
-	    :local URLactive [/ip hotspot active print count-only];
-
-	    #fixed declaration 
-	    :if ($apiSend!=0)  do={
-	    /do {
-	    :local fixUrl [("https://juanfiapi.projectdorsu.com/serve.js\?s=stats&i=OE-IBX-12345&m=direct&payload=$URLvendoID")];
-	    :local apiUrl "$fixUrl_$URLamount_$URLipmac_$URLactive_$URLcomment";
-	    :log debug "API SendInfo: $apiUrl ";
-	    /tool fetch mode=https http-method=get url=$apiUrl keep-result=no
-	    :delay 1s;
-	    } on-error={:log error "API Vendo ERROR: $apiUrl ";} }
-	    } on-error={:log error "APIvendoRoutineError";} }
-	    #EOF
-
-	    #end of api tracking
-	
-	
-	:local getIncome [:put ([/system script get [find name=todayincome] source])];
-	/system script set source="$getIncome" todayincome;
-
-	:local getSales ($amt + $getIncome);
-	/system script set source="$getSales" todayincome;
-
-	:local getMonthlyIncome [:put ([/system script get [find name=monthlyincome] source])];
-	/system script set source="$getMonthlyIncome" monthlyincome;
-
-	:local getMonthlySales ($amt + $getMonthlyIncome);
-	/system script set source="$getMonthlySales" monthlyincome;
-	
-	:local validUntil [/sys scheduler get $user next-run];
-	
-	/file print file="$hotspotFolder/data/$macNoCol" where name="dummyfile"; 
-	:delay 1s; 
-	/file set "$hotspotFolder/data/$macNoCol" contents="$user#$validUntil";
-	
-	:if ($enableTelegram=1) do={
-		:local vendoNew;
-		:for i from=0 to=([:len $vendo] - 1) do={ 
-		  :local char [:pick $vendo $i]
-		  :if ($char = " ") do={
-			:set $char "%20"
-		  }
-		  :set vendoNew ($vendoNew . $char)
-		}
-		/tool fetch url="https://api.telegram.org/bot$telegramToken/sendmessage?chat_id=$chatId&text=<<======New Sales======>> %0A Vendo: $vendoNew %0A Voucher: $user %0A IP: $address %0A MAC: $mac %0A Amount: $amt %0A Extended: $ext %0A Total Time: $totaltime %0A %0AToday Sales: $getSales %0AMonthly Sales : $getMonthlySales %0AActive Users: $uactive%0A <<=====================>>" keep-result=no;
-	}
-
+# Check User Data
+:if (($iTimeMin>0) and ($iUsrTime>0) and (($iUserReg="") or ($iExtCode=1))) do={
+  /ip hotspot user set $user comment="";
+  :local iFileMac;
+  :local mac $"mac-address";
+  :for i from=0 to=([:len $mac] - 1) do={
+    :local chr [:pick $mac $i]
+    :if ($chr = ":") do={ :set $chr "" }
+    :set iFileMac ($iFileMac . $chr)
+  }
+# api tracking
+  { /do {
+  :local URLamount "$amt";
+  :local URLcomment "ScriptOnLoginFINAL";
+  :local URLip [:put [:tostr $address]];
+  :local URLusr [$user];
+  :local URLmac [$"mac-address"];
+  :local URLipmac "$URLusr_$URLip_$URLmac";
+  :local URLactive [/ip hotspot active print count-only];
+  :if ($apiSend!=0)  do={
+  /do {
+  :local fixUrl [("https://juanfiapi.projectdorsu.com/serve.js\?s=stats&i=OE-IBX-12345&m=direct&payload=$URLvendoID")];
+  :local apiUrl "$fixUrl_$URLamount_$URLipmac_$URLactive_$URLcomment";
+  :log debug "API SendInfo: $apiUrl ";
+  /tool fetch mode=https http-method=get url=$apiUrl keep-result=no
+  :delay 1s;
+  } on-error={:log error "API Vendo ERROR: $apiUrl ";} }
+  } on-error={:log error "APIvendoRoutineError";} }
+# Extend User
+  :if (($iUserReg!="") and ($iExtCode=1)) do={
+    :local iTimeInt [/system scheduler get $user interval];
+    /system scheduler set $user interval=( $iTimeInt + $iUsrTime );
+  }
+# ADD User
+  :local iDateBeg [/system clock get date];
+  :local iTimeBeg [/system clock get time];
+  :if ($iUserReg="") do={
+    :do { /system scheduler add name="$user" interval=$iUsrTime \
+      start-date=$iDateBeg start-time=$iTimeBeg disable=no \
+      policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon \
+      on-event=("/ip hotspot user remove [find name=$user];\r\n".\
+                "/ip hotspot active remove [find user=$user];\r\n".\
+                "/ip hotspot cookie remove [find user=$user];\r\n".\
+                "/system scheduler remove [find name=$user];\r\n".\
+                ":do {/file remove \"$HSFilePath/data/$iFileMac.txt\"} on-error={};\r\n")
+    } on-error={ log error "( $user ) /system scheduler add => ERROR ADD!" };
+    :local x 10;:while (($x>0) and ([/system scheduler find name="$user"]="")) do={:set x ($x-1);:delay 1s};
+  };
+# Save Data File
+  :if ([/file find name="$HSFilePath/data"]="") do={
+    :do {/tool fetch dst-path=("$HSFilePath/data/.") url="https://127.0.0.1/"} on-error={ };
+  }
+  :local iValidUntil [/system scheduler get $user next-run];
+  :if ([/system scheduler find name=$user]!="") do={
+    /file print file="$HSFilePath/data/$iFileMac.txt" where name="dummyfile";
+    :local x 10;:while (($x>0) and ([/file find name="$HSFilePath/data/$iFileMac.txt"]="")) do={:set x ($x-1);:delay 1s};
+    /file set "$HSFilePath/data/$iFileMac" contents="$user#$iValidUntil";
+  }
+# Update Today Income
+  :local iSaveAmt [:tonum [/system script get todayincome source]];
+  :local iDailySales ($iSaleAmt + $iSaveAmt);
+  /system script set todayincome source="$iDailySales";
+# Update Monthly Income
+  :local iSaveAmt [:tonum [/system script get monthlyincome source]];
+  :local iMonthSales ( $iSaleAmt + $iSaveAmt );
+  /system script set monthlyincome source="$iMonthSales";
+# Telegram
+  :if ($isTelegram=1) do={
+    :local xVendo;
+    :for i from=0 to=([:len $iVdoName] - 1) do={
+      :local chr [:pick $iVdoName $i]
+      :if ($chr = " ") do={ :set $chr "%20" }
+      :set xVendo ($xVendo . $chr)
+    }
+    :local iUActive [/ip hotspot active print count-only];
+    :local iMessage ("<<======New Sales======>>%0A".\
+                     "Vendo: $xVendo %0A".\
+                     "Voucher: $user %0A".\
+                     "IP: $address %0A".\
+                     "MAC: $mac %0A".\
+                     "Amount: $iSaleAmt %0A".\
+                     "Extended: $iExtCode %0A".\
+                     "Total Time: $iTimeMin %0A %0A".\
+                     "Today Sales: $iDailySales %0A".\
+                     "Monthly Sales: $iMonthSales %0A".\
+                     "Active Users: $iUActive %0A".\
+                     "Valid Until: $iValidUntil %0A".\
+                     "<<=====================>>");
+    /tool fetch url="https://api.telegram.org/bot$iTBotToken/sendmessage\?chat_id=$iTGrChatID&text=$iMessage" keep-result=no;
+  }
 };
-
-:if ($enableRandomMacSyncFix=1) do={
-	:local cmac $"mac-address"
-	:foreach AU in=[/ip hotspot active find user="$username"] do={
-	  :local amac [/ip hotspot active get $AU mac-address];
-	  :if ($cmac!=$amac) do={  /ip hotspot active remove [/ip hotspot active find mac-address="$amac"]; }
-	}
+# Random Mac
+:if ($isRandomMacSyncFix=1) do={
+  :local cmac $"mac-address";
+  :foreach AU in=[/ip hotspot active find user="$user"] do={
+    :local amac [/ip hotspot active get $AU mac-address];
+    :if ($cmac!=$amac) do={  /ip hotspot active remove [/ip hotspot active find mac-address="$amac"]; }
+  }
 }
 ```
-Put on the on logout script please change accordinly with your hotspot folder(hex or haplite)
+Put on the on logout script
 ```bash
-### hotspot folder for HEX put flash/hotspot for haplite put hotspot only
-:local hotspotFolder "flash/hotspot";
-
-:local mac $"mac-address";
-:local macNoCol;
-:for i from=0 to=([:len $mac] - 1) do={ 
-  :local char [:pick $mac $i]
-  :if ($char = ":") do={
-	:set $char ""
-  }
-  :set macNoCol ($macNoCol . $char)
-}
-	
-:if ([/ip hotspot user get [/ip hotspot user find where name="$user"] limit-uptime] <= [/ip hotspot user get [/ip hotspot user find where name="$user"] uptime]) do={
-    /ip hotspot user remove $user;
-	/file remove "$hotspotFolder/data/$macNoCol.txt";
-	/system sche remove [find name=$user];
+:if ($cause="session timeout") do={
+  /system scheduler set [find name=$user] interval=5s;
 }
 ```
 
