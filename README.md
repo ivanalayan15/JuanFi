@@ -195,7 +195,7 @@ Put on the on login script (with telegram support) please change accordinly with
 :local iUserReg [/system scheduler find name=$user];
 
 # Check User Data
-:if (($iTimeMin>0) and ($iUsrTime>0) and (($iUserReg="") or ($iExtCode=1))) do={
+:if (($iTimeMin>0) and ($iUsrTime>=0) and (($iUserReg="") or ($iExtCode=1))) do={
   /ip hotspot user set $user comment="";
   :local iFileMac;
   :local mac $"mac-address";
