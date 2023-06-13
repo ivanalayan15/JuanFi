@@ -269,7 +269,6 @@ Put on the on login script (with telegram support) please change accordinly with
                      "<<=====================>>");
     /tool fetch url="https://api.telegram.org/bot$iTBotToken/sendmessage\?chat_id=$iTGrChatID&text=$iMessage" keep-result=no;
   }
-};
 # API Tracking
   :if ($apiSend!=0) do={
     :do {
@@ -288,6 +287,7 @@ Put on the on login script (with telegram support) please change accordinly with
     } on-error={:log error "API Vendo ERROR: $apiUrl ";}
     } on-error={:log error "APIvendoRoutineError";}
   }
+};
 # Random Mac
 :if ($isRandomMacSyncFix=1) do={
   :local cmac $"mac-address";
