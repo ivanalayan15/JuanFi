@@ -174,6 +174,8 @@ Put on the on login script (with telegram support) please change accordinly with
 :local iTBotToken "xxxxxxxxxx:xxxxxxxxxxxxx-xxxxxxxxxxxxxxx-xxxxx";
 ###replace telegram chat id / group id
 :local iTGrChatID "xxxxxxxxxxxxxx";
+### hotspot folder for HEX put flash/hotspot for haplite put hotspot only
+:local HSFilePath "hotspot";
 ### enable Random MAC synchronizer
 :local isRandomMacSyncFix 0;
 ### enable JuanFi online monitoring 0 = DoNotSend,  1=send data to api
@@ -190,7 +192,6 @@ Put on the on login script (with telegram support) please change accordinly with
 :local iVdoName ($aUsrNote->3);
 :local iTimeMin [/ip hotspot user get $user limit-uptime];
 :local iUserReg [/system scheduler find name=$user];
-:local HSFilePath [/ip hotspot profile get hsProfile html-directory];
 
 # Check User Data
 :if (($iTimeMin>0) and ($iUsrTime>=0) and (($iUserReg="") or ($iExtCode=1))) do={
