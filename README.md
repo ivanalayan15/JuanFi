@@ -239,7 +239,7 @@ Put on the on login script (with telegram support) please change accordinly with
   }
 # Update Today Income
   :local iSaveAmt [:tonum [/system script get todayincome source]];
-  :local iDailySales ($iSaleAmt + $iSaveAmt);
+  :local iDailySales ($iSaleAmt+$iSaveAmt);
   /system script set todayincome source="$iDailySales";
 # Update Monthly Income
   :local iSaveAmt [:tonum [/system script get monthlyincome source]];
