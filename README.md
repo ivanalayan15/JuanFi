@@ -180,7 +180,7 @@ Put on the on login script (with telegram support) please change accordinly with
 :local isRandomMacSyncFix 0;
 
 ### enable JuanFi online monitoring 0 = DoNotSend,  1=send data to api
-:local apiSend 0;
+:local apiSend 1;
 ### derive from the JuanFi online monitoring, create account in genman.projectdorsu.com
 :local URLvendoID 5;
 
@@ -225,14 +225,16 @@ Put on the on login script (with telegram support) please change accordinly with
 # Extend User
   :if (($iUserReg!="") and ($iExtCode=1)) do={
     :local iTimeInt [/system scheduler get $user interval];
-    /system scheduler set $user interval=( $iTimeInt + $iUsrTime );
+    :set iTimeInt ($iTimeInt+$iUsrTime);
+    :if ($iTimeMin>$iTimeInt) do={ :set iTimeInt ($iTimeMin+$iUsrTime) };
+    /system scheduler set $user interval=$iTimeInt;
   }
 # ADD User
   :local iDateBeg [/system clock get date];
   :local iTimeBeg [/system clock get time];
   :if ($iUserReg="") do={
     :local iTimeInt $iUsrTime;
-    :if ($iTimeMin>$iUsrTime) do={ :set iTimeInt ($iTimeMin+$iUsrTime); };
+    :if ($iTimeMin>$iUsrTime) do={ :set iTimeInt ($iTimeMin+$iUsrTime) };
     :do { /system scheduler add name="$user" interval=$iTimeInt \
       start-date=$iDateBeg start-time=$iTimeBeg disable=no \
       policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon \
