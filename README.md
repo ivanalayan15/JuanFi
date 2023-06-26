@@ -314,11 +314,8 @@ if (($iUserTime>0) and ($iValidity>=0)) do={
 :local enableRandomMacSyncFix 0;
 
 :if ($enableRandomMacSyncFix=1) do={
-  :local cmac $"mac-address"
-  :foreach AU in=[/ip hotspot active find user="$username"] do={
-    :local amac [/ip hotspot active get $AU mac-address];
-    :if ($cmac!=$amac) do={ /ip hotspot active remove [/ip hotspot active find mac-address="$amac"]; }
-  }
+  local mac $"mac-address"
+  /ip hotspot active remove [find (user=$user and mac-address!=$mac)]
 }
 
 ```
