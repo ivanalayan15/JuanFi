@@ -313,7 +313,7 @@ if (($iUserTime>0) and ($iValidity>=0)) do={
 ### enable Random MAC synchronizer
 :local enableRandomMacSyncFix 0;
 
-:if ($enableRandomMacSyncFix=1) do={
+if ($enableRandomMacSyncFix=1) do={
   local mac $"mac-address"
   /ip hotspot active remove [find (user=$user and mac-address!=$mac)]
 }
