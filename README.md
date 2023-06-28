@@ -168,7 +168,7 @@ Execute on mirkotik terminal
 
 Put on the on login script (with telegram support) please change accordinly with your hotspot folder(hex or haplite)
 ```bash
-# hsup_juanfi_onlogin #
+# hsup_juanfi4c_onlogin #
 ### enable telegram notification, change from 0 to 1 if you want to enable telegram
 :local isTelegram 0;
 ###replace telegram token
@@ -206,8 +206,6 @@ if (($iUserTime>0) and ($iValidity>=0)) do={
   local iInterval
   local iDateBeg [/system clock get date]
   local iTimeBeg [/system clock get time]
-  /ip hotspot user set $user email=""
-  /ip hotspot user set $user comment=""
 # EXTEND USER
   if ($iUsrExist!="") do={
     log info "( $user ) =====[ EXT USER ]====="
@@ -228,44 +226,59 @@ if (($iUserTime>0) and ($iValidity>=0)) do={
       set iInterval $iUserTime
     }
     log info "( $user ) <<<<< iUserTime=[$iUserTime] iValidity=[$iValidity] iInterval=[$iInterval] >>>>>"
-    do {
-      /system scheduler add name=$user interval=$iInterval \
-      start-date=$iDateBeg start-time=$iTimeBeg disable=no \
-      policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon \
-      on-event=("/ip hotspot active remove [find user=$user]\r\n".\
-                "/ip hotspot cookie remove [find user=$user]\r\n".\
-                "/system scheduler remove [find name=$user]\r\n".\
-                "/ip hotspot user remove [find name=$user]\r\n".\
-                "do {/file remove \"$HSFilePath/data/$iFNameMac.txt\"} on-error={}\r\n")
-    } on-error={ log error "( $user ) /system scheduler add => ERROR ADD!" }
+    /system scheduler add name=$user interval=$iInterval \
+    start-date=$iDateBeg start-time=$iTimeBeg disable=no \
+    policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon \
+    on-event=("do {/ip hotspot active remove [find user=$user]} on-error={}\r\n".\
+              "do {/ip hotspot cookie remove [find user=$user]} on-error={}\r\n".\
+              "do {/system scheduler  remove [find name=$user]} on-error={}\r\n".\
+              "do {/ip hotspot user   remove [find name=$user]} on-error={}\r\n".\
+              "do {/file remove \"$HSFilePath/data/$iFNameMac.txt\"} on-error={}\r\n")
     local x 10;while (($x>0) and ([/system scheduler find name=$user]="")) do={set x ($x-1);delay 1s}
+    if (x=0) do={
+      log error "( $user ) INTERNAL ERROR! /system scheduler $user => NOT FOUND!"
+      /ip hotspot active remove [find user=$user]; return;
+    }
   }
+  /ip hotspot user set $user email=""
+  /ip hotspot user set $user comment=""
 # Create/Save Data File
   local iValidUntil [/system scheduler get $user next-run]
-  if ([/file find name="$HSFilePath"]="") do={ log error "( $user ) INTERNAL ERROR! Invalid HSFilePath! => HSFilePath=[$HSFilePath]" }
   if ([/file find name="$HSFilePath"]!="") do={
     if ([/file find name="$HSFilePath/data"]="") do={
       do { /tool fetch dst-path=("$HSFilePath/data/.") url="https://127.0.0.1/" } on-error={ }
       local x 10;while (($x>0) and ([/file find name="$HSFilePath/data"]="")) do={set x ($x-1);delay 1s}
     }
-    if ([/system scheduler find name=$user]!="") do={
-      /file print file="$HSFilePath/data/$iFNameMac.txt" where name="dummyfile"
+    if ([/file find name="$HSFilePath/data"]!="") do={
+      /file print file="$HSFilePath/data/$iFNameMac.txt" where name="$iFNameMac.txt"
       local x 10;while (($x>0) and ([/file find name="$HSFilePath/data/$iFNameMac.txt"]="")) do={set x ($x-1);delay 1s}
-      /file set "$HSFilePath/data/$iFNameMac" contents="$user#$iValidUntil"
-    }
-  }
+      if (x>0) do={
+        /file set "$HSFilePath/data/$iFNameMac" contents="$user#$iValidUntil"
+      } else={log error "( $user ) INTERNAL ERROR! /file $HSFilePath/data/$iFNameMac.txt => NOT FOUND!"}
+    } else={log error "( $user ) INTERNAL ERROR! /file $HSFilePath/data => NOT FOUND!"}
+  } else={log error "( $user ) INTERNAL ERROR! /file $HSFilePath => NOT FOUND!"}
 # Create/Update Today Income
   local iDailySales
-  if ([/system script find name=todayincome]="") do={/system script add name=todayincome source="0" comment="JuanFi Daily Income"}
-  local iSaveAmt [tonum [/system script get todayincome source]]
-  set iDailySales ($iSalesAmt + $iSaveAmt)
-  /system script set todayincome source="$iDailySales"
+  if ([/system script find name=todayincome]="") do={
+    /system script add name=todayincome source="0" comment="JuanFi Daily Income";
+    local x 10;while (($x>0) and ([/system script find name=todayincome]="")) do={set x ($x-1);delay 1s}
+  }
+  if ([/system script find name=todayincome]!="") do={
+    local iSaveAmt [tonum [/system script get todayincome source]]
+    set iDailySales ($iSalesAmt + $iSaveAmt)
+    /system script set todayincome source="$iDailySales"
+  } else={log error "( $user ) INTERNAL ERROR! /system script todayincome => NOT FOUND!"}
 # Create/Update Monthly Income
   local iMonthSales
-  if ([/system script find name=monthlyincome]="") do={/system script add name=monthlyincome source="0" comment="JuanFi Monthly Income"}
-  local iSaveAmt [tonum [/system script get monthlyincome source]]
-  set iMonthSales ( $iSalesAmt + $iSaveAmt )
-  /system script set monthlyincome source="$iMonthSales"
+  if ([/system script find name=monthlyincome]="") do={
+    /system script add name=monthlyincome source="0" comment="JuanFi Monthly Income"
+    local x 10;while (($x>0) and ([/system script find name=monthlyincome]="")) do={set x ($x-1);delay 1s}
+  }
+  if ([/system script find name=monthlyincome]!="") do={
+    local iSaveAmt [tonum [/system script get monthlyincome source]]
+    set iMonthSales ( $iSalesAmt + $iSaveAmt )
+    /system script set monthlyincome source="$iMonthSales"
+  } else={log error "( $user ) INTERNAL ERROR! /system script monthlyincome => NOT FOUND!"}
 # Telegram
   if ($isTelegram=1) do={
     local iUActive [/ip hotspot active print count-only]
@@ -311,9 +324,9 @@ if (($iUserTime>0) and ($iValidity>=0)) do={
 }}
 
 ### enable Random MAC synchronizer
-:local enableRandomMacSyncFix 0;
+:local isRandomMacSyncFix 0;
 
-if ($enableRandomMacSyncFix=1) do={
+if ($isRandomMacSyncFix=1) do={
   local mac $"mac-address"
   /ip hotspot active remove [find (user=$user and mac-address!=$mac)]
 }
