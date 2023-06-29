@@ -168,7 +168,7 @@ Execute on mirkotik terminal
 
 Put on the on login script (with telegram support) please change accordinly with your hotspot folder(hex or haplite)
 ```bash
-# hsup_juanfi4c_onlogin #
+# hsup_juanfi4d_onlogin #
 ### enable telegram notification, change from 0 to 1 if you want to enable telegram
 :local isTelegram 0;
 ###replace telegram token
@@ -179,7 +179,7 @@ Put on the on login script (with telegram support) please change accordinly with
 :local HSFilePath "flash/hotspot";
 :if ([file find name="hotspot"]!="") do={:set HSFilePath "hotspot"};
 
-# check AddUser or ExtUser
+# Check AddUser or ExtUser
 local aUsr [/ip hotspot user get $username]
 local iUsrEMail ($aUsr->"email")
 if (($iUsrEMail="new@gmail.com") or ($iUsrEMail="extend@gmail.com")) do={
@@ -202,6 +202,7 @@ if (($iUsrEMail="new@gmail.com") or ($iUsrEMail="extend@gmail.com")) do={
   local iVendoNme ($aUserNote->3)
   local iUserTime ($aUsr->"limit-uptime")
   local iUsrExist [/system scheduler find name=$user]
+# Check Valid Entry
 if (($iUserTime>0) and ($iValidity>=0)) do={
   local iInterval
   local iDateBeg [/system clock get date]
@@ -229,17 +230,19 @@ if (($iUserTime>0) and ($iValidity>=0)) do={
     /system scheduler add name=$user interval=$iInterval \
     start-date=$iDateBeg start-time=$iTimeBeg disable=no \
     policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon \
-    on-event=("do {/ip hotspot active remove [find user=$user]} on-error={}\r\n".\
+    on-event=("log info \"( $user ) =====[ EXPIRE USER ]=====\"\r\n".\
+              "do {/ip hotspot active remove [find user=$user]} on-error={}\r\n".\
               "do {/ip hotspot cookie remove [find user=$user]} on-error={}\r\n".\
-              "do {/system scheduler  remove [find name=$user]} on-error={}\r\n".\
-              "do {/ip hotspot user   remove [find name=$user]} on-error={}\r\n".\
-              "do {/file remove \"$HSFilePath/data/$iFNameMac.txt\"} on-error={}\r\n")
+              "do {/system scheduler  remove [find name=$user]} on-error={log error \"( $user ) SCHEDULER REMOVE ERROR! /system scheduler\"}\r\n".\
+              "do {/ip hotspot user   remove [find name=$user]} on-error={log error \"( $user ) SCHEDULER REMOVE ERROR! /ip hotspot user\"}\r\n".\
+              "do {/file remove \"$HSFilePath/data/$iFNameMac.txt\"} on-error={log error \"( $user ) SCHEDULER REMOVE ERROR! /file $HSFilePath/data/$iFNameMac.txt\"}\r\n")
     local x 10;while (($x>0) and ([/system scheduler find name=$user]="")) do={set x ($x-1);delay 1s}
-    if (x=0) do={
-      log error "( $user ) INTERNAL ERROR! /system scheduler $user => NOT FOUND!"
-      /ip hotspot active remove [find user=$user]; return;
+    if ([/system scheduler find name=$user]="") do={
+      log error "( $user ) ONLOGIN ERROR! /system scheduler $user => NOT FOUND!"
+      /ip hotspot active remove [find user=$user]; return
     }
   }
+# Clear only when user scheduler added/extended!
   /ip hotspot user set $user email=""
   /ip hotspot user set $user comment=""
 # Create/Save Data File
@@ -252,11 +255,11 @@ if (($iUserTime>0) and ($iValidity>=0)) do={
     if ([/file find name="$HSFilePath/data"]!="") do={
       /file print file="$HSFilePath/data/$iFNameMac.txt" where name="$iFNameMac.txt"
       local x 10;while (($x>0) and ([/file find name="$HSFilePath/data/$iFNameMac.txt"]="")) do={set x ($x-1);delay 1s}
-      if (x>0) do={
+      if ([/file find name="$HSFilePath/data/$iFNameMac.txt"]!="") do={
         /file set "$HSFilePath/data/$iFNameMac" contents="$user#$iValidUntil"
-      } else={log error "( $user ) INTERNAL ERROR! /file $HSFilePath/data/$iFNameMac.txt => NOT FOUND!"}
-    } else={log error "( $user ) INTERNAL ERROR! /file $HSFilePath/data => NOT FOUND!"}
-  } else={log error "( $user ) INTERNAL ERROR! /file $HSFilePath => NOT FOUND!"}
+      } else={log error "( $user ) ONLOGIN ERROR! /file $HSFilePath/data/$iFNameMac.txt => NOT FOUND!"}
+    } else={log error "( $user ) ONLOGIN ERROR! /file $HSFilePath/data => NOT FOUND!"}
+  } else={log error "( $user ) ONLOGIN ERROR! /file $HSFilePath => NOT FOUND!"}
 # Create/Update Today Income
   local iDailySales
   if ([/system script find name=todayincome]="") do={
@@ -267,7 +270,7 @@ if (($iUserTime>0) and ($iValidity>=0)) do={
     local iSaveAmt [tonum [/system script get todayincome source]]
     set iDailySales ($iSalesAmt + $iSaveAmt)
     /system script set todayincome source="$iDailySales"
-  } else={log error "( $user ) INTERNAL ERROR! /system script todayincome => NOT FOUND!"}
+  } else={log error "( $user ) ONLOGIN ERROR! /system script todayincome => NOT FOUND!"}
 # Create/Update Monthly Income
   local iMonthSales
   if ([/system script find name=monthlyincome]="") do={
@@ -278,7 +281,7 @@ if (($iUserTime>0) and ($iValidity>=0)) do={
     local iSaveAmt [tonum [/system script get monthlyincome source]]
     set iMonthSales ( $iSalesAmt + $iSaveAmt )
     /system script set monthlyincome source="$iMonthSales"
-  } else={log error "( $user ) INTERNAL ERROR! /system script monthlyincome => NOT FOUND!"}
+  } else={log error "( $user ) ONLOGIN ERROR! /system script monthlyincome => NOT FOUND!"}
 # Telegram
   if ($isTelegram=1) do={
     local iUActive [/ip hotspot active print count-only]
@@ -297,7 +300,7 @@ if (($iUserTime>0) and ($iValidity>=0)) do={
                     "Valid Until: $iValidUntil %0A".\
                     "<<=====================>>")
     local iMessage [$eReplaceChr ($iMessage) " " "%20"]
-    /tool fetch url="https://api.telegram.org/bot$iTBotToken/sendmessage?chat_id=$iTGrChatID&text=$iMessage" keep-result=no
+    /tool fetch url="https://api.telegram.org/bot$iTBotToken/sendmessage\?chat_id=$iTGrChatID&text=$iMessage" keep-result=no
   }
 #api tracking
   ### enable JuanFi online monitoring 0 = DoNotSend,  1=send data to api
@@ -334,12 +337,31 @@ if ($isRandomMacSyncFix=1) do={
 ```
 Put on the on logout script
 ```bash
-# hsup_juanfi_onlogout #
+### hotspot folder for HEX put flash/hotspot for haplite put hotspot only
+:local HSFilePath "flash/hotspot";
+:if ([file find name="hotspot"]!="") do={:set HSFilePath "hotspot"};
+
 # session timeout = limit-uptime reached
 # traffic limit reached = limit-bytes reached
 :if (($cause="session timeout") or ($cause="traffic limit reached")) do={
-  /system scheduler set [find name=$user] interval=5s;
+  log info "( $user ) =====[ EXPIRE USER ]====="
+  local eReplaceChr do={
+    local iRet
+    for i from=0 to=([len $1]-1) do={
+      local x [pick $1 $i]
+      if ($x = $2) do={ set x $3 }
+      set iRet ($iRet . $x)
+    }; return $iRet
+  }
+  local mac $"mac-address"
+  local iFNameMac [$eReplaceChr $mac ":" ""]
+  /ip hotspot active remove [find user=$user]
+  /ip hotspot cookie remove [find user=$user]
+  do {/system scheduler  remove [find name=$user]} on-error={log error "( $user ) SCHEDULER REMOVE ERROR! /system scheduler"}
+  do {/ip hotspot user   remove [find name=$user]} on-error={log error "( $user ) SCHEDULER REMOVE ERROR! /ip hotspot user"}
+  do {/file remove "$HSFilePath/data/$iFNameMac.txt"} on-error={log error "( $user ) SCHEDULER REMOVE ERROR! /file"}
 }
+
 ```
 
 ![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Mikrotik-Step4.PNG?raw=true)
