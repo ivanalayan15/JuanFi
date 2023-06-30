@@ -356,8 +356,8 @@ Put on the on logout script
   }
   local mac $"mac-address"
   local iFNameMac [$eReplaceChr $mac ":" ""]
-  /ip hotspot active remove [find user=$user]
-  /ip hotspot cookie remove [find user=$user]
+  /ip hotspot active remove [find user=$username]
+  /ip hotspot cookie remove [find user=$username]
   do {/system scheduler  remove [find name=$user]} on-error={log error "( $user ) SCHEDULER REMOVE ERROR! /system scheduler"}
   do {/ip hotspot user   remove [find name=$user]} on-error={log error "( $user ) SCHEDULER REMOVE ERROR! /ip hotspot user"}
   do {/file remove "$HSFilePath/data/$iFNameMac.txt"} on-error={log error "( $user ) SCHEDULER REMOVE ERROR! /file"}
