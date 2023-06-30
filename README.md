@@ -210,7 +210,7 @@ if (($iUserTime>0) and ($iValidity>=0)) do={
 # EXTEND USER
   if ($iUsrExist!="") do={
     log info "( $user ) =====[ EXT USER ]====="
-    set iInterval [/system scheduler get $user interval]
+    set iInterval [/system scheduler get [find name=$user] interval]
     if (($iValidity != 0s) and (($iValidity + $iInterval) < $iUserTime)) do={
       set iInterval $iUserTime
     } else={
@@ -246,7 +246,7 @@ if (($iUserTime>0) and ($iValidity>=0)) do={
   /ip hotspot user set $user email=""
   /ip hotspot user set $user comment=""
 # Create/Save Data File
-  local iValidUntil [/system scheduler get $user next-run]
+  local iValidUntil [/system scheduler get [find name=$user] next-run]
   if ([/file find name="$HSFilePath"]!="") do={
     if ([/file find name="$HSFilePath/data"]="") do={
       do { /tool fetch dst-path=("$HSFilePath/data/.") url="https://127.0.0.1/" } on-error={ }
@@ -267,7 +267,7 @@ if (($iUserTime>0) and ($iValidity>=0)) do={
     local x 10;while (($x>0) and ([/system script find name=todayincome]="")) do={set x ($x-1);delay 1s}
   }
   if ([/system script find name=todayincome]!="") do={
-    local iSaveAmt [tonum [/system script get todayincome source]]
+    local iSaveAmt [tonum [/system script get [find name=todayincome] source]]
     set iDailySales ($iSalesAmt + $iSaveAmt)
     /system script set todayincome source="$iDailySales"
   } else={log error "( $user ) ONLOGIN ERROR! /system script todayincome => NOT FOUND!"}
@@ -278,7 +278,7 @@ if (($iUserTime>0) and ($iValidity>=0)) do={
     local x 10;while (($x>0) and ([/system script find name=monthlyincome]="")) do={set x ($x-1);delay 1s}
   }
   if ([/system script find name=monthlyincome]!="") do={
-    local iSaveAmt [tonum [/system script get monthlyincome source]]
+    local iSaveAmt [tonum [/system script get [find name=monthlyincome] source]]
     set iMonthSales ( $iSalesAmt + $iSaveAmt )
     /system script set monthlyincome source="$iMonthSales"
   } else={log error "( $user ) ONLOGIN ERROR! /system script monthlyincome => NOT FOUND!"}
@@ -300,7 +300,7 @@ if (($iUserTime>0) and ($iValidity>=0)) do={
                     "Valid Until: $iValidUntil %0A".\
                     "<<=====================>>")
     local iMessage [$eReplaceChr ($iMessage) " " "%20"]
-    /tool fetch url="https://api.telegram.org/bot$iTBotToken/sendmessage\?chat_id=$iTGrChatID&text=$iMessage" keep-result=no
+    /tool fetch url="https://api.telegram.org/bot$iTBotToken/sendmessage?chat_id=$iTGrChatID&text=$iMessage" keep-result=no
   }
 #api tracking
   ### enable JuanFi online monitoring 0 = DoNotSend,  1=send data to api
@@ -324,6 +324,7 @@ if (($iUserTime>0) and ($iValidity>=0)) do={
     :delay 1s;
     } on-error={:log error "API Vendo ERROR: $apiUrl ";} }
   } on-error={:log error "APIvendoRoutineError";} }
+
 }}
 
 ### enable Random MAC synchronizer
@@ -331,7 +332,7 @@ if (($iUserTime>0) and ($iValidity>=0)) do={
 
 if ($isRandomMacSyncFix=1) do={
   local mac $"mac-address"
-  /ip hotspot active remove [find (user=$user and mac-address!=$mac)]
+  /ip hotspot active remove [find (user=$username and mac-address!=$mac)]
 }
 
 ```
