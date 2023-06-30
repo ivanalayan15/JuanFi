@@ -239,7 +239,7 @@ if (($iUserTime>0) and ($iValidity>=0)) do={
     local x 10;while (($x>0) and ([/system scheduler find name=$user]="")) do={set x ($x-1);delay 1s}
     if ([/system scheduler find name=$user]="") do={
       log error "( $user ) ONLOGIN ERROR! /system scheduler $user => NOT FOUND!"
-      /ip hotspot active remove [find user=$user]; return
+      /ip hotspot active remove [find user=$username]; return
     }
   }
 # Clear only when user scheduler added/extended!
