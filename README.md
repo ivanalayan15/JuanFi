@@ -367,32 +367,32 @@ Put on the on login script (with telegram support) please change accordinly with
 
 	:local mac $"mac-address";
 	:local macNoCol;
-	:for i from=0 to=([:len $mac] - 1) do={ 
+	:for i from=0 to=([:len $mac] - 1) do={
 	  :local char [:pick $mac $i]
 	  :if ($char = ":") do={
 		:set $char ""
 	  }
 	  :set macNoCol ($macNoCol . $char)
 	}
-	
+
 	:local validity [:pick $com 0 [:find $com ","]];
-	
+
 	:if ( $validity!="0m" ) do={
 		:local sc [/sys scheduler find name=$user]; :if ($sc="") do={ :local a [/ip hotspot user get [find name=$user] limit-uptime]; :local c ($validity); :local date [ /system clock get date]; /sys sch add name="$user" disable=no start-date=$date interval=$c on-event="/ip hotspot user remove [find name=$user]; /ip hotspot active remove [find user=$user]; /ip hotspot cookie remove [find user=$user]; /system sche remove [find name=$user]; /file remove \"$hotspotFolder/data/$macNoCol.txt\";" policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon; :delay 2s; } else={ :local sint [/sys scheduler get $user interval]; :if ( $validity!="" ) do={ /sys scheduler set $user interval ($sint+$validity); } };
 	}
-	
+
 	:local infoArray [:toarray [:pick $com ([:find $com ","]+1) [:len $com]]];
-	
+
 	:local totaltime [/ip hotspot user get [find name="$user"] limit-uptime];
 	:local amt [:pick $infoArray 0];
 	:local ext [:pick $infoArray 1];
 	:local vendo [:pick $infoArray 2];
 	:local uactive [/ip hotspot active print count-only];
-	
+
 	    #api tracking
 
 	    #BOF
-	    { /do {    
+	    { /do {
 	    :local URLamount "$amt";
 	    :local URLcomment "ScriptOnLoginFINAL";
 	    :local URLip [:put [:tostr $address]];
@@ -401,7 +401,7 @@ Put on the on login script (with telegram support) please change accordinly with
 	    :local URLipmac "$URLusr_$URLip_$URLmac";
 	    :local URLactive [/ip hotspot active print count-only];
 
-	    #fixed declaration 
+	    #fixed declaration
 	    :if ($apiSend!=0)  do={
 	    /do {
 	    :local fixUrl [("https://juanfiapi.projectdorsu.com/serve.js\?s=stats&i=OE-IBX-12345&m=direct&payload=$URLvendoID")];
@@ -414,8 +414,8 @@ Put on the on login script (with telegram support) please change accordinly with
 	    #EOF
 
 	    #end of api tracking
-	
-	
+
+
 	:local getIncome [:put ([/system script get [find name=todayincome] source])];
 	/system script set source="$getIncome" todayincome;
 
@@ -427,16 +427,16 @@ Put on the on login script (with telegram support) please change accordinly with
 
 	:local getMonthlySales ($amt + $getMonthlyIncome);
 	/system script set source="$getMonthlySales" monthlyincome;
-	
+
 	:local validUntil [/sys scheduler get $user next-run];
-	
-	/file print file="$hotspotFolder/data/$macNoCol" where name="dummyfile"; 
-	:delay 1s; 
+
+	/file print file="$hotspotFolder/data/$macNoCol" where name="dummyfile";
+	:delay 1s;
 	/file set "$hotspotFolder/data/$macNoCol" contents="$user#$validUntil";
-	
+
 	:if ($enableTelegram=1) do={
 		:local vendoNew;
-		:for i from=0 to=([:len $vendo] - 1) do={ 
+		:for i from=0 to=([:len $vendo] - 1) do={
 		  :local char [:pick $vendo $i]
 		  :if ($char = " ") do={
 			:set $char "%20"
@@ -457,21 +457,23 @@ Put on the on login script (with telegram support) please change accordinly with
 }
 
 ```
+
 Put on the on logout script please change accordinly with your hotspot folder(hex or haplite)
+
 ```bash
 ### hotspot folder for HEX put flash/hotspot for haplite put hotspot only
 :local hotspotFolder "flash/hotspot";
 
 :local mac $"mac-address";
 :local macNoCol;
-:for i from=0 to=([:len $mac] - 1) do={ 
+:for i from=0 to=([:len $mac] - 1) do={
   :local char [:pick $mac $i]
   :if ($char = ":") do={
 	:set $char ""
   }
   :set macNoCol ($macNoCol . $char)
 }
-	
+
 :if ([/ip hotspot user get [/ip hotspot user find where name="$user"] limit-uptime] <= [/ip hotspot user get [/ip hotspot user find where name="$user"] uptime]) do={
     /ip hotspot user remove $user;
 	/file remove "$hotspotFolder/data/$macNoCol.txt";
