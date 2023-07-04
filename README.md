@@ -285,7 +285,7 @@ default mikrotik user and password is pisonet / abc123
 
 ---
 
-## **4. Modify vendoIpAddress (NodeMcu IPaddress) in the [core.js](/mikrotik-template/assets/js/core.js) file**
+## **4. Modify vendoIpAddress (NodeMcu IPaddress) in the [config.js](/mikrotik-template/assets/js/config.js) file**
  you can do a multivendo setup just follow the comment in javascript for instruction
 ![alt text](/docs/JuanFi-Mikrotik-Step5.PNG?raw=true)
 
