@@ -227,8 +227,6 @@ E.G. COM9 and press enter
 
 ## **JuanFi Setup**
 
-<br>
-
 ## **6. Connect to JuanFi Setup**
 
 - ### **For Esp32/Esp8622 Wireless Based** ***"JuanFI Setup"*** will appear
@@ -508,7 +506,7 @@ Sample Script that turn on nightlight at 6 pm:
  /system scheduler add interval=1d name="Turn ON Night Light" on-event="/tool fetch http-method=post http-header-field=\"X-TOKEN: 38vz2rb6nk\" url=\"http://10.10.10.251/admin/api/toggerNightLight\?toggle=1\"" policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon start-date=Sep/28/2021 start-time=18:00:00;
 ```
 
-Sample Script that turn off nightlight at 6 am:
+### **Sample Script that turn off nightlight at 6 am:**
 
 ```bash
  /system scheduler add interval=1d name="Turn OFF Night Light" on-event="/tool fetch http-method=post http-header-field=\"X-TOKEN: 38vz2rb6nk\" url=\"http://10.10.10.251/admin/api/toggerNightLight\?toggle=0\"" policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon start-date=Sep/28/2021 start-time=06:00:00;
