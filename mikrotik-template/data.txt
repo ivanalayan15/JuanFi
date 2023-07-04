@@ -1,0 +1,55 @@
+# mar/ 9/2022 16:57:39 by RouterOS 6.48.6
+# software id = W0M5-WCAX
+#
+ # NAME                   TYPE                        SIZE CREATION-TIME       
+ 0 CF                     disk                             dec/03/2021 20:47:16
+ 1 flash                  disk                             feb/25/2022 21:35:01
+ 2 flash/hotspot/sampl... .txt file                      6 mar/09/2022 04:37:40
+ 3 flash/hotspot/asset... directory                        mar/01/2022 19:32:12
+ 4 flash/hotspot/rlogi... .html file                   324 feb/25/2022 21:35:10
+ 5 flash/hotspot/asset... .css file                    496 feb/25/2022 21:35:11
+ 6 flash/hotspot/asset... .css file                    512 feb/25/2022 21:35:11
+ 7 flash/hotspot/asset... .gif file                12.4KiB feb/25/2022 21:35:12
+ 8 flash/hotspot/asset... .png file                    380 feb/25/2022 21:35:12
+ 9 flash/hotspot/asset... .png file                14.4KiB feb/25/2022 21:35:12
+10 flash/hotspot/asset... .png file                15.1KiB feb/25/2022 21:35:12
+11 flash/hotspot/asset... .mp3 file                96.0KiB feb/25/2022 21:35:14
+12 flash/hotspot/asset... .js file                 58.6KiB feb/25/2022 21:35:15
+13 flash/hotspot/asset... .js file                 19.9KiB mar/01/2022 19:07:56
+14 flash/hotspot/asset... .js file                391.2KiB feb/25/2022 21:35:17
+15 flash/hotspot/asset... .js file                  6.8KiB feb/25/2022 21:35:18
+16 flash/hotspot/asset... .js file                 20.8KiB feb/25/2022 21:35:18
+17 flash/hotspot/asset... .js file                    2685 feb/25/2022 21:35:18
+18 flash/hotspot/asset... .svg file                   3421 feb/25/2022 21:35:18
+19 flash/hotspot/data     directory                        mar/09/2022 16:47:56
+20 flash/hotspot/asset... .js file                 13.0KiB mar/01/2022 20:04:49
+21 flash/hotspot/data/... .txt file                      0 mar/08/2022 13:40:54
+22 flash/hotspot/val/s... .txt file                      6 mar/09/2022 04:38:03
+23 flash/hotspot/assets   directory                        mar/01/2022 19:32:52
+24 flash/hotspot/asset... directory                        mar/01/2022 20:04:49
+25 flash/hotspot/redir... .html file                   318 feb/25/2022 21:35:10
+26 flash/hotspot/logou... .html file                  3797 feb/26/2022 13:53:29
+27 flash/hotspot/login... .html file               15.7KiB mar/01/2022 19:06:35
+28 flash/hotspot/error... .txt file                   3454 feb/25/2022 21:35:10
+29 flash/hotspot/error... .html file                   617 feb/25/2022 21:35:10
+30 flash/hotspot/alogi... .html file                  1652 feb/25/2022 21:35:10
+31 flash/hotspot/asset... .mp3 file                39.1KiB feb/25/2022 21:35:11
+32 flash/hotspot/asset... .css file               156.5KiB feb/25/2022 21:35:11
+33 flash/hotspot/asset... .css file                   4479 feb/25/2022 21:35:11
+34 flash/hotspot/asset... .png file                14.5KiB feb/25/2022 21:35:12
+35 flash/hotspot/asset... .png file                14.4KiB feb/25/2022 21:35:12
+36 flash/hotspot/asset... .png file                14.3KiB feb/25/2022 21:35:12
+37 flash/hotspot/asset... .png file                15.0KiB feb/25/2022 21:35:12
+38 flash/hotspot/asset... .gif file               180.1KiB feb/25/2022 21:35:13
+39 flash/hotspot/asset... .js file                    1854 mar/01/2022 18:24:16
+40 flash/hotspot/asset... .js file                 87.4KiB feb/25/2022 21:35:18
+41 flash/hotspot/asset... .PNG file               139.6KiB feb/25/2022 21:35:19
+42 flash/hotspot/statu... .html file               12.4KiB mar/01/2022 20:06:02
+43 flash/hotspot/asset... .js file                 19.6KiB feb/28/2022 21:13:19
+44 flash/hotspot          directory                        mar/09/2022 16:49:55
+45 flash/hotspot/asset... directory                        feb/25/2022 21:35:11
+46 flash/hotspot/asset... .png file                15.3KiB feb/25/2022 21:35:12
+47 flash/hotspot/asset... .png file                15.2KiB feb/25/2022 21:35:12
+48 flash/hotspot/val      directory                        mar/09/2022 04:38:03
+49 flash/hotspot/data/... .txt file                     12 mar/09/2022 16:50:08
+50 flash/hotspot/data.txt .txt file                   4230 mar/09/2022 16:50:07

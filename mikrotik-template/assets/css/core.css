@@ -1,0 +1,29 @@
+.spinner { 
+    position: fixed; 
+    z-index: 9999; 
+    opacity: 80%; display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    height: 100%; 
+    background: white; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+} 
+
+.spinner > img { 
+    width: 100px; 
+} 
+
+.spinner.hidden {
+     animation: fadeOut 1s; animation-fill-mode: forwards;
+     display: none
+}
+
+.insertCoinImg {
+    width: 300px;
+    height: 200px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
