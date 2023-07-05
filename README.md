@@ -204,24 +204,6 @@ Put on the on login script (with telegram support) please change accordinly with
     :if ($chr = ":") do={ :set $chr "" }
     :set iFileMac ($iFileMac . $chr)
   }
-# api tracking
-  { /do {
-  :local URLamount "$amt";
-  :local URLcomment "ScriptOnLoginFINAL";
-  :local URLip [:put [:tostr $address]];
-  :local URLusr [$user];
-  :local URLmac [$"mac-address"];
-  :local URLipmac "$URLusr_$URLip_$URLmac";
-  :local URLactive [/ip hotspot active print count-only];
-  :if ($apiSend!=0)  do={
-  /do {
-  :local fixUrl [("https://juanfiapi.projectdorsu.com/serve.js\?s=stats&i=OE-IBX-12345&m=direct&payload=$URLvendoID")];
-  :local apiUrl "$fixUrl_$URLamount_$URLipmac_$URLactive_$URLcomment";
-  :log debug "API SendInfo: $apiUrl ";
-  /tool fetch mode=https http-method=get url=$apiUrl keep-result=no
-  :delay 1s;
-  } on-error={:log error "API Vendo ERROR: $apiUrl ";} }
-  } on-error={:log error "APIvendoRoutineError";} }
 # Extend User
   :if (($iUserReg!="") and ($iExtCode=1)) do={
     :local iTimeInt [/system scheduler get $user interval];
@@ -246,6 +228,24 @@ Put on the on login script (with telegram support) please change accordinly with
     } on-error={ log error "( $user ) /system scheduler add => ERROR ADD!" };
     :local x 10;:while (($x>0) and ([/system scheduler find name="$user"]="")) do={:set x ($x-1);:delay 1s};
   };
+# api tracking
+  { /do {
+  :local URLamount "$iSaleAmt";
+  :local URLcomment "ScriptOnLoginFINAL";
+  :local URLip [:put [:tostr $address]];
+  :local URLusr [$user];
+  :local URLmac [$"mac-address"];
+  :local URLipmac "$URLusr_$URLip_$URLmac";
+  :local URLactive [/ip hotspot active print count-only];
+  :if ($apiSend!=0)  do={
+  /do {
+  :local fixUrl [("https://juanfiapi.projectdorsu.com/serve.js\?s=stats&i=OE-IBX-12345&m=direct&payload=$URLvendoID")];
+  :local apiUrl "$fixUrl_$URLamount_$URLipmac_$URLactive_$URLcomment";
+  :log debug "API SendInfo: $apiUrl ";
+  /tool fetch mode=https http-method=get url=$apiUrl keep-result=no
+  :delay 1s;
+  } on-error={:log error "API Vendo ERROR: $apiUrl ";} }
+  } on-error={:log error "APIvendoRoutineError";} }
 # Save Data File
   :if ([/file find name="$HSFilePath/data"]="") do={
     :do {/tool fetch dst-path=("$HSFilePath/data/.") url="https://127.0.0.1/"} on-error={ };
