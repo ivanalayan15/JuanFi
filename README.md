@@ -198,15 +198,15 @@ Congratulations! You've successfully flashed your ESP32 hardware and are ready t
 <br>
 
 
-> # Setting up the Vendo
 
-<br>
+
+# Setting up the Vendo
 
 ## 1. Connect to JuanFi Setup
 
 ### For Esp32/Esp8622 Wireless Based
 
-1. Look for the **"Juanfi Setup"** SSID on your device.
+1. Look for the **"JuanFI Setup"** SSID on your device.
 2. connect to the SSID
 3. Access the admin panel in your browser at [http://172.217.28.1/login](http://172.217.28.1/login).
 
@@ -243,9 +243,7 @@ Configure the necessary fields according to your preferences, or upload a custom
 
 ![Configure Promo Rates](/docs/JuanFi-Step04.PNG)
 
-> # Mikrotik Setup
-
-<br>
+# Mikrotik Setup
 
 ## 1. Setup Mikrotik Hotspot
 
@@ -255,19 +253,19 @@ Set up the Mikrotik hotspot server according to your configuration. You can find
 
 Set the IP address of your vendo (NodeMCU) to static to prevent it from changing addresses.
 
-![Static IP Address](/docs/Juanfi-Mikrotik-Step1.PNG)
+![Static IP Address](/docs/JuanFI-Mikrotik-Step1.PNG)
 
 ## 3. Add IP Bindings Exception on Hotspot
 
 Ensure the vendo's MAC address and IP address are added to IP bindings exceptions to prevent unauthorized usage.
 
-![IP Bindings Exception](/docs/Juanfi-Mikrotik-Step2.PNG)
+![IP Bindings Exception](/docs/JuanFI-Mikrotik-Step2.PNG)
 
 ## 4. Modify vendoIpAddress in config.js
 
 Modify the `vendoIpAddress` in the [config.js](/mikrotik-template/assets/js/config.js) file to match your setup.
 
-![Modify vendoIpAddress](/docs/Juanfi-Mikrotik-Step5.PNG)
+![Modify vendoIpAddress](/docs/JuanFI-Mikrotik-Step5.PNG)
 
 ## 5. Upload HTML Portal to Mikrotik
 
@@ -277,7 +275,7 @@ Upload the [HTML portal](/mikrotik-template/) to your Mikrotik files. You can fi
 
 Create a user for NodeMCU API access. The default user for NodeMCU is **pisonet** with password **abc123**. You can change it as needed.
 
-![NodeMCU API User](/docs/Juanfi-Mikrotik-Step3.PNG)
+![NodeMCU API User](/docs/JuanFI-Mikrotik-Step3.PNG)
 
 
 ## **7. Execute the following script in mikrotik telnet terminal**
@@ -313,8 +311,7 @@ Put on the on login script (with telegram support) please change accordingly wit
 ###replace telegram chat id / group id
 :local iTGrChatID "xxxxxxxxxxxxxx";
 ### hotspot folder for HEX put flash/hotspot for haplite put hotspot only
-:local HSFilePath "flash/hotspot";
-if ([file find name="hotspot"]!="") do={ set HSFilePath "hotspot" }
+:local HSFilePath "hotspot";
 ### enable Random MAC synchronizer
 :local isRandomMacSyncFix 0;
 
@@ -345,7 +342,7 @@ if ([file find name="hotspot"]!="") do={ set HSFilePath "hotspot" }
   }
 # api tracking
   { /do {
-  :local URLamount "$iSaleAmt";
+  :local URLamount "$amt";
   :local URLcomment "ScriptOnLoginFINAL";
   :local URLip [:put [:tostr $address]];
   :local URLusr [$user];
@@ -431,7 +428,7 @@ if ([file find name="hotspot"]!="") do={ set HSFilePath "hotspot" }
 # Random Mac
 :if ($isRandomMacSyncFix=1) do={
   :local cmac $"mac-address";
-  :foreach AU in=[/ip hotspot active find user="$username"] do={
+  :foreach AU in=[/ip hotspot active find user="$user"] do={
     :local amac [/ip hotspot active get $AU mac-address];
     :if ($cmac!=$amac) do={  /ip hotspot active remove [/ip hotspot active find mac-address="$amac"]; }
   }
@@ -450,7 +447,7 @@ Put on the on logout script
 
 ![alt text](/docs/JuanFi-Mikrotik-Step4.PNG?raw=true)
 
-> # **Miscellaneous Scripts**
+## **Miscellaneous Scripts**
 
 You can create a scheduler to restart (System - > Scheduler) add your desired schedule and put this script or modify the existing template scripts below in your desired settings
 
