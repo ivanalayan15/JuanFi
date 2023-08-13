@@ -64,7 +64,7 @@ Join our vibrant community group to connect with other users and contributors. S
 
 
 ---
-# **Architecture** 
+> # **Architecture** 
 
 
 ![alt text](docs/JuanFi-Architecture.PNG?raw=true)
@@ -91,7 +91,6 @@ Join our vibrant community group to connect with other users and contributors. S
 > # **Flashing the hardware**
 
 # ESP8622 Flashing Instructions
-
 
 <details>
 <summary>Expand for Instructions</summary>
@@ -132,7 +131,7 @@ Download the necessary ESP8622 flashing files for your setup:
 
 After flashing both files, your ESP8622 is now ready. Restart the NodeMCU to begin the setup.
 
-Congratulations! You've successfully flashed your ESP8622 hardware and are ready to proceed with the Juanfi Setup.
+Congratulations! You've successfully flashed your ESP8622 hardware and are ready to proceed with the JuanFi Setup.
 
 </details>
 
@@ -188,25 +187,22 @@ Wait for the flashing process to complete.
 
 ## Step 6: Finish
 
-After the flashing process is finished, you can disconnect the ESP32 from your PC. The device is now ready for the Juanfi Setup.
+After the flashing process is finished, you can disconnect the ESP32 from your PC. The device is now ready for the JuanFi Setup.
 
-Congratulations! You've successfully flashed your ESP32 hardware and are ready to proceed with the Juanfi Setup.
+Congratulations! You've successfully flashed your ESP32 hardware and are ready to proceed with the JuanFi Setup.
 
 
 </details>
 
 <br>
 
-
-
-
-# Setting up the Vendo
+> # Setting up the Vendo
 
 ## 1. Connect to JuanFi Setup
 
 ### For Esp32/Esp8622 Wireless Based
 
-1. Look for the **"JuanFI Setup"** SSID on your device.
+1. Look for the **"JuanFi Setup"** SSID on your device.
 2. connect to the SSID
 3. Access the admin panel in your browser at [http://172.217.28.1/login](http://172.217.28.1/login).
 
@@ -243,7 +239,7 @@ Configure the necessary fields according to your preferences, or upload a custom
 
 ![Configure Promo Rates](/docs/JuanFi-Step04.PNG)
 
-# Mikrotik Setup
+> # Mikrotik Setup
 
 ## 1. Setup Mikrotik Hotspot
 
@@ -253,19 +249,19 @@ Set up the Mikrotik hotspot server according to your configuration. You can find
 
 Set the IP address of your vendo (NodeMCU) to static to prevent it from changing addresses.
 
-![Static IP Address](/docs/JuanFI-Mikrotik-Step1.PNG)
+![Static IP Address](/docs/JuanFi-Mikrotik-Step1.PNG)
 
 ## 3. Add IP Bindings Exception on Hotspot
 
 Ensure the vendo's MAC address and IP address are added to IP bindings exceptions to prevent unauthorized usage.
 
-![IP Bindings Exception](/docs/JuanFI-Mikrotik-Step2.PNG)
+![IP Bindings Exception](/docs/JuanFi-Mikrotik-Step2.PNG)
 
 ## 4. Modify vendoIpAddress in config.js
 
 Modify the `vendoIpAddress` in the [config.js](/mikrotik-template/assets/js/config.js) file to match your setup.
 
-![Modify vendoIpAddress](/docs/JuanFI-Mikrotik-Step5.PNG)
+![Modify vendoIpAddress](/docs/JuanFi-Mikrotik-Step5.PNG)
 
 ## 5. Upload HTML Portal to Mikrotik
 
@@ -275,7 +271,7 @@ Upload the [HTML portal](/mikrotik-template/) to your Mikrotik files. You can fi
 
 Create a user for NodeMCU API access. The default user for NodeMCU is **pisonet** with password **abc123**. You can change it as needed.
 
-![NodeMCU API User](/docs/JuanFI-Mikrotik-Step3.PNG)
+![NodeMCU API User](/docs/JuanFi-Mikrotik-Step3.PNG)
 
 
 ## **7. Execute the following script in mikrotik telnet terminal**
@@ -447,7 +443,7 @@ Put on the on logout script
 
 ![alt text](/docs/JuanFi-Mikrotik-Step4.PNG?raw=true)
 
-## **Miscellaneous Scripts**
+> ## **Miscellaneous Scripts**
 
 You can create a scheduler to restart (System - > Scheduler) add your desired schedule and put this script or modify the existing template scripts below in your desired settings
 
