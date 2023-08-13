@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<link rel="stylesheet" href="assets/css/bootstrap.min.css">
+	<link rel="stylesheet" href="assets/css/toast.min.css">
+	<link rel="stylesheet" href="assets/css/core.css">
+	<link rel="stylesheet" href="assets/css/JuanFi.css">
+    <title>JuanFi - Status</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<script src="assets/js/config.js"></script>
+	<script src="assets/js/pako.min.js"></script>
+	<script>
+		var loginError = "";
+		var mac = "$(mac)";
+		var logoutUrl = "$(link-logout)";
+		var hotspotAddress = "$(server-address)"; 
+		var interfaceName = "$(interface-name)";
+		var remainingTimer = null;
+	</script>
+
+</head>
+<body id="loginBody">
+
+<!-- Messenger Chat plugin Code -->
+    <div id="fb-root"></div>
+
+    <!-- Your Chat plugin code -->
+    <div id="fb-customer-chat" class="fb-customerchat">
+    </div>
+
+    <script>
+      var chatbox = document.getElementById('fb-customer-chat');
+      chatbox.setAttribute("page_id", "108240834062058");
+      chatbox.setAttribute("attribution", "biz_inbox");
+
+      window.fbAsyncInit = function() {
+        FB.init({
+          xfbml            : true,
+          version          : 'v12.0'
+        });
+      };
+
+      (function(d, s, id) {
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) return;
+        js = d.createElement(s); js.id = id;
+        js.src = 'https://connect.facebook.net/en_US/sdk/xfbml.customerchat.js';
+        fjs.parentNode.insertBefore(js, fjs);
+      }(document, 'script', 'facebook-jssdk'));
+    </script>
+
+<div class="container">
+<center>
+		<form action="$(link-logout)" name="logout" >
+		</form>
+
+		<form action="$(link-logout)" name="forcelogout" >
+			<input type="hidden" name="erase-cookie" value="true" />
+		</form>
+		
+        <div class="row">
+            <div class="col-sm-5">
+                <div class="row" style="margin-bottom: 20px">
+                    <img src="assets/MainPic.PNG" class="img-fluid" />
+                </div>
+				
+				<div class="info"><center>
+						<div class="info-ip">
+						<img src="assets/img/ip.png" width="20px" height="20px" />
+						<span>$(ip)</span>
+						</div>
+						<div class="info-mac">
+						<img src="assets/img/mac.png" width="20px" height="20px" />
+						<span>$(mac)</span>
+						</div>
+					</center>
+				</div>
+				
+				<center>			
+				<span class="status-connected">Status: <span class="blinking2" id="connectionStatus" style="color: #4cd137">Connected</span></span>
+                </center>
+            </div>
+
+            <div class="col-sm-7">
+                <div class="login">
+				
+				
+				
+				<div class="info-status">
+				<center>
+					<div class="status-holder">
+						<div class="info-title"><img src="assets/img/voucher.png" width="20px" height="20px" /><span> Voucher</span></div>
+						<span style="font-size: 25px; font-weight: bold; text-shadow: 1px 1px 3px #000">$(username)</span>
+					</div>
+					
+					<div class="break2"></div>
+					
+					<div class="status-holder">						
+						<div class="info-title"><img src="assets/img/time.png" width="20px" height="20px" /><span> Remaining Time</span></div>
+						<span class="odometer" id="remainTime" style="font-size: 16px; font-weight: bold; text-shadow: 1px 1px 3px #000"></span><br>
+						
+					</div>
+					
+					<div class="break2"></div>
+					
+					<div class="status-holder">					
+						<div class="info-title"><img src="assets/img/timeexpired.png" width="20px" height="20px" /><span> Expiration Time</span></div>
+						<span id="expirationTime" style="font-size: 16px; font-weight: bold; text-shadow: 1px 1px 3px #000"></span>
+					</div>
+					
+					<div class="break2"></div>
+					
+					<div class="status-holder">
+						<div class="info-title"><img src="assets/img/data.png" width="20px" height="20px" /><span> Data Usage</span></div>
+						<div style="display: inline-block"><img src="assets/img/upload.png" width="20px" height="20px" /><span style="font-size: 16px; font-weight: bold; text-shadow: 1px 1px 3px #000">$(bytes-in-nice)</span></div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+						<div style="display: inline-block"><img src="assets/img/download.png" width="20px" height="20px" /><span style="font-size: 16px; font-weight: bold; text-shadow: 1px 1px 3px #000">$(bytes-out-nice)</span></div>
+						<div class="inscoinholder" id="dataInfoDiv2">
+							<span id="totalDataInfo" style="font-size: 20px; font-weight: bold; color: #ffffff">$(remain-bytes-total-nice)</span><br>
+							<span style="color: #ffffff">Remaining Data</span>
+						</div>
+					</div>
+				</center>
+				</div>
+					
+					<div id="vendoSelectDiv" style="margin-top: 20px">
+						<label for="exampleFormControlSelect2">Select Vendo</label>
+						<select class="form-control" name="vendoSelected" id="vendoSelected" >
+						</select>
+					</div>
+					<br>
+				
+					<button type="button" id="insertBtn" onclick="insertBtnAction(); return false" class="btn btn-success btn-block" data-insert-type="extend" data-toggle="modal" style="display: block; width: 100%; color: #fff; text-shadow: 0px 1px 2px #000;">EXTEND TIME</button>
+					<div style="margin-bottom:-5px"></div>
+					<br>
+					<button type="button" id="promoRateBtn" onclick="promoBtnAction(); return false" class="btn btn-warning" style="display: block; width: 100%; color: #fff; text-shadow: 0px 1px 2px #000;">PROMO RATES</button>
+					<div style="margin-bottom:-5px"></div>
+					<br>
+					<button type="button" id="pauseTimeBtn" onClick="pause(); return false" class="btn btn-danger btn-block" style="display: block; width: 100%; color: #fff; text-shadow: 0px 1px 2px #000;">PAUSE TIME</button>
+					<br>
+					<button type="button" id="chargingBtn" onclick="chargingBtnAction(); return false" class="btn btn-secondary" style="display: block; width: 100%; color: #fff; text-shadow: 0px 1px 2px #000;">CHARGING STATION</button>
+					<br>
+					<button type="button" id="eloadBtn" onclick="eloadBtnAction(); return false" class="btn btn-info" style="display: block; width: 100%; color: #fff; text-shadow: 0px 1px 2px #000;">E-LOAD</button>
+					<div style="margin-top: 18px"></div>
+			
+					<div class="modal fade" id="insertCoinModal" style="z-index: 1500" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="insertCoinModalTitle" aria-hidden="true">
+						<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+						  <div class="modal-content">
+							<div class="modal-header">
+							  <h5 class="modal-title" id="insertCoinModalTitle">Please insert the coin</h5>
+							  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							  </button>
+							</div>
+							<div class="modal-body">
+								  <div class="progress" style="margin-bottom: 20px">
+									  <div id="progressDiv" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%; height: 30px"></div>
+								  </div>
+  
+								  <div id="noticeDiv" style="display: none">
+									  <center>
+										  <h4 id="noticeText">Coin is reading, please wait</h4>
+									  </center>
+								  </div>
+								  
+								  <div class="inscoin">
+								  <center>
+								  <div class="inscoinholder" style="border: 2px solid #576574; padding: 5px; height: 90px; border-radius: 3px">
+								  <span style="color: #747d8c">Your code is</span><br>
+								  <span id="codeGeneratedBlock">
+									  <span id="codeGenerated" style="font-size: 35px; font-weight: bold; color: #4cd137">*****</span>
+								  </span>
+								  </div>
+  
+								  <div class="inscoinholder convertVoucherBlock" id="convertVoucherBlockDiv">
+									  <span style="color: #747d8c">Convert unsed voucher</span><br>
+								  <input type="text" class="form-control" id="convertVoucherCode" placeholder="Enter voucher" style="width: 140px; text-align: center; ">
+								  <br>
+								  <button type="button" id="convertBtn" class="btn btn-success" onclick="convertVoucherAction(); return false">Convert</button>
+								  </div>
+								  
+								  <div class="inscoinholder">
+								  <span id="totalCoin" style="font-size: 20px; font-weight: bold; color: #fff">0</span><span style="font-size: 20px; font-weight: bold; color: #fff">.00 Php</span><br>
+								  <span style="color: #747d8c">Coin</span>
+								  </div>
+								  
+								  <div class="inscoinholder" id="totalTimeDiv">
+								  <span id="totalTime" style="font-size: 20px; font-weight: bold; color: #fff"></span><br>
+								  <span style="color: #747d8c">Time: </span>
+								  </div>
+								  
+								  <div class="inscoinholder" id="expectedCoinDiv" style="display: none">
+								  <span id="expectedCoin" style="font-size: 20px; font-weight: bold; color: #fff"></span><br>
+								  <span style="color: #747d8c">Expected Coin </span>
+								  </div>
+								  
+								  </center>
+								  </div>
+								  
+								  
+								  
+							</div>
+							<div class="modal-footer">
+							  <button type="button" id="saveVoucherButton" data-save-type="extend" onclick="saveVoucherBtnAction(); return false" class="btn btn-primary" data-dismiss="modal">
+								Done
+							  </button>
+							  <button type="button" id="cncl" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+							</div>
+						  </div>
+						</div>
+					  </div>
+					
+					<div class="modal fade" id="promoRatesModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+					  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+						<div class="modal-content">
+						  <div class="modal-header">
+							<h5 class="modal-title" id="exampleModalLabel">Promo Rates</h5>
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							  <span aria-hidden="true" style="color: #fff">&times;</span>
+							</button>
+						  </div>
+						  <div class="modal-body">
+							<center>
+								<div id="rateTypeDiv">
+								<label for="rateType" class="rate-title"><b>Rate Type</b></label>
+								<select name="rateType" class="form-control" id="rateType" onChange="onRateTypeChange(this)">
+								  <option value="1">Internet</option>
+								  <option value="2">Charging</option>
+								</select>
+								</div>
+							</center>
+							<br/>
+							<center>	
+							<div id="ratesBody"></div>
+							<div id="totalTime"></div>							
+							</center>
+						  </div>
+						  <div class="modal-footer">
+							<button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+						  </div>
+						</div>
+					  </div>
+					</div>
+					
+					<div class="modal fade" id="chargingModal" tabindex="1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+					  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+						<div class="modal-content">
+						  <div class="modal-header">
+							<h5 class="modal-title" id="exampleModalLabel">Charging Station</h5>
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							  <span aria-hidden="true" style="color: #fff">&times;</span>
+							</button>
+						  </div>
+						  <div class="modal-body">
+							<center>	
+							<div id="chargingBody"></div>
+							</center>
+						  </div>
+						  <div class="modal-footer">
+							<button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+						  </div>
+						</div>
+					  </div>
+					</div>
+					
+					<div class="modal fade" id="eloadModal" tabindex="1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+					  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+						<div class="modal-content">
+						  <div class="modal-header">
+							<h5 class="modal-title" id="exampleModalLabel">E-LOAD</h5>
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							  <span aria-hidden="true" style="color: #fff">&times;</span>
+							</button>
+						  </div>
+						  <div class="modal-body">
+							<center>	
+							<div id="eloadingBody">
+								<h4 id="eloadConfirm" style="display: none"><span style="color: #2e86de; text-shadow: 1px 2px 3px #000">CONFIRM YOUR SELECTED DETAILS</span></h4>
+								<div id="mobileNumDiv" class="input-bottom-space-20px">
+									<label for="exampleFormControlSelect2">Mobile #</label>
+									<input type="number" class="form-control" id="mobileNo" aria-describedby="mobileNo"  pattern="\d*" maxlength="11" placeholder="Enter mobile number (Ex: 09182392234)" required>
+								</div>
+								<div id="loadTypeDiv" style="display: none" class="input-bottom-space-20px">
+									<label for="exampleFormControlSelect2" >Select Load Type</label>
+									<select class="form-control" name="loadType" onChange="loadTypeChanged(this)" id="loadTypeSelected" >
+									</select>
+								</div>
+								<div id="productTypeDiv" style="display: none" class="input-bottom-space-20px">
+									<label for="exampleFormControlSelect2">Select Product</label>
+									<select class="form-control input-bottom-space-20px" name="productType" id="productTypeSelected" onChange="productTypeChanged(this)">
+									</select>
+									<label for="exampleFormControlSelect2">Price (PHP)</label>
+									<input type="text" class="form-control" id="price" aria-describedby="mobileNo" disabled>
+								</div>
+								<br/>
+								<h5 id="eloadConfirm2" style="display: none;" class="input-bottom-space-20px"><span style="color: #2e86de; text-shadow: 1px 2px 3px #000">Please make sure to insert the exact amount <ul style="
+									font-size: medium;
+									color: white;
+									text-align: left;
+								"><li>In case theres an excess amount or amount is insufficient, it will be converted to a voucher code and you can use it for your next e-Loading or you can use it on internet service.</li></ul></span></h5>
+							</div>
+							</center>
+						  </div>
+						  <div class="modal-footer">
+							<button type="button" id="buyEloadPrevBtn" class="btn btn-danger" onclick="buyEloadPrevAction(); return false">Close</button>
+						    <button type="button" id="buyEloadBtn" onclick="buyEloadAction(); return false" class="btn btn-success">Next</button>
+						  </div>
+						</div>
+					  </div>
+					</div>
+
+                </div>
+				
+			<div class="footer">
+					<span class="footers">
+					Powered by: <a href="https://www.facebook.com/groups/1172413279934139">JuanFi System v4.0</a> &copy; All rights reserved 2022<br>
+					
+					</span>				
+				</div>
+            </div>	
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/popper.min.js"></script>
+			<script src="assets/js/bootstrap.min.js"></script>
+			<script src="assets/js/toast.min.js"></script>
+			<script src="assets/js/core.js"></script>
+			<script src="assets/js/eload.js"></script>
+			<script src="assets/js/pako.min.js"></script>
+
+			
+			
+			<script>
+				var sessiontime = "$(session-time-left-secs)";
+				var uptime = "$(uptime-secs)";
+				var currentVoucher = "$(username)";
+				window.name="hotspot_status";
+				
+				$(document).ready(function(){
+					voucher = currentVoucher;
+					$("#expirationTime").html("Loading...");
+					setTimeout(function(){
+						fetchValidity(1);
+					}, 1000);
+					
+					setStorageValue('activeVoucher', currentVoucher);
+					
+					var time = sessiontime;
+					if(time == "0"){
+						$("#remainTime").html("Unlimited");
+					}else{
+						$("#remainTime").html(secondsToDhms(time));
+						remainingTimer = setInterval(function(){
+							time--;
+							$("#remainTime").html(secondsToDhms(time));
+							if(time <= 0){
+								$.toast({
+									title: 'Success',
+									content: 'Time limit exceeded, Thank you for the purchase, will be logout shortly',
+									type: 'success',
+									delay: 5000
+								});
+								clearInterval(remainingTimer);
+								setTimeout(function(){
+									document.logout.submit();
+								}, 6000);
+							}
+						}, 1000);
+					}
+					
+				});
+				
+				function fetchValidity(retryNo){
+					if(retryNo > 5){
+						fallbackValidity();
+						return;
+					}
+					var macNoColon = replaceAll(mac, ":");
+					$.ajax({
+							  type: "GET",
+							  url: "/data/"+macNoColon+".txt?query="+new Date().getTime(),
+							  success: function(data){
+								if(data.length > 50){
+									setTimeout(function(){
+										fetchValidity(retryNo++);
+									}, 1000);
+									return;
+								}
+								var macData = data.split("#");
+								var validityRaw = macData[1];
+								
+								var validityTime = null;
+								if(validityRaw.length > 15){
+									validityTime = new Date(Date.parse(validityRaw));
+								}else if(validityRaw.length > 8){
+									var dt = validityRaw.split(" ");
+									var yr = new Date().getFullYear();
+									validityTime = new Date(Date.parse(dt[0]+"/"+yr+" "+dt[1]));
+								}else if(validityRaw.length == 0){
+									validityTime = null;
+								} else{
+									var curDate = new Date();
+									var m = curDate.getMonth()+1;
+									var d = curDate.getDate();
+									var yr = curDate.getFullYear();
+									validityTime = new Date(Date.parse(m+"/"+d+"/"+yr+" "+validityRaw));
+								}
+								if(validityTime != null){
+									$("#expirationTime").html(validityTime.toLocaleString());
+								}else{
+									$("#expirationTime").html("No Expiration");
+								}
+							  },
+							  error: function(d){
+									fallbackValidity();
+							 }
+					});			
+				}
+				
+				function fallbackValidity(){
+					var validity = getStorageValue(voucher+"validity");
+					if(validity != null){
+						var curDate = new Date();
+						var validityTime = new Date(parseInt(validity));
+						if(validityTime.getTime() < curDate.getTime()){
+							removeStorageValue(voucher+"validity");
+							removeStorageValue(voucher+"tempValidity");
+							$("#expirationTime").html("Not Available");
+						}else{
+							$("#expirationTime").html(validityTime.toLocaleString());
+						}
+					}else{
+						$("#expirationTime").html("Not Available");
+					}
+				}
+				
+				$(if refresh-timeout)
+					setInterval(function(){
+						if(!insertingCoin){
+							location.reload();
+						}
+					}, $(refresh-timeout-secs) * 1000);
+				$(endif)
+			</script>
+			
+			
+			<div id="loaderDiv" class="spinner hidden">
+				<center>
+					<img src="assets/loading.svg" />
+				</center>
+			</div>
+</div>
+</center>
+</div>
+</body>
+
+</html>

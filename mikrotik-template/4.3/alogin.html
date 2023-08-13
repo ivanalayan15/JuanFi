@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+   <title>Congratulations</title>
+   <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+   <link rel="stylesheet" href="assets/css/style.css">
+   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
+   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+   <meta http-equiv="refresh" content="1; url=$(link-status)">
+   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+   <script>
+         var error = "$(error)"; 
+         if (error == "customer $(username) has reached uptime limit") { 
+               window.location.href = "./login.html"; 
+         }
+   </script> 
+   
+         $(if chap-id)
+         <form name="sendin" action="$(link-login-only)" method="post">
+            <input type="hidden" name="username" />
+            <input type="hidden" name="password" />
+            <input type="hidden" name="dst" value="$(link-orig)" />
+            <input type="hidden" name="popup" value="true" />
+         </form>
+
+         <script type="text/javascript" src="assets/js/md5.js"></script>
+         <script type="text/javascript">
+            function doLogin() { 
+               document.sendin.username.value = document.login.username.value; 
+               document.sendin.password.value = hexMD5('$(chap-id)' + document.login.password.value + '$(chap-challenge)'); 
+               document.sendin.submit(); 
+               return false; 
+            }
+         </script>
+   $(endif)
+</head>
+<body>
+   <div class="spinner">
+      <center>
+         <img src="assets/loading.svg" />
+      </center>
+   </div>
+</body>
+</html>

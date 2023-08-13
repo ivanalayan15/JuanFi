@@ -1,46 +1,52 @@
-# JuanFi
+# **JuanFi**
+- ## Official Website: [juanfi.juansystems.com](https://juanfi.juansystems.com/)
 
-JuanFi is an open source system for coinslot integration for mikrotik hotspot
 
-## Donation
 
-Donation is very welcome, if you want to donate, you can donate using 
+JuanFi is an innovative open-source system designed for seamless coinslot integration with MikroTik Hotspot. It provides a comprehensive solution for managing and monetizing internet access through the integration of a coinslot mechanism. With JuanFi, hotspot owners can effortlessly incorporate a coinslot system into their network infrastructure, enabling them to offer paid internet access in an efficient and user-friendly manner.
 
-Gcash account:
-Ivan Julius Alayan
-09175425572
+## **Donation**
 
-Paypal account:
-https://www.paypal.com/paypalme/ivanalayan
+We greatly appreciate donations as they help support the development and maintenance of JuanFi. If you wish to contribute and show your support, you can make a donation using the following methods:
+``
+- Gcash account: Ivan Julius Alayan - 09175425572
+- PayPal account: [paypal.me/ivanalayan](https://www.paypal.com/paypalme/ivanalayan)
 
-# Community Group
-  FB: https://www.facebook.com/groups/1172413279934139
+# **Community Group**
 
-## Features
+Join our vibrant community group to connect with other users and contributors. Share your experiences, exchange ideas, hotspot portals, and stay up to date with the latest developments and enhancements of JuanFi.
+
+- Facebook Group: [JuanFi Community](https://www.facebook.com/groups/1172413279934139)
+
+# **Features**
 
  ### Hardware Option
- * Wireless based
- * Lan based
- 
- ### Coinslot System
- * Mikrotik integration
- * Pause expiration
- * Codeless generation
- * Anti Coinslot abuse system
- * LCD Display
- * Code generation in vendo using LCD without device needed
- * Multi vendo system
- 
- ### Admin System
- * Initial setup of the system
- * Mikrotik connection setup, SSID setup, coinslot settings
- * Promo Rates configuration ( Rates, expiration)
- * Dashboard, Sales report
- * Custom pin configuration
- * coinslot abuse system config
+
+- Wireless based
+- Lan based
+
+### Coinslot System
+
+- Mikrotik integration
+- Pause expiration
+- Codeless generation
+- Anti Coinslot abuse system
+- LCD Display
+- Code generation in vendo using LCD without device needed
+- Multi vendo system
+
+### Admin System
+
+- Initial setup of the system
+- Mikrotik connection setup, SSID setup, coinslot settings
+- Promo Rates configuration ( Rates, expiration)
+- Dashboard, Sales report
+- Custom pin configuration
+- coinslot abuse system config
 
 ## Requirements
-1.) NodeMCU(ESP8266) for wireless/lan or NodemCU(ESP32) for wireless/lan
+
+1.) NodeMCU(ESP8266) for wireless/lan or NodeMCU(ESP32) for wireless/lan
 
 2.) Coinslot
 
@@ -50,115 +56,244 @@ https://www.paypal.com/paypalme/ivanalayan
 
 5.) Node MCU baseboard( Optional for wireless)
 
-6.) Power Supply (12v for nodemcu, another 12v for Mikrotik)
+6.) Power Supply (12v for nodeMCU, another 12v for Mikrotik)
 
 7.) W5500 for Lan based
 
 8.) LM2596 or any DC to DC buck that can convert to 5v for (Lan based only since no available baseboard for ESP32)
 
-## Architecture
-![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Architecture.PNG?raw=true)
+
+---
+# **Architecture** 
+
+
+![alt text](docs/JuanFi-Architecture.PNG?raw=true)
+
+---
 
 ## ESP32 LAN Based Connection Diagram
-![alt text](https://raw.githubusercontent.com/ivanalayan15/JuanFi/master/docs/esp32-lan-diagram.jpg)
+
+![alt text](/docs/esp32-lan-diagram.jpg)
 
 ## ESP32 Wireless Based Connection Diagram
-![alt text](https://raw.githubusercontent.com/ivanalayan15/JuanFi/master/docs/esp32-wireless-diagram.jpg)
+
+![alt text](/docs/esp32-wireless-diagram.jpg)
 
 ## ESP8622 Wireless Based Connection Diagram
-![alt text](https://raw.githubusercontent.com/ivanalayan15/JuanFi/master/docs/esp8622-wireles-diagram.jpg)
+
+![alt text](/docs/esp8622-wireles-diagram.jpg)
 
 ## ESP8622 LAN Based Connection Diagram
-![alt text](https://raw.githubusercontent.com/ivanalayan15/JuanFi/master/docs/esp8622-lan-diagram.jpg)
 
-## Installation
-
+![alt text](/docs/esp8622-lan-diagram.jpg)
 
 
-### NodeMCU Setup
+> # **Flashing the hardware**
 
-There are 2 ways how to upload the software in NodeMCU
-
-#### a.) Install the binary release file, follow this guide on how to flash the bin file https://github.com/ivanalayan15/JuanFi/tree/master/release
-
-#### b.) Build and compile the code
-
-(SKIP THIS STEP IF YOU CHOOSE THE BIN FILES) GOTO Step #4 directly
-
-1.) Download and install Arduino IDE
-https://www.arduino.cc/en/software
+# ESP8622 Flashing Instructions
 
 
-2.) Install nodemcu board and libraries
-https://randomnerdtutorials.com/how-to-install-esp8266-board-arduino-ide/
+<details>
+<summary>Expand for Instructions</summary>
+
+Here are the instructions to flash the ESP8622 using the custom pyflasher. Follow these steps to successfully flash the ESP8622 module with the required firmware.
+
+## Step 1: Download the Flashing Files
+
+Download the necessary ESP8622 flashing files for your setup:
+
+- [**ESP8622 Wireless Base folder**](/release/WirelessBase/ES8622) - For wireless setup.
+- [**ESP8622 Lan Base folder**](/release/LanBased/ESP8622/) - For LAN-based setup.
+
+## Step 2: Open the NodeMCU-PyFlasher
+
+1. Connect your ESP8622 to your PC.
+2. Open the `NodeMCU-PyFlasher.exe` application.
+
+## Step 3: Flashing JuanFi-FlashFile1.bin
+
+1. In the PyFlasher interface:
+   - Select the file `JuanFi-FlashFile1.bin`.
+   - Make sure the offset is set to `0x000000`.
+   - Click the `Flash Nodemcu` button and wait for the flashing process to complete.
+
+![Flash File 1](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-FlashFile1.PNG?raw=true)
+
+## Step 4: Flashing JuanFi-FlashFile2.bin
+
+1. In the PyFlasher interface:
+   - Select the file `JuanFi-FlashFile2.bin`.
+   - Set the offset to `0x200000`.
+   - Click the `Flash Nodemcu` button and wait for the flashing process to complete.
+
+![Flash File 2](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-FlashFile2.PNG?raw=true)
+
+## Step 5: Completing the Flashing Process
+
+After flashing both files, your ESP8622 is now ready. Restart the NodeMCU to begin the setup.
+
+Congratulations! You've successfully flashed your ESP8622 hardware and are ready to proceed with the Juanfi Setup.
+
+</details>
+
+<br>
 
 
-install dependency libraries at arduino libraries folder 
-* Download this https://github.com/videojedi/ESP8266-Telnet-Client and put it on ardunio library folder
-* From arduino, Go to Tools->Manage Libararies->Seach for LiquidCrystal_I2C and installl
+# ESP32 Flashing Instructions
 
-3.) Compile and upload code
+<details>
+<summary>Expand for Instructions</summary>
 
-   a.) Open JuanFi.ino
+Follow these instructions to flash the ESP32 hardware using `esptool.exe`. This process will load the necessary firmware onto the ESP32 module.
 
-   b.) Compile and upload
-      ![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi%20-%20NodeMcu-UploadCode.PNG?raw=true)
+## Step 1: Download Flashing Files
 
-   c.) Upload sketchup data using SIFSS, follow this instruction https://randomnerdtutorials.com/install-esp8266-filesystem-uploader-arduino-ide/
-      ![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi%20-%20NodeMcu-SketchUpload.png?raw=true)
+Download the required flashing files based on your setup:
 
-4.) JuanFi initial setup
+- [**ESP32 Wireless Base folder**](/release/WirelessBase/ESP32/) - For wireless setup.
+- [**ESP32 Lan Base folder**](/release/LanBased/ESP32/) - For LAN-based setup.
 
-a.) Connect to JuanFi Setup SSID
+## Step 2: Run the Flashing Script
 
-1.) For Nodemcu/esp8622 wireless JuanFI setup will appear
-![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Step01.PNG?raw=true)
+1. Double-click `start_flash.bat`.
+2. Connect your ESP32 to your PC using a USB cable.
 
-2.) For ESP32 Lanbase, you need to plugin first in your PC/Laptop ethernet and set your IP address as static 172.217.28.2
+![Connect ESP32](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Lan-FlashFile1.PNG?raw=true)
 
-After you set to static you can access the admin in your browser as 172.217.28.1
+3. A command prompt will appear, prompting you to select an available COM port for your ESP32.
+
+![Select COM Port](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Lan-FlashFile2.PNG?raw=true)
+
+## Step 3: Select COM Port
+
+1. Choose the appropriate COM port for your ESP32 (e.g., COM9).
+2. Press "Enter."
+
+![Select COM Port](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Lan-FlashFile3.PNG?raw=true)
+
+3. A connecting message will appear, indicating the tool is attempting to connect to the ESP32.
+
+![Connecting](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Lan-FlashFile4.PNG?raw=true)
+
+## Step 4: Initiate Flashing
+
+1. Press and hold the flash button on the ESP32 for 3-5 seconds.
+2. The flashing process will start.
+
+![Initiate Flashing](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Lan-FlashFile5.PNG?raw=true)
+
+## Step 5: Wait for Completion
+
+Wait for the flashing process to complete.
+
+## Step 6: Finish
+
+After the flashing process is finished, you can disconnect the ESP32 from your PC. The device is now ready for the Juanfi Setup.
+
+Congratulations! You've successfully flashed your ESP32 hardware and are ready to proceed with the Juanfi Setup.
 
 
-b.) Login to admin panel,
-Default user and password : admin / admin
+</details>
 
-![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Step02.PNG?raw=true)
+<br>
 
-c.) Configure System, change the necessary fields to your configuration, system will restart to take effect,
-default mikrotik user and password is pisonet / abc123
-![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Step03.PNG?raw=true)
 
-d.) Configure Promo rates
-![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Step04.PNG?raw=true)
 
-### Mikrotik Setup
 
-1.) Setup mikrotik hotspot according to your configuration
+# Setting up the Vendo
 
-2.) Make the NodeMCU IP address static
-![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFI-Mikrotik-Step1.PNG?raw=true)
+## 1. Connect to JuanFi Setup
 
-3.) Add IP Bindings exception on hotspot
-![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Mikrotik-Step2.PNG?raw=true)
+### For Esp32/Esp8622 Wireless Based
 
-4.) Modify vendoIpAddress (NodeMcu IPaddress) in the core.js file, you can do a multivendo setup just follow the comment in javascript for instruction
-![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Mikrotik-Step5.PNG?raw=true)
+1. Look for the **"JuanFI Setup"** SSID on your device.
+2. connect to the SSID
+3. Access the admin panel in your browser at [http://172.217.28.1/login](http://172.217.28.1/login).
 
-5.) Upload html template to mikrotik in Files option of mikrotik
+![Wireless Setup](/docs/JuanFi-Step01.PNG)
 
-6.) Create user for nodemcu access, default user for nodemcu is pisonet / abc123 you can change it by your own
-![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Mikrotik-Step3.PNG?raw=true)
+### For Esp32/Esp8622 LanBase
 
-7.) Execute the following script in mikrotik telnet terminal
-replace 10.0.10.253 with your own nodemcu IP address
+1. Plug your vendo into your PC/Laptop's ethernet port.
+2. Set your PC/Laptop's IP address as static to **172.217.28.10**:
+   - IP address: 172.217.28.10
+   - Subnet Mask: 255.255.255.0
+   - Gateway: 172.217.28.10
+   - DNS: 172.217.28.10
+3. Access the admin panel in your browser at [http://172.217.28.1/login](http://172.217.28.1/login).
+
+## 2. Login to Admin Panel
+
+Use the following default credentials:
+
+- Username: admin
+- Password: admin
+
+![Admin Panel Login](/docs/JuanFi-Step02.PNG)
+
+## 8. Configure System
+
+Configure the necessary fields according to your preferences, or upload a custom configuration file. The system will restart to apply the changes. The default Mikrotik API username and password are **pisonet** and **abc123**.
+
+> **Note:** Change the password of the **operator** account to prevent unauthorized access to the vendo.
+
+![Configure System](/docs/JuanFi-Step03.PNG)
+
+### Configure Promo Rates
+
+![Configure Promo Rates](/docs/JuanFi-Step04.PNG)
+
+# Mikrotik Setup
+
+## 1. Setup Mikrotik Hotspot
+
+Set up the Mikrotik hotspot server according to your configuration. You can find tutorials online for setting up a hotspot server in Mikrotik.
+
+## 2. Make NodeMCU IP Address Static
+
+Set the IP address of your vendo (NodeMCU) to static to prevent it from changing addresses.
+
+![Static IP Address](/docs/JuanFI-Mikrotik-Step1.PNG)
+
+## 3. Add IP Bindings Exception on Hotspot
+
+Ensure the vendo's MAC address and IP address are added to IP bindings exceptions to prevent unauthorized usage.
+
+![IP Bindings Exception](/docs/JuanFI-Mikrotik-Step2.PNG)
+
+## 4. Modify vendoIpAddress in config.js
+
+Modify the `vendoIpAddress` in the [config.js](/mikrotik-template/assets/js/config.js) file to match your setup.
+
+![Modify vendoIpAddress](/docs/JuanFI-Mikrotik-Step5.PNG)
+
+## 5. Upload HTML Portal to Mikrotik
+
+Upload the [HTML portal](/mikrotik-template/) to your Mikrotik files. You can find different portal designs in our [Facebook Group Community](https://www.facebook.com/groups/1172413279934139).
+
+## 6. Create User for NodeMCU API Access
+
+Create a user for NodeMCU API access. The default user for NodeMCU is **pisonet** with password **abc123**. You can change it as needed.
+
+![NodeMCU API User](/docs/JuanFI-Mikrotik-Step3.PNG)
+
+
+## **7. Execute the following script in mikrotik telnet terminal**
+replace **10.0.10.253** with your own nodemcu IP address
 
 ```bash
 /ip hotspot walled-garden ip add action=accept disabled=no dst-address=10.0.10.253
-/ip firewall filter add action=accept chain=input place-before=0 comment=NodeMCUIP src-address=10.0.10.253
+/ip firewall filter add action=accept chain=input place-before=0 comment=NodeMCU src-address=10.0.10.253
 ```
-8.) Please add this script in the hotspot user profile on login event(credits to kristoff for adding sales)
 
-Execute on mirkotik terminal
+<br>
+
+---
+
+## **8.) Please add this script in the hotspot user profile on login event** (credits to kristoff for adding sales)
+
+Execute on mikrotik terminal
+
 ```bash
 /system scheduler add interval=1d name="Reset Daily Income" on-event="/system script set source=\"0\" todayincome " policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon start-date=Sep/28/2021 start-time=00:00:00;
 /system scheduler add interval=30d name="Reset Monthly Income" on-event="/system script set source=\"0\" monthlyincome " policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon start-date=Sep/28/2021 start-time=00:00:00;
@@ -166,7 +301,8 @@ Execute on mirkotik terminal
 /system script add dont-require-permissions=no name= monthlyincome owner=admin policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon source="0";
 ```
 
-Put on the on login script (with telegram support) please change accordinly with your hotspot folder(hex or haplite)
+Put on the on login script (with telegram support) please change accordingly with your hotspot folder(hex or haplite)
+
 ```bash
 ### enable telegram notification, change from 0 to 1 if you want to enable telegram
 :local isTelegram 0;
@@ -298,58 +434,65 @@ Put on the on login script (with telegram support) please change accordinly with
   }
 }
 
+
 ```
+
 Put on the on logout script
+
 ```bash
 :if ($cause="session timeout") do={
   /system scheduler set [find name=$user] interval=5s;
 }
 ```
 
-![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Mikrotik-Step4.PNG?raw=true)
+![alt text](/docs/JuanFi-Mikrotik-Step4.PNG?raw=true)
 
-## Miscellaneous Scripts
-
+## **Miscellaneous Scripts**
 
 You can create a scheduler to restart (System - > Scheduler) add your desired schedule and put this script or modify the existing template scripts below in your desired settings
 
-38vz2rb6nk - this is the API KEY you generate in admin panel
-10.10.10.251 - this is your ESP IP Address
+- **38vz2rb6nk** - this is the API KEY you generate in admin panel
+- **10.10.10.251** - this is your ESP IP Address
 
 Replace those value with your own setting
 
-### Restart vendo scheduler
+### **Restart vendo scheduler**
 
 Sample Script that run at 3am:
+
 ```bash
   /system scheduler add interval=1d name="Restart Vendo" on-event="/tool fetch http-method=post http-header-field=\"X-TOKEN: 38vz2rb6nk\" url=\"http://10.10.10.251/admin/api/restartSystem\"" policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon start-date=Sep/28/2021 start-time=03:00:00;
 ```
 
-### Night Light schedulers
+### **Night Light schedulers**
 
 Sample Script that turn on nightlight at 6 pm:
+
 ```bash
  /system scheduler add interval=1d name="Turn ON Night Light" on-event="/tool fetch http-method=post http-header-field=\"X-TOKEN: 38vz2rb6nk\" url=\"http://10.10.10.251/admin/api/toggerNightLight\?toggle=1\"" policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon start-date=Sep/28/2021 start-time=18:00:00;
 ```
-Sample Script that turn off nightlight at 6 am:
+
+### **Sample Script that turn off nightlight at 6 am:**
+
 ```bash
  /system scheduler add interval=1d name="Turn OFF Night Light" on-event="/tool fetch http-method=post http-header-field=\"X-TOKEN: 38vz2rb6nk\" url=\"http://10.10.10.251/admin/api/toggerNightLight\?toggle=0\"" policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon start-date=Sep/28/2021 start-time=06:00:00;
 ```
 
 
-## Usage
+# **Mikrotik Hotspot Portal**
 
-### Mikrotik Hotspot Portal
+![alt text](/docs/Mikrotik-hotspot.PNG?raw=true)
 
-![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/Mikrotik-hotspot.PNG?raw=true)
+# **Admin Panel Dashboard**
 
-### Admin Panel Dashboard
-![alt text](https://github.com/ivanalayan15/JuanFi/blob/master/docs/JuanFi-Step05.PNG?raw=true)
+![alt text](/docs/JuanFi-Step05.PNG?raw=true)
 
 ## Contributing
+
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
 Please make sure to update tests as appropriate.
 
 ## License
+
 [MIT](https://choosealicense.com/licenses/mit/)
