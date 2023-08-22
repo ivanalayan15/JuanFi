@@ -1,9 +1,13 @@
 # **JuanFi**
 - ## Official Website: [juanfi.juansystems.com](https://juanfi.juansystems.com/)
 
+- ## Android App: [JuanFi Manager](https://play.google.com/store/apps/details?id=com.juanfi.mobile.admin)
 
 
 JuanFi is an innovative open-source system designed for seamless coinslot integration with MikroTik Hotspot. It provides a comprehensive solution for managing and monetizing internet access through the integration of a coinslot mechanism. With JuanFi, hotspot owners can effortlessly incorporate a coinslot system into their network infrastructure, enabling them to offer paid internet access in an efficient and user-friendly manner.
+
+
+
 
 ## **Donation**
 
@@ -87,6 +91,29 @@ Join our vibrant community group to connect with other users and contributors. S
 
 ![alt text](/docs/esp8622-lan-diagram.jpg)
 
+# **Updated Connection diagram**
+
+<details>
+<summary> Expand for more images</summary>
+
+
+### *Credits to [Tee Ay](https://www.facebook.com/ajr.lauren) for the updated diagram*
+
+## ESP8266 Simple Wireless
+![alt text](/docs/ESP8266_Simple_Wireless.jpg)
+
+## ESP8266 Simple Lan based
+![alt text](/docs/ESP8266_Simple_LanBased.jpg)
+
+## ESP8266 Wireless With Power Cut
+![alt text](/docs/ESP8266_PowerCut_Wireless.jpg)
+
+## ESP8266 Lan Based with Power Cut
+![alt text](/docs/ESP8266_PowerCut_LanBased.jpg)
+
+</details>
+
+<br>
 
 > # **Flashing the hardware**
 
@@ -245,17 +272,44 @@ Configure the necessary fields according to your preferences, or upload a custom
 
 Set up the Mikrotik hotspot server according to your configuration. You can find tutorials online for setting up a hotspot server in Mikrotik.
 
+## 2. Add this initial script in your terminal
+
+## **8.) Please add this script in the hotspot user profile on login event** (credits to kristoff for adding sales)
+
+Execute on mikrotik terminal
+
+```bash
+/system scheduler add interval=1d name="Reset Daily Income" on-event="/system script set source=\"0\" todayincome " policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon start-date=Sep/28/2021 start-time=00:00:00;
+/system scheduler add interval=30d name="Reset Monthly Income" on-event="/system script set source=\"0\" monthlyincome " policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon start-date=Sep/28/2021 start-time=00:00:00;
+```
+
+```bash
+/system script add dont-require-permissions=no name=todayincome owner=admin policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon source="0";
+/system script add dont-require-permissions=no name= monthlyincome owner=admin policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon source="0";
+```
+
+```bash
+/ip hotspot walled-garden ip add action=accept disabled=no dst-address-list=JuanfiVendo
+/ip firewall filter add action=accept chain=input place-before=0 comment=JuanfiVendo src-address-list=JuanfiVendo
+```
+
 ## 2. Make NodeMCU IP Address Static
 
 Set the IP address of your vendo (NodeMCU) to static to prevent it from changing addresses.
 
 ![Static IP Address](/docs/JuanFi-Mikrotik-Step1.PNG)
 
+Copy the mac-address and ip-address of your vendo
+and set the address-list to JuanfiVendo
+
+![Static IP Address](/docs/JuanFi-Mikrotik-Step1.2.PNG)
+
 ## 3. Add IP Bindings Exception on Hotspot
 
 Ensure the vendo's MAC address and IP address are added to IP bindings exceptions to prevent unauthorized usage.
 
 ![IP Bindings Exception](/docs/JuanFi-Mikrotik-Step2.PNG)
+
 
 ## 4. Modify vendoIpAddress in config.js
 
@@ -273,30 +327,11 @@ Create a user for NodeMCU API access. The default user for NodeMCU is **pisonet*
 
 ![NodeMCU API User](/docs/JuanFi-Mikrotik-Step3.PNG)
 
-
-## **7. Execute the following script in mikrotik telnet terminal**
-replace **10.0.10.253** with your own nodemcu IP address
-
-```bash
-/ip hotspot walled-garden ip add action=accept disabled=no dst-address=10.0.10.253
-/ip firewall filter add action=accept chain=input place-before=0 comment=NodeMCU src-address=10.0.10.253
-```
-
-<br>
-
 ---
 
-## **8.) Please add this script in the hotspot user profile on login event** (credits to kristoff for adding sales)
+## **7.) Please add this script in the hotspot user profile on login event** (credits to kristoff for adding sales)
 
 Execute on mikrotik terminal
-
-```bash
-/system scheduler add interval=1d name="Reset Daily Income" on-event="/system script set source=\"0\" todayincome " policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon start-date=Sep/28/2021 start-time=00:00:00;
-/system scheduler add interval=30d name="Reset Monthly Income" on-event="/system script set source=\"0\" monthlyincome " policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon start-date=Sep/28/2021 start-time=00:00:00;
-/system script add dont-require-permissions=no name=todayincome owner=admin policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon source="0";
-/system script add dont-require-permissions=no name= monthlyincome owner=admin policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon source="0";
-```
-
 Put on the on login script (with telegram support) please change accordingly with your hotspot folder(hex or haplite)
 
 ```bash
