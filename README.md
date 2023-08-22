@@ -297,7 +297,7 @@ Execute on mikrotik terminal
 
 Set the IP address of your vendo (NodeMCU) to static to prevent it from changing addresses.
 
-![Static IP Address](/docs/JuanFi-Mikrotik-Step1.PNG)
+![Static IP Address](/docs/JuanFI-Mikrotik-Step1.PNG)
 
 Copy the mac-address and ip-address of your vendo
 and set the address-list to JuanfiVendo
