@@ -291,7 +291,7 @@ Execute on mikrotik terminal
 /ip firewall filter add action=accept chain=input place-before=0 comment=JuanfiVendo src-address-list=JuanfiVendo
 ```
 
-## 2. Make NodeMCU IP Address Static
+## 3. Make NodeMCU IP Address Static
 
 Set the IP address of your vendo (NodeMCU) to static to prevent it from changing addresses.
 
@@ -302,24 +302,24 @@ and set the address-list to JuanfiVendo
 
 ![Static IP Address](/docs/JuanFi-Mikrotik-Step1.2.PNG)
 
-## 3. Add IP Bindings Exception on Hotspot
+## 4. Add IP Bindings Exception on Hotspot
 
 Ensure the vendo's MAC address and IP address are added to IP bindings exceptions to prevent unauthorized usage.
 
 ![IP Bindings Exception](/docs/JuanFi-Mikrotik-Step2.PNG)
 
 
-## 4. Modify vendoIpAddress in config.js
+## 5. Modify vendoIpAddress in config.js
 
 Modify the `vendoIpAddress` in the [config.js](/mikrotik-template/assets/js/config.js) file to match your setup.
 
 ![Modify vendoIpAddress](/docs/JuanFi-Mikrotik-Step5.PNG)
 
-## 5. Upload HTML Portal to Mikrotik
+## 6. Upload HTML Portal to Mikrotik
 
 Upload the [HTML portal](/mikrotik-template/) to your Mikrotik files. You can find different portal designs in our [Facebook Group Community](https://www.facebook.com/groups/1172413279934139).
 
-## 6. Create User for NodeMCU API Access
+## 7. Create User for NodeMCU API Access
 
 Create a user for NodeMCU API access. The default user for NodeMCU is **pisonet** with password **abc123**. You can change it as needed.
 
@@ -327,7 +327,7 @@ Create a user for NodeMCU API access. The default user for NodeMCU is **pisonet*
 
 ---
 
-## **7.) Please add this script in the hotspot user profile on login event** (credits to kristoff for adding sales)
+## **8.) Please add this script in the hotspot user profile on login event** (credits to kristoff for adding sales)
 
 Execute on mikrotik terminal
 Put on the on login script (with telegram support) please change accordingly with your hotspot folder(hex or haplite)
