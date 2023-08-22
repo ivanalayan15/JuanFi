@@ -274,8 +274,6 @@ Set up the Mikrotik hotspot server according to your configuration. You can find
 
 ## 2. Add this initial script in your terminal
 
-## **8.) Please add this script in the hotspot user profile on login event** (credits to kristoff for adding sales)
-
 Execute on mikrotik terminal
 
 ```bash
